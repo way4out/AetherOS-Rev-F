@@ -45,7 +45,7 @@ void update(const SystemState&){}
 
 static void card(int n,const SystemState&s){
     bool active=(n==s.selectedModule);
-    iprintf("%s%s",active?"\\x1b[33m>":"\\x1b[37m "); iprintf("%-10s",glyphs[n]);
+    iprintf("%s",active?"\\x1b[33m>":"\\x1b[37m "); iprintf("%-10s",glyphs[n]);
     if((n&1)==1) iprintf("\\n");
 }
 static void statusRibbon(const SystemState&s){
