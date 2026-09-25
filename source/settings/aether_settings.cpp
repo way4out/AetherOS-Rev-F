@@ -16,7 +16,7 @@ void defaults(){
     p.showTelemetry=true; p.showQuotes=true; p.autoLocationTheme=true;
     p.locationValid=false; p.latitudeE3=0; p.longitudeE3=0; p.utcOffsetMinutes=0;
     p.quantumQubits=4; p.audioVoices=8; p.visualLevel=3; p.networkQuality=2;
-    p.selectedSetting=0;
+    p.selectedSetting=0; p.language=1;
 }
 }
 
@@ -32,6 +32,7 @@ bool load(){
     if(p.theme>=THEME_COUNT)p.theme=THEME_AUTO;
     if(p.layout>=LAYOUT_COUNT)p.layout=LAYOUT_MYSPACE;
     if(p.quantumQubits<2||p.quantumQubits>8)p.quantumQubits=4;
+    if(p.language>=52)p.language=1;
     if(p.audioVoices<1||p.audioVoices>16)p.audioVoices=8;
     dirty=false; return true;
 }
@@ -42,8 +43,8 @@ bool save(){
     fclose(f); dirty=!ok; return ok;
 }
 void tick(){ if(dirty && (p.selectedSetting==255)) save(); }
-void nextSetting(){ p.selectedSetting=(u8)((p.selectedSetting+1)%18); }
-void previousSetting(){ p.selectedSetting=(u8)((p.selectedSetting+17)%18); }
+void nextSetting(){ p.selectedSetting=(u8)((p.selectedSetting+1)%19); }
+void previousSetting(){ p.selectedSetting=(u8)((p.selectedSetting+18)%19); }
 
 void adjust(int d){
     switch(p.selectedSetting){
@@ -65,6 +66,7 @@ void adjust(int d){
     case 15: p.audioVoices=(u8)((p.audioVoices-1+d+16)%16+1); break;
     case 16: p.visualLevel=(u8)((p.visualLevel+d+5)%5); break;
     case 17: save(); break;
+    case 18: p.language=(u8)((p.language+d+52)%52); break;
     default: break;
     }
     dirty=true;
