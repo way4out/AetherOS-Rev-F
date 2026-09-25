@@ -55,8 +55,9 @@ jobs:
           grep -q "MISSION CONTROL" source/ui/aether_ui.cpp
           grep -q "mission::tick" source/core/aether_core.cpp
           test -f source/core/capacity_engine.cpp
-          grep -q "1024" source/core/capacity_engine.cpp
+          grep -q "1126" source/core/capacity_engine.cpp
           grep -q "AETHEROS REVOLUTION X" source/ui/aether_ui.cpp
+          grep -q "1.1GB CLASS WORKSPACE READY" source/core/capacity_engine.cpp
           test -f source/i18n/aether_i18n.cpp
           test -f source/i18n/aether_i18n.h
           test -f source/animal/aether_animal.cpp
