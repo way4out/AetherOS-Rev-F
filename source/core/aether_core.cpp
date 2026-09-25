@@ -71,7 +71,7 @@ static void doAction(SystemState&s){
     case MOD_SYSTEM: mission::refresh(); diag::tick(s.frame); recovery::heartbeat(); break;
     case MOD_ANIMAL: animal::analyze(); animal::synthesize(); ++s.animalTicks; break;
     case MOD_CODEX: codex::tick(); ++s.codexTicks; break;
-    case MOD_HARMONIC: harmonic::tick(); ++s.harmonicTicks; break;
+    case MOD_HARMONIC: { harmonic::tick(); u32 hz=harmonic::outputMilliHz()/1000; if(hz<20)hz=20; if(hz>20000)hz=20000; audio::tone((u16)hz,150); ++s.harmonicTicks; break; }
     case MOD_SETTINGS: settings::adjust(1); break;
     default: ++s.coreTicks; break;
     }
