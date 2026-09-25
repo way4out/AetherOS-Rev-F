@@ -36,7 +36,7 @@ void init(SystemState&s){
     studio::init(); gate::init(); compute::init(); settings::init(); theme::init(); securitylab::init(); ui::init();
 }
 static void startDeferredServices(SystemState&s){
-    if(servicesStarted) return; servicesStarted=true;
+    if(servicesStarted) return;\n    servicesStarted=true;
     s.sdReady=hardware::sdAvailable();
     if(s.sdReady) {
         s.sdWriteReady=hardware::ensureDirectories()&&hardware::writeBootMarker();
