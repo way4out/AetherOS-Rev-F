@@ -23,3 +23,7 @@ RF/Marauder features are receive-only/authorized telemetry and analysis. No jamm
 
 ## Project
 https://github.com/way4out/AetherOS-Rev-F
+
+
+### Rev:F6
+F6 usability/UI pass: dual-screen dashboard, clearer module navigation, touch actions, and action panels while preserving Phase 5 gateway, quantum, DSP, AI, lab, RF, studio, and diagnostics capabilities.
