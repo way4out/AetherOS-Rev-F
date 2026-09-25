@@ -27,3 +27,11 @@ https://github.com/way4out/AetherOS-Rev-F
 
 ### Rev:F6
 F6 usability/UI pass: dual-screen dashboard, clearer module navigation, touch actions, and action panels while preserving Phase 5 gateway, quantum, DSP, AI, lab, RF, studio, and diagnostics capabilities.
+
+
+## AetherOS Revolution 7+ — Pass 1
+- Persistent user Settings surface with theme, layout, density, animation, audio, clock, telemetry, quote, location, quantum, voice, and visual controls.
+- MySpace-inspired personal-space home layout with direct touchscreen module access while retaining D-pad/button navigation.
+- Theme engine with location-aware automatic selection and a Hobbit fallback when no location is configured.
+- Live DSi RTC timestamp shown throughout the UI; location coordinates are user-configurable because original DSi hardware has no native GPS.
+- Settings persist to `REVF/CORE/SETTINGS.CFG` when the SD workspace is writable.
