@@ -3,16 +3,26 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: devkitpro/devkitarm:latest
+    container: devkitpro/devkitarm:20241104
     steps:
       - uses: actions/checkout@v4
+      - name: Verify devkitPro NDS toolchain
+        run: |
+          echo "DEVKITPRO=$DEVKITPRO"
+          echo "DEVKITARM=$DEVKITARM"
+          test -f "$DEVKITARM/ds_rules"
+          test -f "$DEVKITPRO/libnds/lib/libnds9.a"
       - name: Build
         run: make
       - name: Verify
-        run: test -s AETHEROS.nds
+        run: |
+          test -s AETHEROS.nds
+          file AETHEROS.nds || true
+          ls -lh AETHEROS.nds
       - uses: actions/upload-artifact@v4
         with:
           name: AETHEROS-NDS
