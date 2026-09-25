@@ -19,7 +19,17 @@ jobs:
           test -f "$DEVKITARM/ds_rules"
           test -f "$DEVKITPRO/libnds/lib/libnds9.a"
       - name: Build
-        run: make
+        run: |
+          set +e
+          make 2>&1 | tee build.log
+          rc=${PIPESTATUS[0]}
+          exit $rc
+      - name: Upload build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AETHEROS-build-diagnostics
+          path: build.log
       - name: Gateway protocol HIL test
         run: |
           python3 tools/test_gateway_protocol.py
