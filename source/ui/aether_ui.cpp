@@ -16,15 +16,12 @@
 #include "../core/capacity_engine.h"
 #include "../i18n/aether_i18n.h"
 #include "../animal/aether_animal.h"
-#include "../codex/aether_yhwh_codex.h"
-#include "../harmonic/aether_prime_harmonic.h"
-#include "../heritage/aether_heritage.h"
 #include <nds.h>
 
 namespace aether::ui {
 static PrintConsole topConsole, bottomConsole;
-static const char* names[MOD_COUNT]={"CORE","QUANTUM","SOUND","DSP","LAB","AI","NETWORK","PROJECTS","RF LAB","MARAUDER","STUDIO","SYSTEM","ANIMAL","CODEX","HARMONIC","SETTINGS"};
-static const char* glyphs[MOD_COUNT]={"[CORE]","[QBIT]","[SND ]","[DSP ]","[LAB ]","[AI  ]","[NET ]","[FILE]","[RF  ]","[RFX ]","[DAW ]","[SYS ]","[BIO ]","[BIB ]","[FRQ ]","[SET ]"};
+static const char* names[MOD_COUNT]={"CORE","QUANTUM","SOUND","DSP","LAB","AI","NETWORK","PROJECTS","RF LAB","MARAUDER","STUDIO","SYSTEM","ANIMAL","SETTINGS"};
+static const char* glyphs[MOD_COUNT]={"[CORE]","[QBIT]","[SND ]","[DSP ]","[LAB ]","[AI  ]","[NET ]","[FILE]","[RF  ]","[RFX ]","[DAW ]","[SYS ]","[BIO ]","[SET ]"};
 
 static void selectTop(){consoleSelect(&topConsole);}
 static void selectBottom(){consoleSelect(&bottomConsole);}
@@ -159,23 +156,42 @@ static void actionPanel(int m){
     case MOD_RF: iprintf("A Capture sample\nX Analyze band\nY Refresh telemetry\nSELECT Reset"); break;
     case MOD_MARAUDER: iprintf("A Sample + analyze\nX Analyze\nY Consent/acknowledge\nL Passive RF\nR Lab Simulation\nSELECT Reset"); break;
     case MOD_STUDIO: iprintf("A Play/trigger\nX Performance hit\nY Stop\nL/R View/step\nSELECT Reset"); break;
-    case MOD_SYSTEM:{
-        auto hs=heritage::state(); auto hr=hil::report(); auto dg=diag::report(); auto mr=mission::report();
-        iprintf("SYSTEM HEALTH / MISSION CONTROL");
-        iprintf("READY SCORE %u%%",mr.score);
-        iprintf("CORE %s  SD %s  CFG %s",mission::state(mr.boot),mission::state(mr.sd),mission::state(mr.config));
-        iprintf("Q %s  AUD %s  DSP %s  LAB %s",mission::state(mr.quantum),mission::state(mr.audio),mission::state(mr.dsp),mission::state(mr.lab));
-        iprintf("AI %s  NET %s  SEC %s  REC %s",mission::state(mr.ai),mission::state(mr.network),mission::state(mr.security),mission::state(mr.recovery));
-        iprintf("GATEWAY %s",mission::state(mr.gateway));
-        iprintf("HIL %u%%  DIAG %u  FAULTS %u",hr.score,dg.score,dg.faults);
-        iprintf("GRAPH %u  ONLINE %u",dg.graphTicks,dg.gatewayOnline);
-        iprintf("TX/CREDS/DESTRUCTIVE LOCKED");
-        iprintf("OEQL %s",hs.oeql?"READY":"OFF");
-        iprintf("STELLARPHONE %s",hs.stellarphone?"READY":"OFF");
-        iprintf("MARTIN OPTICS %s",hs.martinOptics?"READY":"OFF");
+    case MOD_SYSTEM: iprintf("A Mission refresh\nX Diagnostics snapshot\nY Recovery heartbeat\nSELECT Safe mode"); break;
+    case MOD_ANIMAL: iprintf("A Analyze animal signal\nX Animal > Human\nY Human > Animal\nL/R Species\nSELECT Reset"); break;
+    case MOD_SETTINGS: iprintf("A Apply\nX Save config\nY Reset layout\nL/R Choose\nSELECT Save\nLANG %s",i18n::languageName()); break;
+    }
+    iprintf("\n%sL/R Module  B Home  TOUCH Direct%s",theme::accent(),"\x1b[37m");
+}
+static void module(const SystemState&s){
+    const int m=s.selectedModule;
+    if(m==MOD_SETTINGS){settingsScreen(s);settingsBottom(s);return;}
+    title(names[m],s); selectTop();
+    switch(m){
+    case MOD_CORE: iprintf("SYSTEM FABRIC\nWATCHDOG RECOVERY STORAGE\nFRAME %lu\nCORE %lu  TOUCH %s\nSD %s / WORKSPACE %s", (unsigned long)s.frame,(unsigned long)s.coreTicks,s.touchReady?"READY":"ERROR",s.sdReady?"READY":"ERROR",s.sdWriteReady?"READY":"ERROR"); break;
+    case MOD_QUANTUM:{auto&q=simulator();auto gq=gate::status(gate::GATE_QPU);iprintf("QUANTUM CORE\nLOCAL SIM + EXTERNAL QPU\nQUBITS %d SHOTS %d ALG %d\nBELL %s QPU %s\n",q.qubits,q.shots,q.algorithm,q.bellState?"ON":"OFF",gq.online?"ONLINE":"READY");for(int i=0;i<(1<<q.qubits)&&i<8;i++)iprintf("|%d> %3d%% ",i,(int)(q.probability[i]*100));break;}
+    case MOD_SOUND: iprintf("AETHER SOUND\nSYNTH FM DRUMS SAMPLER MIXER\nA TEST TONE\nX PERFORMANCE\nAUDIO %s",s.audioReady?"READY":"WAIT");break;
+    case MOD_DSP:{auto mtr=dsp::metrics();iprintf("AETHER DSP\nINPUT > FFT128 > FX > OUT\nRMS %u PEAK %u\nBIN %u ENERGY %u\nREAL FFT / PHASE ENGINE",mtr.rms,mtr.peak,mtr.dominantBin,mtr.energy);break;}
+    case MOD_LAB:{auto mtr=lab::metrics();iprintf("AETHER LAB\nSCIENCE + PROCEDURAL\nENTROPY %u\nMONTE %u\nAUTOMATA %u\nPHYSICS %u",mtr.entropy,mtr.monteCarlo,mtr.automata,mtr.physics);break;}
+    case MOD_AI:{auto r=ai::result();auto ga=gate::status(gate::GATE_AI);iprintf("AETHER AI\nLOCAL MICRO-AI + GATEWAY\nCLASS %u CONF %u%%\nPATTERN %lu\nGATEWAY %s", (unsigned)r.classId,r.confidence,(unsigned long)r.pattern,ga.online?"ONLINE":"READY");break;}
+    case MOD_NETWORK: iprintf("NETWORK FABRIC\nWIFI %s\n5G EXTERNAL GATEWAY\nSAT EXTERNAL GATEWAY\nBT EXTERNAL GATEWAY\nSDR EXTERNAL GATEWAY\nQPU EXTERNAL GATEWAY\nAUTHORIZED HARDWARE ONLY",s.networkReady?"LINK":"OFF");break;
+    case MOD_PROJECTS: { auto cp=capacity::report(); iprintf("PROJECT SPACE\nAPRJ / CIRCUITS / SAMPLES\nPRESETS / PLUGINS\nCURRENT: %s\nA SAVE  X FABRIC\nCAPACITY %s",s.projectSaved?"SAVED":"NEW",capacity::status());break;}
+    case MOD_RF: iprintf("RF LAB\nRECEIVE-ONLY / AUTHORIZED\nSPECTRUM / WATERFALL\nPEAKS / RSSI / BANDWIDTH\nSDR/TINYSA GATEWAY\nSAMPLES %lu",(unsigned long)s.rfSamples);break;
+    case MOD_MARAUDER:{auto sr=securitylab::report();iprintf("AETHER MARAUDER / SECURITY LAB\nMODE %s\nCONSENT %s\nTX LOCKED %s\nCRED CAPTURE LOCKED %s\n\nPASSIVE RF: RSSI / CHANNEL / WATERFALL\nAUTHORIZED NET: OWNED/LAB TRAFFIC METADATA\nLAB SIM: SAFE ATTACK-CONCEPT SIMULATION\nGATEWAY HARDEN: PROTOCOL / AUTH / CRC\n\nSAMPLES %lu DEVICES %lu PACKETS %lu\nALERTS %lu LAB RUNS %lu\n\n%s",securitylab::modeName(sr.mode),sr.consent?"YES":"REQUIRED",sr.txLocked?"YES":"NO",sr.credentialCaptureLocked?"YES":"NO",(unsigned long)sr.samples,(unsigned long)sr.devices,(unsigned long)sr.packets,(unsigned long)sr.alerts,(unsigned long)sr.labRuns,securitylab::warning());break;}
+    case MOD_STUDIO:{auto st=studio::state();iprintf("AETHER STUDIO\nDAW / TRACKER / PERFORMANCE\nBPM %u STEP %u/16 NOTE %u\nVOICES %u\nQUANTUM -> MUSIC\nLAB -> AUDIO",st.bpm,st.step,st.note,st.voices);break;}
+    case MOD_ANIMAL:{
+        auto ar=animal::report();
+        iprintf("AETHER UNIVERSAL COMMUNICATION");
+        iprintf(" ANIMAL < > HUMAN BRIDGE");
+        iprintf(" SPECIES %s",animal::speciesName());
+        iprintf(" MODE %s",animal::directionName());
+        iprintf(" CONF %u%% SIGNAL %u",ar.confidence/10,ar.signalScore);
+        iprintf(" SAMPLES %lu",(unsigned long)ar.samples);
+        iprintf(" LOCAL ANALYSIS READY");
+        iprintf(" MODEL GATEWAY %s",animal::gatewayRequired()?"REQUIRED":"READY");
+        iprintf(" WEB: AETHERLINK / CRITTER CHAT");
+        iprintf(" TRANSLATE > VERIFY > SYNTHESIZE");
         break;
     }
-    actionPanel(m);
-}
+
 void render(const SystemState&s){ if(s.screen==0){topDesktop(s);bottomDesktop(s);} else module(s); }
 }
