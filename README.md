@@ -35,3 +35,13 @@ F6 usability/UI pass: dual-screen dashboard, clearer module navigation, touch ac
 - Theme engine with location-aware automatic selection and a Hobbit fallback when no location is configured.
 - Live DSi RTC timestamp shown throughout the UI; location coordinates are user-configurable because original DSi hardware has no native GPS.
 - Settings persist to `REVF/CORE/SETTINGS.CFG` when the SD workspace is writable.
+
+
+## AetherOS Revolution 7+ — Pass 2
+- Added **Aether Marauder / Security Lab** as a safety-gated RF/network analysis workspace.
+- Passive RF mode supports authorized signal telemetry concepts such as samples, devices, RSSI/channel/waterfall-oriented analysis through an external SDR gateway.
+- Authorized Network mode is limited to metadata/diagnostic workflows for systems the operator owns or is authorized to test.
+- Lab Simulation mode provides non-transmitting, non-credential, attack-concept simulations for learning and defensive testing.
+- Gateway Hardening mode focuses on protocol framing, CRC, authentication state, diagnostics, and resilience.
+- Transmit/jamming, credential capture, covert interception, unauthorized access, and destructive operations are deliberately locked out of the Rev7 on-device security interface. External radio hardware is still required for RF functions.
+- The interface displays the authorization/safety state before security-lab operation.
