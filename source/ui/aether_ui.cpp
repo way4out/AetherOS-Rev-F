@@ -148,7 +148,7 @@ static void actionPanel(int m){
     case MOD_LAB: iprintf("A Run lab tick\\nX New sample\\nSELECT Reset"); break;
     case MOD_PROJECTS: iprintf("A Save project\\nX Fabric\\nSELECT Reset"); break;
     case MOD_RF: iprintf("A Sample\\nX Analyze band\\nSELECT Reset"); break;
-    case MOD_MARAUDER: iprintf("A Authorized scan\\nX Telemetry\\nSELECT Reset"); break;
+    case MOD_MARAUDER: iprintf("A Sample / Analyze\\nX Analyze\\nY Acknowledge\\nL Passive RF\\nR Lab Simulation\\nSELECT Reset"); break;
     default: iprintf("A Open action\\nB Home\\nSELECT Reset"); break;
     }
     iprintf("\\n%sL/R Module  B Home%s",theme::accent(),"\\x1b[37m");
