@@ -28,7 +28,7 @@ static void clearBottom(){selectBottom();consoleClear();}
 static void title(const char* t,const SystemState&s){
     clearTop(); selectTop();
     char stamp[40]; settings::timestamp(stamp,sizeof(stamp));
-    iprintf("%sAETHEROS REV7+%s // %s\n","\x1b[36m","\x1b[37m",t);
+    iprintf("%sAETHEROS REV8%s // %s\n","\x1b[36m","\x1b[37m",t);
     iprintf("%s%s%s\n",theme::accent(),theme::sky(),"\x1b[37m");
     iprintf("%s%s%s\n",theme::accent(),theme::ground(),"\x1b[37m");
     iprintf("%s%s  %s%s\n",theme::accent(),theme::icon(),stamp,"\x1b[37m");
@@ -60,7 +60,7 @@ static void topDesktop(const SystemState&s){
     selectTop();
     auto p=settings::current();
     if(p.layout==settings::LAYOUT_MYSPACE){
-        iprintf("\x1b[33m AETHER SPACE  \x1b[37m%s\n",p.locationValid?"LOCATION READY":"HOBBIT FALLBACK");
+        iprintf("\x1b[33m AETHER SPACE  \x1b[37m%s\n",p.locationValid?"LOCATION READY":"AETHER DEFAULT");
         iprintf(" %s\n",theme::sky());
         statusRibbon(s);
         iprintf("\n\x1b[36mYOUR MODULES\n");
