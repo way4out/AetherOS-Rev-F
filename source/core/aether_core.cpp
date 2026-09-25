@@ -113,8 +113,10 @@ void update(SystemState&s){
             if(d&KEY_Y&&s.selectedModule==MOD_CORE) recovery::heartbeat();
             if(d&KEY_Y&&s.selectedModule==MOD_AI) ai::generate();
             if(d&KEY_Y&&s.selectedModule==MOD_LAB) lab::tick();
-            if(d&KEY_X&&s.selectedModule==MOD_ANIMAL) animal::analyze();
-            if(d&KEY_Y&&s.selectedModule==MOD_ANIMAL) animal::synthesize();
+            if(d&KEY_X&&s.selectedModule==MOD_ANIMAL){ animal::setDirection(animal::ANIMAL_TO_HUMAN); animal::analyze(); }
+            if(d&KEY_Y&&s.selectedModule==MOD_ANIMAL){ animal::setDirection(animal::HUMAN_TO_ANIMAL); animal::synthesize(); }
+            if(d&KEY_L&&s.selectedModule==MOD_ANIMAL) animal::setSpecies((animal::Species)((animal::report().species+animal::SPECIES_COUNT-1)%animal::SPECIES_COUNT));
+            if(d&KEY_R&&s.selectedModule==MOD_ANIMAL) animal::setSpecies((animal::Species)((animal::report().species+1)%animal::SPECIES_COUNT));
             if(d&KEY_Y&&s.selectedModule==MOD_DSP) (void)dsp::metrics();
             if(d&KEY_Y&&s.selectedModule==MOD_PROJECTS) engine::resetProject();
             if(d&KEY_SELECT){quantum::reset(q);audio::stop();}
