@@ -18,6 +18,12 @@ jobs:
           test -f "$DEVKITPRO/libnds/lib/libnds9.a"
       - name: Build
         run: make
+      - name: Pass 5 structural verification
+        run: |
+          test -f source/network/gateway_manager.cpp
+          test -f source/core/diagnostics.cpp
+          grep -q "GATE_QPU" source/network/gateway_manager.h
+          grep -q "DIAG SCORE" source/ui/aether_ui.cpp
       - name: Verify
         run: |
           test -s AETHEROS.nds
