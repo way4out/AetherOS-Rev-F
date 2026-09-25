@@ -14,7 +14,7 @@ LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(TARGET).map
 LIBS := -lfat -lnds9
 LIBPATHS := -L$(LIBNDS)/lib
 
-OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o $(BUILD)/engine_modules.o
+OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o $(BUILD)/engine_modules.o $(BUILD)/aether_audio.o
 
 .PHONY: all clean
 all: $(TARGET).nds
@@ -41,6 +41,9 @@ $(BUILD)/quantum_core.o: source/quantum/quantum_core.cpp | $(BUILD)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 $(BUILD)/engine_modules.o: source/engine/engine_modules.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/aether_audio.o: source/audio/aether_audio.cpp | $(BUILD)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 $(TARGET).elf: $(OBJECTS)
