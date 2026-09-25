@@ -21,8 +21,11 @@ jobs:
       - name: Build
         run: |
           set +e
-          make 2>&1 | tee build.log
-          rc=${PIPESTATUS[0]}
+          make > build.log 2>&1
+          rc=$?
+          cat build.log
+          echo "MAKE_RC=$rc"
+          ls -lh AETHEROS.elf AETHEROS.nds 2>/dev/null || true
           exit $rc
       - name: Upload build diagnostics
         if: failure()
