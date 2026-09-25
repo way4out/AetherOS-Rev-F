@@ -15,12 +15,13 @@
 #include "../security/aether_security_lab.h"
 #include "../core/capacity_engine.h"
 #include "../i18n/aether_i18n.h"
+#include "../animal/aether_animal.h"
 #include <nds.h>
 
 namespace aether::ui {
 static PrintConsole topConsole, bottomConsole;
-static const char* names[MOD_COUNT]={"CORE","QUANTUM","SOUND","DSP","LAB","AI","NETWORK","PROJECTS","RF LAB","MARAUDER","STUDIO","SYSTEM","SETTINGS"};
-static const char* glyphs[MOD_COUNT]={"[CORE]","[QBIT]","[SND ]","[DSP ]","[LAB ]","[AI  ]","[NET ]","[FILE]","[RF  ]","[RFX ]","[DAW ]","[SYS ]","[SET ]"};
+static const char* names[MOD_COUNT]={"CORE","QUANTUM","SOUND","DSP","LAB","AI","NETWORK","PROJECTS","RF LAB","MARAUDER","STUDIO","SYSTEM","ANIMAL","SETTINGS"};
+static const char* glyphs[MOD_COUNT]={"[CORE]","[QBIT]","[SND ]","[DSP ]","[LAB ]","[AI  ]","[NET ]","[FILE]","[RF  ]","[RFX ]","[DAW ]","[SYS ]","[BIO ]","[SET ]"};
 
 static void selectTop(){consoleSelect(&topConsole);}
 static void selectBottom(){consoleSelect(&bottomConsole);}
@@ -121,11 +122,12 @@ static void settingsScreen(const SystemState&s){
     settingLine(15,"VOICES","1-16",sel==15);
     settingLine(16,"VISUAL","0-4",sel==16);
     settingLine(17,"SAVE","WRITE CFG",sel==17);
+    settingLine(18,"LANG",i18n::languageName(),sel==18);
 }
 static void settingsBottom(const SystemState&s){
     clearBottom();selectBottom();const auto&p=settings::current();
     iprintf("%sSETTINGS CONTROL%s\n",theme::accent(),"\x1b[37m");
-    iprintf("Selected: %u / 17\n\n",p.selectedSetting);
+    iprintf("Selected: %u / 18\n\n",p.selectedSetting);
     iprintf("UP/DOWN  Choose\n");
     iprintf("LEFT/RIGHT Change\n");
     iprintf("A         Apply\n");
