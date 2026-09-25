@@ -9,13 +9,15 @@
 #include "../lab/aether_lab.h"
 #include "../ai/aether_ai.h"
 #include "../network/network_fabric.h"
-#include "../network/network_fabric.h"
 #include "../radio/radio_gateway.h"
 #include "../network/gateway_session.h"
 #include "../network/gateway_security.h"
+#include "../network/gateway_manager.h"
+#include "../compute/remote_compute.h"
 #include "system_graph.h"
 #include "recovery.h"
 #include "governor.h"
+#include "diagnostics.h"
 
 namespace { aether::quantum::Simulator q; bool servicesStarted=false; }
 
@@ -34,6 +36,9 @@ void init(SystemState&s){
     graph::init();
     recovery::init();
     governor::init();
+    diag::init();
+    gate::init();
+    compute::init();
     ui::init();
 }
 static void startDeferredServices(SystemState&s){
@@ -48,7 +53,8 @@ static void startDeferredServices(SystemState&s){
     s.quantumReady=true;
     s.audioReady=audio::init();
     dsp::init(); lab::init(); ai::init();
-    s.networkReady=false;
+    network::init();
+    s.networkReady=network::status(network::LINK_WIFI).available;
     s.gatewayConfigured=radio::configured();
     s.projectSaved=engine::projectExists();
 }
@@ -90,14 +96,14 @@ void update(SystemState&s){
         if(d&KEY_Y&&s.selectedModule==MOD_QUANTUM) quantum::measure(q);
         if(d&KEY_L&&s.selectedModule==MOD_QUANTUM) quantum::runDeutschJozsa(q);
         if(d&KEY_R&&s.selectedModule==MOD_QUANTUM) quantum::runQFT2(q);
-        if(d&KEY_X&&s.selectedModule==MOD_STUDIO) { audio::tone(660,180); ++s.studioTicks; }
+        if(d&KEY_X&&s.selectedModule==MOD_STUDIO){audio::tone(660,180);++s.studioTicks;}
         if(d&KEY_SELECT){quantum::reset(q);audio::stop();}
         if(!s.safeMode) quantum::tick(q);
         dsp::tick(); lab::tick(); ai::tick();
         engine::tick();
-        if((s.frame & 63)==0){ dsp::Metrics dm=dsp::metrics(); (void)dm; ai::generate(); }
-        if(s.selectedModule==MOD_NETWORK && (s.frame & 127)==0) network::tick();
-        graph::tick(); governor::tick(); recovery::heartbeat();
+        if((s.frame&63)==0){(void)dsp::metrics();ai::generate();}
+        if(s.selectedModule==MOD_NETWORK&&(s.frame&127)==0)network::tick();
+        gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame);
     }
     ui::update(s);
 }
