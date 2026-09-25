@@ -72,7 +72,7 @@ void adjust(int d){
 void activate(){ adjust(1); }
 
 const char* themeName(Theme t){
-    static const char* n[]={"AUTO","HOBBIT","AETHER VALLEY","NIGHT SKY","OCEAN","QUANTUM","FOREST"};
+    static const char* n[]={"AUTO","AETHER VALLEY","NIGHT SKY","OCEAN","QUANTUM","FOREST"};
     return n[t<THEME_COUNT?t:0];
 }
 const char* layoutName(Layout l){
