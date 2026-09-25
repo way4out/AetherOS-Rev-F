@@ -18,9 +18,35 @@ OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(
 
 .PHONY: all clean
 all: $(TARGET).nds
-$(BUILD):; @mkdir -p $@
-$(BUILD)/%.o: source/%.cpp | $(BUILD)
+$(BUILD):
+	@mkdir -p $@
+define COMPILE
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+endef
+$(BUILD)/main.o: source/main.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/aether_core.o: source/core/aether_core.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/hardware_profile.o: source/hardware/hardware_profile.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/benchmark.o: source/benchmark/benchmark.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/aether_ui.o: source/ui/aether_ui.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/quantum_core.o: source/quantum/quantum_core.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/engine_modules.o: source/engine/engine_modules.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/aether_audio.o: source/audio/aether_audio.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/aether_dsp.o: source/dsp/aether_dsp.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/aether_lab.o: source/lab/aether_lab.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/aether_ai.o: source/ai/aether_ai.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/network_fabric.o: source/network/network_fabric.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/radio_gateway.o: source/radio/radio_gateway.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/remote_compute.o: source/compute/remote_compute.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/gateway_protocol.o: source/network/gateway_protocol.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/gateway_session.o: source/network/gateway_session.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/gateway_security.o: source/network/gateway_security.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/wifi_transport.o: source/network/wifi_transport.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/gateway_client.o: source/network/gateway_client.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/gateway_manager.o: source/network/gateway_manager.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/system_graph.o: source/core/system_graph.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/recovery.o: source/core/recovery.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/governor.o: source/core/governor.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/diagnostics.o: source/core/diagnostics.cpp | $(BUILD); $(COMPILE)
 $(TARGET).elf: $(OBJECTS)
 	@$(CXX) $(LIBPATHS) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
 $(TARGET).nds: $(TARGET).elf
