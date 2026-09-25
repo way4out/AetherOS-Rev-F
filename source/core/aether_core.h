@@ -14,7 +14,7 @@ struct SystemState {
     bool sdWriteReady; bool audioReady; bool quantumReady; bool projectSaved;
     u32 frame; int selectedModule; int screen; bool networkReady; bool gatewayConfigured;
     u32 dspTicks; u32 labTicks; u32 aiTicks; u32 rfSamples; u32 marauderFrames;
-    u32 studioTicks; u32 coreTicks;
+    u32 studioTicks; u32 coreTicks; u32 securityTicks;
 };
 
 void init(SystemState&);
