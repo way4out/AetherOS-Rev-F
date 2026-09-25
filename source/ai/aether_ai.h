@@ -1,2 +1,2 @@
 #pragma once
-namespace aether::ai { struct Result{unsigned confidence,pattern,classId;}; void init(); void tick(); void generate(); Result result(); }
+namespace aether::ai { struct Result{unsigned confidence,pattern,classId;}; void init(); void tick(); void generate(); Result result(); unsigned classifyEnergy(unsigned); }
