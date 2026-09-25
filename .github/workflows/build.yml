@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
@@ -18,12 +20,17 @@ jobs:
           test -f "$DEVKITPRO/libnds/lib/libnds9.a"
       - name: Build
         run: make
+      - name: Gateway protocol HIL test
+        run: |
+          python3 tools/test_gateway_protocol.py
       - name: Pass 5 structural verification
         run: |
           test -f source/network/gateway_manager.cpp
           test -f source/core/diagnostics.cpp
           grep -q "GATE_QPU" source/network/gateway_manager.h
-          grep -q "DIAG SCORE" source/ui/aether_ui.cpp
+          grep -q "HIL" source/ui/aether_ui.cpp
+          grep -q "fft128" source/dsp/aether_dsp.h
+          test -f source/studio/aether_studio.cpp
       - name: Verify
         run: |
           test -s AETHEROS.nds
