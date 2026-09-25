@@ -17,8 +17,8 @@ void next(){lang=(Language)((lang+1)%LANG_COUNT);pack=false;loadPack(langs[lang]
 void previous(){lang=(Language)((lang+LANG_COUNT-1)%LANG_COUNT);pack=false;loadPack(langs[lang].code);}
 void adjust(int d){if(d>0)next();else if(d<0)previous();}
 Language current(){return lang;}
-const LanguageInfo& info(Language x){return langs[x<LANG_COUNT?x:LANG_EN];}
+const LanguageInfo& info(Language x){if(x==LANG_PACK)return extInfo;return langs[x<LANG_COUNT?x:LANG_EN];}
 const char* text(const char*k){return en(k);}
-const char* languageName(){return info(lang).name;}
-bool externalPackReady(){return pack;} unsigned languageCount(){return (unsigned)(sizeof(langs)/sizeof(langs[0]));} bool selectCode(const char*code){for(unsigned i=0;i<languageCount();++i)if(!strcmp(code,langs[i].code)){lang=langs[i].id;pack=false;loadPack(code);return true;}return false;}
+const char* languageName(){return lang==LANG_PACK?extCode:info(lang).name;}
+bool externalPackReady(){return pack;} unsigned languageCount(){return (unsigned)(sizeof(langs)/sizeof(langs[0]));} bool selectCode(const char*code){for(unsigned i=0;i<languageCount();++i)if(!strcmp(code,langs[i].code)){lang=langs[i].id;pack=false;loadPack(code);return true;}if(loadPack(code)){lang=LANG_PACK;return true;}return false;}
 }
