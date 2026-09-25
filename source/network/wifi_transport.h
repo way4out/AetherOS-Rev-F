@@ -1,4 +1,5 @@
 #pragma once
+#include <nds.h>
 namespace aether::wifi {
 bool init();
 bool connected();
