@@ -1,4 +1,4 @@
-name: Build AetherOS REV9* for Nintendo DSi
+name: Build AetherOS REVOLUTION X for Nintendo DSi
 on:
   workflow_dispatch:
   push:
@@ -56,7 +56,12 @@ jobs:
           grep -q "mission::tick" source/core/aether_core.cpp
           test -f source/core/capacity_engine.cpp
           grep -q "1024" source/core/capacity_engine.cpp
-          grep -q "AETHEROS REV9" source/ui/aether_ui.cpp
+          grep -q "AETHEROS REVOLUTION X" source/ui/aether_ui.cpp
+          test -f source/i18n/aether_i18n.cpp
+          test -f source/i18n/aether_i18n.h
+          grep -q "LANG_ZH" source/i18n/aether_i18n.h
+          grep -q "LANG_AR" source/i18n/aether_i18n.h
+          grep -q "aether_i18n.o" Makefile
           ! grep -R "HOBBIT" source README.md || true
           grep -q "mission_control.o" Makefile
       - name: Verify
