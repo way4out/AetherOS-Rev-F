@@ -70,6 +70,15 @@ $(BUILD)/wifi_transport.o: source/network/wifi_transport.cpp | $(BUILD)
 $(BUILD)/gateway_client.o: source/network/gateway_client.cpp | $(BUILD)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
+$(BUILD)/system_graph.o: source/core/system_graph.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/recovery.o: source/core/recovery.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/governor.o: source/core/governor.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
 $(TARGET).elf: $(OBJECTS)
 	@$(CXX) $(LIBPATHS) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
 
