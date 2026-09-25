@@ -19,17 +19,17 @@ settings::Theme active(){return effective();}
 const char* name(){return settings::themeName(active());}
 const char* sky(){
     switch(active()){
-    case settings::THEME_HOBBIT:return "  . . .  /\__/\  . . .  HOBBIT HILLS";
+    case settings::THEME_HOBBIT:return "  . . .  (__)  . . .  HOBBIT HILLS";
     case settings::THEME_AETHER:return "  ^  ^  AETHER VALLEY / SUNRISE";
     case settings::THEME_NIGHT:return "  *  .  *  NIGHT SKY / CONSTELLATION";
     case settings::THEME_OCEAN:return "  ~ ~ ~  OCEAN HORIZON / TIDE";
     case settings::THEME_QUANTUM:return "  o--o  QUANTUM FIELD / PHASE";
-    default:return "  ^^^  FOREST CANOPY / WILDLANDS";
+    default:return "  ^^^  FOREST CANOPY  ^^^  WILDLANDS";
     }
 }
 const char* ground(){
     switch(active()){
-    case settings::THEME_HOBBIT:return "  __/  \____  _/\_/  GREEN HILLS ____";
+    case settings::THEME_HOBBIT:return "  ______  GREEN HILLS  ______";
     case settings::THEME_OCEAN:return "  ~~~~~~~~  ~~~~~~~~  TIDELINE  ~~~~~";
     case settings::THEME_QUANTUM:return "  .-o-.  .-o-.  .-o-.  ENTANGLEMENT";
     case settings::THEME_NIGHT:return "  --------  horizon / deep space  -----";
