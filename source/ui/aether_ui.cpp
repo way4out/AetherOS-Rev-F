@@ -7,6 +7,8 @@
 #include "../ai/aether_ai.h"
 #include "../network/gateway_manager.h"
 #include "../core/diagnostics.h"
+#include "../core/hil.h"
+#include "../studio/aether_studio.h"
 #include <nds.h>
 
 namespace aether::ui {
@@ -37,7 +39,8 @@ static void topDesktop(const SystemState&s){
     iprintf("\x1b[33m      /  \\       CORE:%s  SD:%s       /  \\ \n",
         s.coreTicks?"LIVE":"BOOT",s.sdReady?"OK":"ERR");
     iprintf("\x1b[32m  ____/____\\______/\\______/\\______/____\\____\n");
-    iprintf("\x1b[36m Q:%s AUD:%s NET:%s GW:%u/6\n",s.quantumReady?"OK":"ERR",s.audioReady?"OK":"ERR",s.networkReady?"LINK":"OFF",(unsigned)gate::onlineCount());
+    auto hr=hil::report(); auto st=studio::state();
+    iprintf("\x1b[36m Q:%s AUD:%s NET:%s GW:%u/6 HIL:%u%%\n",s.quantumReady?"OK":"ERR",s.audioReady?"OK":"ERR",s.networkReady?"LINK":"OFF",(unsigned)gate::onlineCount(),hr.score);
     iprintf("\x1b[37m DSP:%lu LAB:%lu AI:%lu RF:%lu\n",(unsigned long)s.dspTicks,(unsigned long)s.labTicks,(unsigned long)s.aiTicks,(unsigned long)s.rfSamples);
     iprintf("\n");
     for(int i=0;i<MOD_COUNT;i++){iprintf("%c%-10s",i==s.selectedModule?'>':' ',names[i]);if((i&3)==3)iprintf("\n");}
@@ -61,15 +64,15 @@ static void module(const SystemState&s){
     case MOD_CORE: iprintf("SYSTEM FABRIC / WATCHDOG / RECOVERY\nFRAME %lu CORE %lu\nSD:%s WS:%s TOUCH:%s\n", (unsigned long)s.frame,(unsigned long)s.coreTicks,s.sdReady?"READY":"ERROR",s.sdWriteReady?"READY":"ERROR",s.touchReady?"READY":"ERROR"); break;
     case MOD_QUANTUM:{auto&q=simulator();auto gq=gate::status(gate::GATE_QPU);iprintf("LOCAL SIMULATOR + REMOTE QPU FABRIC\nQUBITS %d SHOTS %d ALG %d\nBELL:%s LAST:%d QPU-GW:%s\n",q.qubits,q.shots,q.algorithm,q.bellState?"ON":"OFF",q.lastMeasurement,gq.online?"ONLINE":"READY");for(int i=0;i<(1<<q.qubits)&&i<8;i++)iprintf("|%d> %3d%% ",i,(int)(q.probability[i]*100));break;}
     case MOD_SOUND: iprintf("AETHER SOUND / SYNTH / SAMPLER / TRACKER\nWAVE FM DRUM SAMPLE GRANULAR MIXER\nA PLAY TEST   X SAVE PROJECT\n");break;
-    case MOD_DSP:{auto mtr=dsp::metrics();iprintf("AETHER DSP / LIVE ANALYZER\nINPUT > FFT* > FILTER > EQ > FX > OUTPUT\nRMS:%u PEAK:%u BIN:%u ENERGY:%u\n*LIGHTWEIGHT DSi ANALYSIS CORE",mtr.rms,mtr.peak,mtr.dominantBin,mtr.energy);break;}
+    case MOD_DSP:{auto mtr=dsp::metrics();iprintf("AETHER DSP / LIVE FFT ANALYZER\nINPUT > FFT128 > FILTER > EQ > FX > OUTPUT\nRMS:%u PEAK:%u BIN:%u ENERGY:%u\nREAL FFT/PHASE ENGINE READY",mtr.rms,mtr.peak,mtr.dominantBin,mtr.energy);break;}
     case MOD_LAB:{auto mtr=lab::metrics();iprintf("AETHER LAB / SCIENCE WORKBENCH\nENTROPY:%u MONTE:%u AUTO:%u PHYS:%u\nMATRICES / PROCEDURAL / SIMULATION",mtr.entropy,mtr.monteCarlo,mtr.automata,mtr.physics);break;}
     case MOD_AI:{auto r=ai::result();auto ga=gate::status(gate::GATE_AI);iprintf("MICRO-AI / LOCAL + REMOTE INFERENCE\\nCLASS:%u CONF:%u%%\\nPATTERN:%lu\\nAI GATEWAY:%s\\nLOCAL FALLBACK / REMOTE HEAVY MODELS",(unsigned)r.classId,r.confidence,(unsigned long)r.pattern,ga.online?"ONLINE":"READY");break;}
     case MOD_NETWORK: iprintf("NETWORK FABRIC / AUTHORIZED LINKS\nDSI WIFI / PHONE HOTSPOT / REMOTE COMPUTE\n5G SATELLITE BLUETOOTH = EXTERNAL GATEWAYS\nOFFLINE QUEUE / LINK TELEMETRY");break;
     case MOD_PROJECTS: iprintf("PROJECT VAULT / COMMON DATA FABRIC\nAPRJ / CIRCUITS / SAMPLES / PRESETS / LOGS\nDEFAULT PROJECT: %s",s.projectSaved?"SAVED":"NEW");break;
     case MOD_RF: iprintf("RF LAB / FREQUENCY ANALYSIS\nRECEIVE-ONLY AUTHORIZED MEASUREMENT\nSPECTRUM / WATERFALL / PEAKS / RSSI / BANDWIDTH\nEXTERNAL SDR / TINYSA GATEWAY\nSAMPLES:%lu",(unsigned long)s.rfSamples);break;
     case MOD_MARAUDER: iprintf("MARAUDER BOARD GATEWAY\nAUTHORIZED ESP32 TELEMETRY / DISCOVERY\nRSSI / CHANNEL / DEVICE STATE\nNO JAMMING / NO CREDENTIAL CAPTURE\nFRAMES:%lu",(unsigned long)s.marauderFrames);break;
-    case MOD_STUDIO: iprintf("AETHER STUDIO / DAW\nARRANGE / PATTERNS / PIANO ROLL / TRACKER\nAUTOMATION / SAMPLER / MIXER / MASTER\nQUANTUM -> MUSIC   LAB -> AUDIO");break;
-    default: iprintf("SYSTEM / PERFORMANCE / CREATIVE / LAB\nSAFE:%s BENCH:%s\nSELF-DIAGNOSTICS / RECOVERY",s.safeMode?"ON":"OFF",s.benchmarkComplete?"DONE":"RUN");break;
+    case MOD_STUDIO:{auto st=studio::state();iprintf("AETHER STUDIO / DAW\nARRANGE / PATTERNS / PIANO ROLL / TRACKER\nAUTOMATION / SAMPLER / MIXER / MASTER\nBPM:%u STEP:%u NOTE:%u VOICES:%u\nQUANTUM -> MUSIC   LAB -> AUDIO",st.bpm,st.step,st.note,st.voices);break;}
+    case MOD_SYSTEM:{auto hr=hil::report();auto dg=diag::report();iprintf("SYSTEM / PERFORMANCE / CREATIVE / LAB\nSAFE:%s BENCH:%s\nHIL PROTOCOL:%s STORAGE:%s SCORE:%u\nFAULTS:%u GRAPH:%u GATEWAYS:%u",s.safeMode?"ON":"OFF",s.benchmarkComplete?"DONE":"RUN",hr.protocol?"PASS":"FAIL",hr.storage?"PASS":"FAIL",hr.score,dg.faults,dg.graphTicks,dg.gatewayOnline);break;}break;
     }
     selectBottom(); consoleClear(); iprintf("\x1b[36mAETHER TOUCH / ACTION PANEL\n\x1b[37m--------------------------------\n");
     if(m==MOD_QUANTUM) iprintf("A BELL  X GROVER  Y MEASURE\nL DJ  R QFT  SELECT RESET");
