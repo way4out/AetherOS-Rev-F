@@ -50,7 +50,7 @@ jobs:
           grep -q "SETTINGS.CFG" source/settings/aether_settings.cpp
           test -f source/security/aether_security_lab.cpp
           grep -q "TX LOCKED" source/ui/aether_ui.cpp
-          grep -q "credentialCaptureLocked" source/security/aether_security_lab.cpp
+          grep -q "credentialCaptureLocked" source/security/aether_security_lab.h
       - name: Verify
         run: |
           test -s AETHEROS.nds
