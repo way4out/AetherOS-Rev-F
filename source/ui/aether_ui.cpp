@@ -16,12 +16,14 @@
 #include "../core/capacity_engine.h"
 #include "../i18n/aether_i18n.h"
 #include "../animal/aether_animal.h"
+#include "../codex/aether_yhwh_codex.h"
+#include "../harmonic/aether_prime_harmonic.h"
 #include <nds.h>
 
 namespace aether::ui {
 static PrintConsole topConsole, bottomConsole;
-static const char* names[MOD_COUNT]={"CORE","QUANTUM","SOUND","DSP","LAB","AI","NETWORK","PROJECTS","RF LAB","MARAUDER","STUDIO","SYSTEM","ANIMAL","SETTINGS"};
-static const char* glyphs[MOD_COUNT]={"[CORE]","[QBIT]","[SND ]","[DSP ]","[LAB ]","[AI  ]","[NET ]","[FILE]","[RF  ]","[RFX ]","[DAW ]","[SYS ]","[BIO ]","[SET ]"};
+static const char* names[MOD_COUNT]={"CORE","QUANTUM","SOUND","DSP","LAB","AI","NETWORK","PROJECTS","RF LAB","MARAUDER","STUDIO","SYSTEM","ANIMAL","CODEX","HARMONIC","SETTINGS"};
+static const char* glyphs[MOD_COUNT]={"[CORE]","[QBIT]","[SND ]","[DSP ]","[LAB ]","[AI  ]","[NET ]","[FILE]","[RF  ]","[RFX ]","[DAW ]","[SYS ]","[BIO ]","[BIB ]","[FRQ ]","[SET ]"};
 
 static void selectTop(){consoleSelect(&topConsole);}
 static void selectBottom(){consoleSelect(&bottomConsole);}
@@ -158,6 +160,8 @@ static void actionPanel(int m){
     case MOD_STUDIO: iprintf("A Play/trigger\nX Performance hit\nY Stop\nL/R View/step\nSELECT Reset"); break;
     case MOD_SYSTEM: iprintf("A Mission refresh\nX Diagnostics snapshot\nY Recovery heartbeat\nSELECT Safe mode"); break;
     case MOD_ANIMAL: iprintf("A Analyze animal signal\nX Animal > Human\nY Human > Animal\nL/R Species\nSELECT Reset"); break;
+    case MOD_CODEX: iprintf("A Open BIBLIO index\nX Verify invariant\nY Refresh catalog\nSELECT Reset\nENTRIES %u",codex::count()); break;
+    case MOD_HARMONIC: iprintf("A Run node\nX Next prime\nY Void +1\nL Dampener -\nR Amplifier +\nSELECT Reset"); break;
     case MOD_SETTINGS: iprintf("A Apply\nX Save config\nY Reset layout\nL/R Choose\nSELECT Save\nLANG %s",i18n::languageName()); break;
     }
     iprintf("\n%sL/R Module  B Home  TOUCH Direct%s",theme::accent(),"\x1b[37m");
