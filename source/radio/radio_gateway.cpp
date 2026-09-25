@@ -2,5 +2,5 @@
 namespace aether::radio {
 void init(){}
 bool configured(){return false;}
-Capability capabilities(){return {false,false,false,false};}
+Capability capabilities(){Capability c={false,false,false,false};return c;}
 }
