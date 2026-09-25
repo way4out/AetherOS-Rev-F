@@ -9,7 +9,7 @@ include $(DEVKITARM)/ds_rules
 TARGET := AETHEROS
 BUILD := build
 SOURCES := source
-INCLUDES := include
+INCLUDES := include build
 
 ARCH := -march=armv5te -mtune=arm946e-s -mthumb
 CFLAGS := -g -Wall -O2 -ffunction-sections -fdata-sections \
@@ -51,7 +51,7 @@ export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 all: $(OUTPUT).nds
 
 $(BUILD):
-	@mkdir -p $@
+	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 clean:
