@@ -26,18 +26,12 @@ static void clearBottom(){selectBottom();consoleClear();}
 static void title(const char* t,const SystemState&s){
     clearTop(); selectTop();
     char stamp[40]; settings::timestamp(stamp,sizeof(stamp));
-    iprintf("%sAETHEROS REV7+%s // %s
-","[36m","[37m",t);
-    iprintf("%s%s%s
-",theme::accent(),theme::sky(),"[37m");
-    iprintf("%s%s%s
-",theme::accent(),theme::ground(),"[37m");
-    iprintf("%s%s  %s%s
-",theme::accent(),theme::icon(),stamp,"[37m");
-    iprintf("[34m-----------------------------------------------
-");
-    iprintf("[37m%s  %s  |  %s  |  %s
-",s.safeMode?"SAFE":"READY",s.networkReady?"WIFI":"OFFLINE",s.sdReady?"SD":"NO SD",settings::themeName(theme::active()));
+    iprintf("%sAETHEROS REV7+%s // %s\\n","\\x1b[36m","\\x1b[37m",t);
+    iprintf("%s%s%s\\n",theme::accent(),theme::sky(),"\\x1b[37m");
+    iprintf("%s%s%s\\n",theme::accent(),theme::ground(),"\\x1b[37m");
+    iprintf("%s%s  %s%s\\n",theme::accent(),theme::icon(),stamp,"\\x1b[37m");
+    iprintf("\\x1b[34m-----------------------------------------------\\n");
+    iprintf("\\x1b[37m%s  %s  |  %s  |  %s\\n",s.safeMode?"SAFE":"READY",s.networkReady?"WIFI":"OFFLINE",s.sdReady?"SD":"NO SD",settings::themeName(theme::active()));
 }
 
 void init(){
@@ -51,86 +45,52 @@ void update(const SystemState&){}
 
 static void card(int n,const SystemState&s){
     bool active=(n==s.selectedModule);
-    iprintf("%s%s %-10s",active?"[33m>":"[37m ",glyphs[n]);
-    if((n&1)==1) iprintf("
-");
+    iprintf("%s%s %-10s",active?"\\x1b[33m>":"\\x1b[37m ",glyphs[n]);
+    if((n&1)==1) iprintf("\\n");
 }
 static void statusRibbon(const SystemState&s){
     auto hr=hil::report(); auto st=studio::state(); auto dg=diag::report();
-    iprintf("[36mCORE %s Q %s AUD %s
-",s.coreTicks?"LIVE":"IDLE",s.quantumReady?"OK":"--",s.audioReady?"OK":"--");
-    iprintf("HIL %u%% GW %u/6 HP %u BPM %u
-",hr.score,(unsigned)gate::onlineCount(),dg.score,st.bpm);
+    iprintf("\\x1b[36mCORE %s Q %s AUD %s\\n",s.coreTicks?"LIVE":"IDLE",s.quantumReady?"OK":"--",s.audioReady?"OK":"--");
+    iprintf("HIL %u%% GW %u/6 HP %u BPM %u\\n",hr.score,(unsigned)gate::onlineCount(),dg.score,st.bpm);
 }
 static void topDesktop(const SystemState&s){
     title("AETHER HOME",s);
     selectTop();
     auto p=settings::current();
     if(p.layout==settings::LAYOUT_MYSPACE){
-        iprintf("[33m AETHER SPACE  [37m%s
-",p.locationValid?"LOCATION READY":"HOBBIT FALLBACK");
-        iprintf(" %s
-",theme::sky());
+        iprintf("\\x1b[33m AETHER SPACE  \\x1b[37m%s\\n",p.locationValid?"LOCATION READY":"HOBBIT FALLBACK");
+        iprintf(" %s\\n",theme::sky());
         statusRibbon(s);
-        iprintf("
-[36mYOUR MODULES
-");
+        iprintf("\\n\\x1b[36mYOUR MODULES\\n");
         for(int i=0;i<MOD_COUNT;i++)card(i,s);
     } else if(p.layout==settings::LAYOUT_FOCUS){
-        iprintf("[33m FOCUS DESK
-[37m");
-        iprintf(" %s
-",names[s.selectedModule]);
-        iprintf(" Personal control surface
-
-");
+        iprintf("\\x1b[33m FOCUS DESK\\n\\x1b[37m");
+        iprintf(" %s\\n",names[s.selectedModule]);
+        iprintf(" Personal control surface\\n\\n");
         statusRibbon(s);
-        iprintf("
-A OPEN   L/R MODULE
-TOUCH CENTER ACTION
-");
+        iprintf("\\nA OPEN   L/R MODULE\\nTOUCH CENTER ACTION\\n");
     } else {
-        iprintf("[32m AETHER VALLEY DESKTOP
-[37m");
-        iprintf(" %s
-",theme::ground());
+        iprintf("\\x1b[32m AETHER VALLEY DESKTOP\\n\\x1b[37m");
+        iprintf(" %s\\n",theme::ground());
         statusRibbon(s);
-        iprintf("
- MODULES
-");
+        iprintf("\\n MODULES\\n");
         for(int i=0;i<MOD_COUNT;i++)card(i,s);
     }
 }
 static void bottomDesktop(const SystemState&s){
     clearBottom(); selectBottom();
     auto p=settings::current();
-    iprintf("%sAETHER SPACE%s
-",theme::accent(),"[37m");
-    iprintf("PROFILE: YOU
-THEME: %s
-LAYOUT: %s
-",settings::themeName(theme::active()),settings::layoutName(p.layout));
-    iprintf("%s
-",settings::locationLabel());
-    iprintf("
-[36mQUICK CONTROL
-");
-    iprintf("A  Open / Enter
-D  Navigate
-TOUCH  Direct
-B  Back
-START Safe Mode
-");
-    iprintf("
-%s
-",theme::ground());
-    iprintf("SD:%s WS:%s BENCH:%s
-",s.sdReady?"OK":"--",s.sdWriteReady?"OK":"--",s.benchmarkComplete?"OK":"RUN");
+    iprintf("%sAETHER SPACE%s\\n",theme::accent(),"\\x1b[37m");
+    iprintf("PROFILE: YOU\\nTHEME: %s\\nLAYOUT: %s\\n",settings::themeName(theme::active()),settings::layoutName(p.layout));
+    iprintf("%s\\n",settings::locationLabel());
+    iprintf("\\n\\x1b[36mQUICK CONTROL\\n");
+    iprintf("A  Open / Enter\\nD  Navigate\\nTOUCH  Direct\\nB  Back\\nSTART Safe Mode\\n");
+    iprintf("\\n%s\\n",theme::ground());
+    iprintf("SD:%s WS:%s BENCH:%s\\n",s.sdReady?"OK":"--",s.sdWriteReady?"OK":"--",s.benchmarkComplete?"OK":"RUN");
     iprintf("QBIT > DSP > SOUND > PROJECTS");
 }
 static void settingLine(u8 i,const char*label,const char*value,bool selected){
-    iprintf("%s%s %-10s %s%s
-",selected?"[33m>":"[37m",label,value,selected?" *":"","[37m");
+    iprintf("%s%s %-10s %s%s\\n",selected?"\\x1b[33m>":"\\x1b[37m",label,value,selected?" *":"","\\x1b[37m");
 }
 static void settingsScreen(const SystemState&s){
     title("PERSONALIZE / SETTINGS",s); selectTop();
@@ -160,151 +120,55 @@ static void settingsScreen(const SystemState&s){
 }
 static void settingsBottom(const SystemState&s){
     clearBottom();selectBottom();const auto&p=settings::current();
-    iprintf("%sSETTINGS CONTROL%s
-",theme::accent(),"[37m");
-    iprintf("Selected: %u / 17
-
-",p.selectedSetting);
-    iprintf("UP/DOWN  Choose
-");
-    iprintf("LEFT/RIGHT Change
-");
-    iprintf("A         Apply
-");
-    iprintf("X         Save
-");
-    iprintf("Y         Reset layout
-");
-    iprintf("SELECT    Save
-");
-    iprintf("B         Home
-
-");
-    iprintf("TIME IS LIVE RTC
-");
-    iprintf("Location: %s
-",settings::locationLabel());
-    iprintf("Theme: %s
-",theme::name());
-    iprintf("
-%s",theme::ground());
+    iprintf("%sSETTINGS CONTROL%s\\n",theme::accent(),"\\x1b[37m");
+    iprintf("Selected: %u / 17\\n\\n",p.selectedSetting);
+    iprintf("UP/DOWN  Choose\\n");
+    iprintf("LEFT/RIGHT Change\\n");
+    iprintf("A         Apply\\n");
+    iprintf("X         Save\\n");
+    iprintf("Y         Reset layout\\n");
+    iprintf("SELECT    Save\\n");
+    iprintf("B         Home\\n\\n");
+    iprintf("TIME IS LIVE RTC\\n");
+    iprintf("Location: %s\\n",settings::locationLabel());
+    iprintf("Theme: %s\\n",theme::name());
+    iprintf("\\n%s",theme::ground());
 }
 static void actionPanel(int m){
     clearBottom(); selectBottom();
-    iprintf("%s%s / ACTIONS%s
-",theme::accent(),names[m],"[37m");
-    iprintf("----------------
-");
+    iprintf("%s%s / ACTIONS%s\\n",theme::accent(),names[m],"\\x1b[37m");
+    iprintf("----------------\\n");
     switch(m){
-    case MOD_QUANTUM: iprintf("A Bell  X Grover
-Y Measure
-L Deutsch-Jozsa
-R QFT
-SELECT Reset"); break;
-    case MOD_STUDIO: iprintf("A Play/trigger
-X Performance
-L/R View
-SELECT Stop"); break;
-    case MOD_NETWORK: iprintf("A Link test
-X Gateway view
-SELECT Reset"); break;
-    case MOD_DSP: iprintf("A Analyze
-X FFT snapshot
-SELECT Reset"); break;
-    case MOD_AI: iprintf("A Generate
-X Classify
-SELECT Reset"); break;
-    case MOD_LAB: iprintf("A Run lab tick
-X New sample
-SELECT Reset"); break;
-    case MOD_PROJECTS: iprintf("A Save project
-X Fabric
-SELECT Reset"); break;
-    case MOD_RF: iprintf("A Sample
-X Analyze band
-SELECT Reset"); break;
-    case MOD_MARAUDER: iprintf("A Authorized scan
-X Telemetry
-SELECT Reset"); break;
-    default: iprintf("A Open action
-B Home
-SELECT Reset"); break;
+    case MOD_QUANTUM: iprintf("A Bell  X Grover\\nY Measure\\nL Deutsch-Jozsa\\nR QFT\\nSELECT Reset"); break;
+    case MOD_STUDIO: iprintf("A Play/trigger\\nX Performance\\nL/R View\\nSELECT Stop"); break;
+    case MOD_NETWORK: iprintf("A Link test\\nX Gateway view\\nSELECT Reset"); break;
+    case MOD_DSP: iprintf("A Analyze\\nX FFT snapshot\\nSELECT Reset"); break;
+    case MOD_AI: iprintf("A Generate\\nX Classify\\nSELECT Reset"); break;
+    case MOD_LAB: iprintf("A Run lab tick\\nX New sample\\nSELECT Reset"); break;
+    case MOD_PROJECTS: iprintf("A Save project\\nX Fabric\\nSELECT Reset"); break;
+    case MOD_RF: iprintf("A Sample\\nX Analyze band\\nSELECT Reset"); break;
+    case MOD_MARAUDER: iprintf("A Authorized scan\\nX Telemetry\\nSELECT Reset"); break;
+    default: iprintf("A Open action\\nB Home\\nSELECT Reset"); break;
     }
-    iprintf("
-%sL/R Module  B Home%s",theme::accent(),"[37m");
+    iprintf("\\n%sL/R Module  B Home%s",theme::accent(),"\\x1b[37m");
 }
 static void module(const SystemState&s){
     const int m=s.selectedModule;
     if(m==MOD_SETTINGS){settingsScreen(s);settingsBottom(s);return;}
     title(names[m],s); selectTop();
     switch(m){
-    case MOD_CORE: iprintf("SYSTEM FABRIC
-WATCHDOG RECOVERY STORAGE
-FRAME %lu
-CORE %lu  TOUCH %s
-SD %s / WORKSPACE %s", (unsigned long)s.frame,(unsigned long)s.coreTicks,s.touchReady?"READY":"ERROR",s.sdReady?"READY":"ERROR",s.sdWriteReady?"READY":"ERROR"); break;
-    case MOD_QUANTUM:{auto&q=simulator();auto gq=gate::status(gate::GATE_QPU);iprintf("QUANTUM CORE
-LOCAL SIM + EXTERNAL QPU
-QUBITS %d SHOTS %d ALG %d
-BELL %s QPU %s
-",q.qubits,q.shots,q.algorithm,q.bellState?"ON":"OFF",gq.online?"ONLINE":"READY");for(int i=0;i<(1<<q.qubits)&&i<8;i++)iprintf("|%d> %3d%% ",i,(int)(q.probability[i]*100));break;}
-    case MOD_SOUND: iprintf("AETHER SOUND
-SYNTH FM DRUMS SAMPLER MIXER
-A TEST TONE
-X PERFORMANCE
-AUDIO %s",s.audioReady?"READY":"WAIT");break;
-    case MOD_DSP:{auto mtr=dsp::metrics();iprintf("AETHER DSP
-INPUT > FFT128 > FX > OUT
-RMS %u PEAK %u
-BIN %u ENERGY %u
-REAL FFT / PHASE ENGINE",mtr.rms,mtr.peak,mtr.dominantBin,mtr.energy);break;}
-    case MOD_LAB:{auto mtr=lab::metrics();iprintf("AETHER LAB
-SCIENCE + PROCEDURAL
-ENTROPY %u
-MONTE %u
-AUTOMATA %u
-PHYSICS %u",mtr.entropy,mtr.monteCarlo,mtr.automata,mtr.physics);break;}
-    case MOD_AI:{auto r=ai::result();auto ga=gate::status(gate::GATE_AI);iprintf("AETHER AI
-LOCAL MICRO-AI + GATEWAY
-CLASS %u CONF %u%%
-PATTERN %lu
-GATEWAY %s", (unsigned)r.classId,r.confidence,(unsigned long)r.pattern,ga.online?"ONLINE":"READY");break;}
-    case MOD_NETWORK: iprintf("NETWORK FABRIC
-WIFI %s
-5G EXTERNAL GATEWAY
-SAT EXTERNAL GATEWAY
-BT EXTERNAL GATEWAY
-SDR EXTERNAL GATEWAY
-QPU EXTERNAL GATEWAY
-AUTHORIZED HARDWARE ONLY",s.networkReady?"LINK":"OFF");break;
-    case MOD_PROJECTS: iprintf("PROJECT SPACE
-APRJ / CIRCUITS / SAMPLES
-PRESETS / PLUGINS
-CURRENT: %s
-A SAVE  X FABRIC",s.projectSaved?"SAVED":"NEW");break;
-    case MOD_RF: iprintf("RF LAB
-RECEIVE-ONLY / AUTHORIZED
-SPECTRUM / WATERFALL
-PEAKS / RSSI / BANDWIDTH
-SDR/TINYSA GATEWAY
-SAMPLES %lu",(unsigned long)s.rfSamples);break;
-    case MOD_MARAUDER: iprintf("RF GATEWAY
-AUTHORIZED DISCOVERY
-RSSI / CHANNEL / STATE
-NO JAMMING / NO CREDENTIALS
-FRAMES %lu",(unsigned long)s.marauderFrames);break;
-    case MOD_STUDIO:{auto st=studio::state();iprintf("AETHER STUDIO
-DAW / TRACKER / PERFORMANCE
-BPM %u STEP %u/16 NOTE %u
-VOICES %u
-QUANTUM -> MUSIC
-LAB -> AUDIO",st.bpm,st.step,st.note,st.voices);break;}
-    case MOD_SYSTEM:{auto hr=hil::report();auto dg=diag::report();iprintf("SYSTEM HEALTH
-HIL PROTOCOL %s
-STORAGE %s
-HIL %u%% DIAG %u
-FAULTS %u GRAPH %u
-GATEWAYS %u",hr.protocol?"PASS":"FAIL",hr.storage?"PASS":"FAIL",hr.score,dg.score,dg.faults,dg.graphTicks,dg.gatewayOnline);break;}
+    case MOD_CORE: iprintf("SYSTEM FABRIC\\nWATCHDOG RECOVERY STORAGE\\nFRAME %lu\\nCORE %lu  TOUCH %s\\nSD %s / WORKSPACE %s", (unsigned long)s.frame,(unsigned long)s.coreTicks,s.touchReady?"READY":"ERROR",s.sdReady?"READY":"ERROR",s.sdWriteReady?"READY":"ERROR"); break;
+    case MOD_QUANTUM:{auto&q=simulator();auto gq=gate::status(gate::GATE_QPU);iprintf("QUANTUM CORE\\nLOCAL SIM + EXTERNAL QPU\\nQUBITS %d SHOTS %d ALG %d\\nBELL %s QPU %s\\n",q.qubits,q.shots,q.algorithm,q.bellState?"ON":"OFF",gq.online?"ONLINE":"READY");for(int i=0;i<(1<<q.qubits)&&i<8;i++)iprintf("|%d> %3d%% ",i,(int)(q.probability[i]*100));break;}
+    case MOD_SOUND: iprintf("AETHER SOUND\\nSYNTH FM DRUMS SAMPLER MIXER\\nA TEST TONE\\nX PERFORMANCE\\nAUDIO %s",s.audioReady?"READY":"WAIT");break;
+    case MOD_DSP:{auto mtr=dsp::metrics();iprintf("AETHER DSP\\nINPUT > FFT128 > FX > OUT\\nRMS %u PEAK %u\\nBIN %u ENERGY %u\\nREAL FFT / PHASE ENGINE",mtr.rms,mtr.peak,mtr.dominantBin,mtr.energy);break;}
+    case MOD_LAB:{auto mtr=lab::metrics();iprintf("AETHER LAB\\nSCIENCE + PROCEDURAL\\nENTROPY %u\\nMONTE %u\\nAUTOMATA %u\\nPHYSICS %u",mtr.entropy,mtr.monteCarlo,mtr.automata,mtr.physics);break;}
+    case MOD_AI:{auto r=ai::result();auto ga=gate::status(gate::GATE_AI);iprintf("AETHER AI\\nLOCAL MICRO-AI + GATEWAY\\nCLASS %u CONF %u%%\\nPATTERN %lu\\nGATEWAY %s", (unsigned)r.classId,r.confidence,(unsigned long)r.pattern,ga.online?"ONLINE":"READY");break;}
+    case MOD_NETWORK: iprintf("NETWORK FABRIC\\nWIFI %s\\n5G EXTERNAL GATEWAY\\nSAT EXTERNAL GATEWAY\\nBT EXTERNAL GATEWAY\\nSDR EXTERNAL GATEWAY\\nQPU EXTERNAL GATEWAY\\nAUTHORIZED HARDWARE ONLY",s.networkReady?"LINK":"OFF");break;
+    case MOD_PROJECTS: iprintf("PROJECT SPACE\\nAPRJ / CIRCUITS / SAMPLES\\nPRESETS / PLUGINS\\nCURRENT: %s\\nA SAVE  X FABRIC",s.projectSaved?"SAVED":"NEW");break;
+    case MOD_RF: iprintf("RF LAB\\nRECEIVE-ONLY / AUTHORIZED\\nSPECTRUM / WATERFALL\\nPEAKS / RSSI / BANDWIDTH\\nSDR/TINYSA GATEWAY\\nSAMPLES %lu",(unsigned long)s.rfSamples);break;
+    case MOD_MARAUDER: iprintf("RF GATEWAY\\nAUTHORIZED DISCOVERY\\nRSSI / CHANNEL / STATE\\nNO JAMMING / NO CREDENTIALS\\nFRAMES %lu",(unsigned long)s.marauderFrames);break;
+    case MOD_STUDIO:{auto st=studio::state();iprintf("AETHER STUDIO\\nDAW / TRACKER / PERFORMANCE\\nBPM %u STEP %u/16 NOTE %u\\nVOICES %u\\nQUANTUM -> MUSIC\\nLAB -> AUDIO",st.bpm,st.step,st.note,st.voices);break;}
+    case MOD_SYSTEM:{auto hr=hil::report();auto dg=diag::report();iprintf("SYSTEM HEALTH\\nHIL PROTOCOL %s\\nSTORAGE %s\\nHIL %u%% DIAG %u\\nFAULTS %u GRAPH %u\\nGATEWAYS %u",hr.protocol?"PASS":"FAIL",hr.storage?"PASS":"FAIL",hr.score,dg.score,dg.faults,dg.graphTicks,dg.gatewayOnline);break;}
     }
     actionPanel(m);
 }
