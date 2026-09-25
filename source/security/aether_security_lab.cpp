@@ -1,6 +1,6 @@
 #include "aether_security_lab.h"
-namespace { aether::security::Report r={aether::security::PASSIVE_RF,false,true,true,true,0,0,0,0,0}; unsigned seed=0xA37E91u; }
-namespace aether::security {
+namespace { aether::securitylab::Report r={aether::securitylab::PASSIVE_RF,false,true,true,true,0,0,0,0,0}; unsigned seed=0xA37E91u; }
+namespace aether::securitylab {
 void init(){r={PASSIVE_RF,false,true,true,true,0,0,0,0,0};}
 void tick(){seed=seed*1664525u+1013904223u; if(r.mode==PASSIVE_RF&&r.consent&&((seed>>20)&31)==0)++r.samples;}
 void setMode(Mode m){if(m>=MODE_COUNT)m=PASSIVE_RF;r.mode=m;r.consent=false;}
