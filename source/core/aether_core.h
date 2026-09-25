@@ -8,8 +8,12 @@ struct SystemState {
     bool benchmarkComplete;
     bool safeMode;
     bool sdWriteReady;
+    bool audioReady;
+    bool quantumReady;
+    bool projectSaved;
     u32 frame;
     int selectedModule;
+    int screen;
 };
 
 void init(SystemState& state);
