@@ -7,49 +7,50 @@ include $(DEVKITARM)/ds_rules
 TARGET := AETHEROS
 BUILD := build
 SOURCES := source
-ARCH := -march=armv5te -mtune=arm946e-s -mthumb
-CFLAGS := -g -Wall -O2 -ffunction-sections -fdata-sections $(ARCH) -DARM9
-CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
-INCLUDES := -I$(CURDIR)/source -I$(CURDIR)/build -I$(LIBNDS)/include
-LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(TARGET).map
-LIBS := -lnds9
-LIBPATHS := -L$(LIBNDS)/lib
+INCLUDES := include build
 
-.PHONY: all clean
-all: $(TARGET).nds
+ARCH := -march=armv5te -mtune=arm946e-s -mthumb
+CFLAGS := -g -Wall -O2 -ffunction-sections -fdata-sections $(ARCH)
+CFLAGS += $(INCLUDE) -DARM9
+CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
+ASFLAGS := -g $(ARCH)
+LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(TARGET).map
+
+LIBS := -lnds9
+LIBDIRS := $(LIBNDS)
+
+ifneq ($(BUILD),$(notdir $(CURDIR)))
+export OUTPUT := $(CURDIR)/$(TARGET)
+export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) 
+export DEPSDIR := $(CURDIR)/$(BUILD)
+
+CFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+CPPFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
+SFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+
+ifeq ($(strip $(CPPFILES)),)
+export LD := $(CC)
+else
+export LD := $(CXX)
+endif
+
+export OFILES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) $(foreach dir,$(LIBDIRS),-I$(dir)/include) -I$(CURDIR)/$(BUILD)
+export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+
+.PHONY: all $(BUILD) clean
+all: $(OUTPUT).nds
 
 $(BUILD):
-	@mkdir -p $@
-
-CORE_SRC := $(SOURCES)/main.cpp $(SOURCES)/core/aether_core.cpp $(SOURCES)/hardware/hardware_profile.cpp $(SOURCES)/benchmark/benchmark.cpp $(SOURCES)/ui/aether_ui.cpp $(SOURCES)/quantum/quantum_core.cpp
-
-$(BUILD)/main.o: $(SOURCES)/main.cpp | $(BUILD)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
-
-$(BUILD)/core_aether_core.o: $(SOURCES)/core/aether_core.cpp | $(BUILD)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
-
-$(BUILD)/hardware_profile.o: $(SOURCES)/hardware/hardware_profile.cpp | $(BUILD)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
-
-$(BUILD)/benchmark.o: $(SOURCES)/benchmark/benchmark.cpp | $(BUILD)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
-
-$(BUILD)/aether_ui.o: $(SOURCES)/ui/aether_ui.cpp | $(BUILD)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
-
-$(BUILD)/quantum_core.o: $(SOURCES)/quantum/quantum_core.cpp | $(BUILD)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
-
-OBJECTS := $(BUILD)/main.o $(BUILD)/core_aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o
-
-$(TARGET).elf: $(OBJECTS)
-	@$(CXX) $(LIBPATHS) $(LDFLAGS) $^ $(LIBS) -o $@
-
-$(TARGET).nds: $(TARGET).elf
-	@echo "Packaging $@"
-
--include $(BUILD)/*.d
+	@[ -d $@ ] || mkdir -p $@
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 clean:
-	@rm -rf $(BUILD) $(TARGET).elf $(TARGET).nds $(TARGET).map
+	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds $(TARGET).ds.gba
+
+else
+DEPENDS := $(OFILES:.o=.d)
+$(OUTPUT).nds: $(OUTPUT).elf
+$(OUTPUT).elf: $(OFILES)
+-include $(DEPENDS)
+endif
