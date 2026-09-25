@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "aether_ui.h"
 #include "../quantum/quantum_core.h"
 #include "../engine/engine_modules.h"
