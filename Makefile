@@ -38,9 +38,9 @@ $(BUILD)/aether_ui.o: source/ui/aether_ui.cpp | $(BUILD)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 $(BUILD)/quantum_core.o: source/quantum/quantum_core.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 $(BUILD)/engine_modules.o: source/engine/engine_modules.cpp | $(BUILD)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 $(TARGET).elf: $(OBJECTS)
