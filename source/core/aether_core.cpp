@@ -19,6 +19,7 @@
 #include "governor.h"
 #include "diagnostics.h"
 #include "hil.h"
+#include "mission_control.h"
 #include "../studio/aether_studio.h"
 #include "../settings/aether_settings.h"
 #include "../theme/aether_theme.h"
@@ -28,11 +29,11 @@ namespace { aether::quantum::Simulator q; bool servicesStarted=false; }
 
 namespace aether {
 void init(SystemState&s){
-    s={false,false,false,false,false,false,false,false,0,0,0,false,false,0,0,0,0,0,0,0};
+    s={false,false,false,false,false,false,false,false,0,0,0,false,false,0,0,0,0,0,0,0,0};
     videoSetMode(MODE_0_2D); videoSetModeSub(MODE_0_2D);
     vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
     consoleDemoInit(); consoleClear(); s.touchReady=true;
-    quantum::init(q); engine::init(); graph::init(); recovery::init(); governor::init(); diag::init(); hil::init();
+    quantum::init(q); engine::init(); graph::init(); recovery::init(); governor::init(); diag::init(); hil::init(); mission::init();
     studio::init(); gate::init(); compute::init(); settings::init(); theme::init(); securitylab::init(); ui::init();
 }
 static void startDeferredServices(SystemState&s){
@@ -90,9 +91,17 @@ void update(SystemState&s){
             if(d&KEY_RIGHT)s.selectedModule=(s.selectedModule+1)%MOD_COUNT;
             if(d&KEY_A)doAction(s);
             if(d&KEY_X&&s.selectedModule==MOD_QUANTUM) quantum::runGrover2(q);
+            if(d&KEY_X&&s.selectedModule==MOD_DSP) ++s.dspTicks;
+            if(d&KEY_X&&s.selectedModule==MOD_RF) ++s.rfSamples;
+            if(d&KEY_X&&s.selectedModule==MOD_NETWORK) network::tick();
+            if(d&KEY_X&&s.selectedModule==MOD_AI) ai::generate();
+            if(d&KEY_X&&s.selectedModule==MOD_PROJECTS) engine::saveProject();
             if(d&KEY_Y&&s.selectedModule==MOD_QUANTUM) quantum::measure(q);
+            if(d&KEY_Y&&s.selectedModule==MOD_MARAUDER) securitylab::acknowledge();
             if(d&KEY_L&&s.selectedModule==MOD_QUANTUM) quantum::runDeutschJozsa(q);
             if(d&KEY_R&&s.selectedModule==MOD_QUANTUM) quantum::runQFT2(q);
+            if(d&KEY_L&&s.selectedModule==MOD_MARAUDER) securitylab::setMode(securitylab::PASSIVE_RF);
+            if(d&KEY_R&&s.selectedModule==MOD_MARAUDER) securitylab::setMode(securitylab::LAB_SIMULATION);
             if(d&KEY_X&&s.selectedModule==MOD_STUDIO){audio::tone(660,180);++s.studioTicks;}
             if(d&KEY_SELECT){quantum::reset(q);audio::stop();}
         }
@@ -114,7 +123,7 @@ void update(SystemState&s){
         dsp::tick(); lab::tick(); ai::tick(); studio::tick(); hil::tick(); engine::tick();
         if((s.frame&63)==0){(void)dsp::metrics();ai::generate();}
         if(s.selectedModule==MOD_NETWORK&&(s.frame&127)==0)network::tick();
-        gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame); securitylab::tick(); ++s.securityTicks;
+        gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame); securitylab::tick(); mission::tick(); ++s.securityTicks; ++s.missionTicks;
         settings::tick();
     }
     ui::update(s);
