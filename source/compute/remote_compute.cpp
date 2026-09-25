@@ -2,6 +2,6 @@
 #include "../network/network_fabric.h"
 namespace aether::compute {
 void init(){}
-bool available(Backend b){return b==BACKEND_QPU?network::status(network::LINK_REMOTE_COMPUTE).available:network::status(network::LINK_REMOTE_COMPUTE).available;}
+bool available(Backend){return network::status(network::LINK_REMOTE_COMPUTE).available;}
 bool submit(const Job&j){if(!j.payload)return false;if(!available(j.backend))return false;return true;}
 }
