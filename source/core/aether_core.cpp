@@ -33,7 +33,7 @@ void init(SystemState&s){
     vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
     consoleDemoInit(); consoleClear(); s.touchReady=true;
     quantum::init(q); engine::init(); graph::init(); recovery::init(); governor::init(); diag::init(); hil::init();
-    studio::init(); gate::init(); compute::init(); settings::init(); theme::init(); security::init(); ui::init();
+    studio::init(); gate::init(); compute::init(); settings::init(); theme::init(); securitylab::init(); ui::init();
 }
 static void startDeferredServices(SystemState&s){
     if(servicesStarted) return; servicesStarted=true;
@@ -42,7 +42,7 @@ static void startDeferredServices(SystemState&s){
         s.sdWriteReady=hardware::ensureDirectories()&&hardware::writeBootMarker();
         if(s.sdWriteReady) settings::load();
     }
-    benchmark::runQuick(s.benchmarkComplete); radio::init(); session::init(); security::init();
+    benchmark::runQuick(s.benchmarkComplete); radio::init(); session::init(); securitylab::init();
     s.quantumReady=true; s.audioReady=audio::init(); dsp::init(); lab::init(); ai::init(); studio::init(); network::init();
     s.networkReady=network::status(network::LINK_WIFI).available; s.gatewayConfigured=radio::configured(); s.projectSaved=engine::projectExists();
 }
@@ -59,7 +59,7 @@ static void doAction(SystemState&s){
     case MOD_NETWORK: network::tick(); break;
     case MOD_PROJECTS: engine::saveProject(); break;
     case MOD_RF: ++s.rfSamples; break;
-    case MOD_MARAUDER: security::sample(); security::analyze(); if(security::report().mode==security::LAB_SIMULATION) security::runLabSimulation(); ++s.marauderFrames; break;
+    case MOD_MARAUDER: securitylab::sample(); securitylab::analyze(); if(securitylab::report().mode==securitylab::LAB_SIMULATION) securitylab::runLabSimulation(); ++s.marauderFrames; break;
     case MOD_STUDIO: studio::trigger(60+(s.studioTicks&7),100); ++s.studioTicks; break;
     case MOD_SETTINGS: settings::adjust(1); break;
     default: ++s.coreTicks; break;
@@ -113,7 +113,7 @@ void update(SystemState&s){
         dsp::tick(); lab::tick(); ai::tick(); studio::tick(); hil::tick(); engine::tick();
         if((s.frame&63)==0){(void)dsp::metrics();ai::generate();}
         if(s.selectedModule==MOD_NETWORK&&(s.frame&127)==0)network::tick();
-        gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame); security::tick(); ++s.securityTicks;
+        gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame); securitylab::tick(); ++s.securityTicks;
         settings::tick();
     }
     ui::update(s);
