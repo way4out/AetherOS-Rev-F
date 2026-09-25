@@ -1,6 +1,7 @@
 #include "aether_settings.h"
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 namespace {
 aether::settings::Profile p;
@@ -84,14 +85,13 @@ const char* locationLabel(){
     return "MANUAL LOCATION";
 }
 void timestamp(char* out,unsigned n){
-    rtcTimeAndDate rtc{};
-    rtcTimeAndDateGet(&rtc);
-    int h=(rtc.hours>=52)?(rtc.hours-52+12):rtc.hours;
-    if(h>23)h=23;
-    if(p.clock24) snprintf(out,n,"%04u-%02u-%02u %02d:%02u:%02u",2000u+rtc.year,rtc.month,rtc.day,h,rtc.minutes,rtc.seconds);
+    time_t now=time(NULL);
+    struct tm* t=localtime(&now);
+    if(!t){ if(n) out[0]=0; return; }
+    if(p.clock24) snprintf(out,n,"%04d-%02d-%02d %02d:%02d:%02d",t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec);
     else {
-        int hh=h%12; if(hh==0)hh=12;
-        snprintf(out,n,"%04u-%02u-%02u %02d:%02u:%02u %s",2000u+rtc.year,rtc.month,rtc.day,hh,rtc.minutes,rtc.seconds,h>=12?"PM":"AM");
+        int h=t->tm_hour%12; if(h==0)h=12;
+        snprintf(out,n,"%04d-%02d-%02d %02d:%02d:%02d %s",t->tm_year+1900,t->tm_mon+1,t->tm_mday,h,t->tm_min,t->tm_sec,t->tm_hour>=12?"PM":"AM");
     }
 }
 }
