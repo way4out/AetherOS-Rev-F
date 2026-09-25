@@ -14,7 +14,7 @@ LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(TARGET).map
 LIBS := -lfat -lnds9
 LIBPATHS := -L$(LIBNDS)/lib
 
-OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o $(BUILD)/engine_modules.o $(BUILD)/aether_audio.o
+OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o $(BUILD)/engine_modules.o $(BUILD)/aether_audio.o $(BUILD)/network_fabric.o $(BUILD)/radio_gateway.o $(BUILD)/remote_compute.o
 
 .PHONY: all clean
 all: $(TARGET).nds
@@ -44,6 +44,15 @@ $(BUILD)/engine_modules.o: source/engine/engine_modules.cpp | $(BUILD)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 $(BUILD)/aether_audio.o: source/audio/aether_audio.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/network_fabric.o: source/network/network_fabric.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/radio_gateway.o: source/radio/radio_gateway.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/remote_compute.o: source/compute/remote_compute.cpp | $(BUILD)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 $(TARGET).elf: $(OBJECTS)
