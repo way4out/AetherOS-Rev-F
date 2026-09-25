@@ -192,6 +192,9 @@ static void module(const SystemState&s){
         iprintf(" TRANSLATE > VERIFY > SYNTHESIZE");
         break;
     }
-
+    case MOD_SYSTEM:{auto hr=hil::report();auto dg=diag::report();auto mr=mission::report();iprintf("SYSTEM HEALTH / MISSION CONTROL\nREADY SCORE %u%%\nCORE %s  SD %s  CFG %s\nQ %s  AUD %s  DSP %s  LAB %s\nAI %s  NET %s  SEC %s  REC %s\nGATEWAY %s\nHIL %u%%  DIAG %u  FAULTS %u\nGRAPH %u  ONLINE %u\nTX/CREDS/DESTRUCTIVE LOCKED",mr.score,mission::state(mr.boot),mission::state(mr.sd),mission::state(mr.config),mission::state(mr.quantum),mission::state(mr.audio),mission::state(mr.dsp),mission::state(mr.lab),mission::state(mr.ai),mission::state(mr.network),mission::state(mr.security),mission::state(mr.recovery),mission::state(mr.gateway),hr.score,dg.score,dg.faults,dg.graphTicks,dg.gatewayOnline);break;}
+    }
+    actionPanel(m);
+}
 void render(const SystemState&s){ if(s.screen==0){topDesktop(s);bottomDesktop(s);} else module(s); }
 }
