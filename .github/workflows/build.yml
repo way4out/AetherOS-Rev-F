@@ -19,7 +19,20 @@ jobs:
           test -f "$DEVKITARM/ds_rules"
           test -f "$DEVKITPRO/libnds/lib/libnds9.a"
       - name: Build
-        run: make
+        run: |
+          set +e
+          make > build.log 2>&1
+          rc=$?
+          cat build.log
+          echo "MAKE_RC=$rc"
+          ls -lh AETHEROS.elf AETHEROS.nds 2>/dev/null || true
+          exit $rc
+      - name: Upload build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AETHEROS-build-diagnostics
+          path: build.log
       - name: Gateway protocol HIL test
         run: |
           python3 tools/test_gateway_protocol.py
@@ -31,6 +44,10 @@ jobs:
           grep -q "HIL" source/ui/aether_ui.cpp
           grep -q "fft128" source/dsp/aether_dsp.h
           test -f source/studio/aether_studio.cpp
+          test -f source/settings/aether_settings.cpp
+          test -f source/theme/aether_theme.cpp
+          grep -q "MOD_SETTINGS" source/core/aether_core.h
+          grep -q "SETTINGS.CFG" source/settings/aether_settings.cpp
       - name: Verify
         run: |
           test -s AETHEROS.nds
