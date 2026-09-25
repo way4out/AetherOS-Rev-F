@@ -56,14 +56,15 @@ static void doAction(SystemState&s){
     switch(s.selectedModule){
     case MOD_QUANTUM: quantum::runBell(q); break;
     case MOD_SOUND: audio::tone(440,250); break;
-    case MOD_DSP: ++s.dspTicks; break;
-    case MOD_LAB: ++s.labTicks; break;
+    case MOD_DSP: ++s.dspTicks; (void)dsp::metrics(); break;
+    case MOD_LAB: ++s.labTicks; lab::tick(); break;
     case MOD_AI: ++s.aiTicks; ai::generate(); break;
-    case MOD_NETWORK: network::tick(); break;
+    case MOD_NETWORK: network::tick(); gate::tick(); break;
     case MOD_PROJECTS: engine::saveProject(); break;
     case MOD_RF: ++s.rfSamples; break;
     case MOD_MARAUDER: securitylab::sample(); securitylab::analyze(); if(securitylab::report().mode==securitylab::LAB_SIMULATION) securitylab::runLabSimulation(); ++s.marauderFrames; break;
     case MOD_STUDIO: studio::trigger(60+(s.studioTicks&7),100); ++s.studioTicks; break;
+    case MOD_SYSTEM: mission::refresh(); diag::tick(s.frame); recovery::heartbeat(); break;
     case MOD_SETTINGS: settings::adjust(1); break;
     default: ++s.coreTicks; break;
     }
@@ -92,9 +93,9 @@ void update(SystemState&s){
             if(d&KEY_RIGHT)s.selectedModule=(s.selectedModule+1)%MOD_COUNT;
             if(d&KEY_A)doAction(s);
             if(d&KEY_X&&s.selectedModule==MOD_QUANTUM) quantum::runGrover2(q);
-            if(d&KEY_X&&s.selectedModule==MOD_DSP) ++s.dspTicks;
-            if(d&KEY_X&&s.selectedModule==MOD_RF) ++s.rfSamples;
-            if(d&KEY_X&&s.selectedModule==MOD_NETWORK) network::tick();
+            if(d&KEY_X&&s.selectedModule==MOD_DSP){ ++s.dspTicks; (void)dsp::metrics(); }
+            if(d&KEY_X&&s.selectedModule==MOD_RF){ ++s.rfSamples; }
+            if(d&KEY_X&&s.selectedModule==MOD_NETWORK){ network::tick(); gate::tick(); }
             if(d&KEY_X&&s.selectedModule==MOD_AI) ai::generate();
             if(d&KEY_X&&s.selectedModule==MOD_PROJECTS) engine::saveProject();
             if(d&KEY_Y&&s.selectedModule==MOD_QUANTUM) quantum::measure(q);
@@ -104,6 +105,13 @@ void update(SystemState&s){
             if(d&KEY_L&&s.selectedModule==MOD_MARAUDER) securitylab::setMode(securitylab::PASSIVE_RF);
             if(d&KEY_R&&s.selectedModule==MOD_MARAUDER) securitylab::setMode(securitylab::LAB_SIMULATION);
             if(d&KEY_X&&s.selectedModule==MOD_STUDIO){audio::tone(660,180);++s.studioTicks;}
+            if(d&KEY_Y&&s.selectedModule==MOD_SOUND) audio::stop();
+            if(d&KEY_Y&&s.selectedModule==MOD_SYSTEM) recovery::heartbeat();
+            if(d&KEY_Y&&s.selectedModule==MOD_CORE) recovery::heartbeat();
+            if(d&KEY_Y&&s.selectedModule==MOD_AI) ai::generate();
+            if(d&KEY_Y&&s.selectedModule==MOD_LAB) lab::tick();
+            if(d&KEY_Y&&s.selectedModule==MOD_DSP) (void)dsp::metrics();
+            if(d&KEY_Y&&s.selectedModule==MOD_PROJECTS) engine::resetProject();
             if(d&KEY_SELECT){quantum::reset(q);audio::stop();}
         }
         touchPosition t; touchRead(&t);
