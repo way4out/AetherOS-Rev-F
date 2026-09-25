@@ -36,7 +36,7 @@ jobs:
       - name: Gateway protocol HIL test
         run: |
           python3 tools/test_gateway_protocol.py
-      - name: Pass 5 structural verification
+      - name: Rev7+ Pass 3 structural verification
         run: |
           test -f source/network/gateway_manager.cpp
           test -f source/core/diagnostics.cpp
@@ -51,6 +51,10 @@ jobs:
           test -f source/security/aether_security_lab.cpp
           grep -q "TX LOCKED" source/ui/aether_ui.cpp
           grep -q "credentialCaptureLocked" source/security/aether_security_lab.h
+          test -f source/core/mission_control.cpp
+          grep -q "MISSION CONTROL" source/ui/aether_ui.cpp
+          grep -q "mission::tick" source/core/aether_core.cpp
+          grep -q "mission_control.o" Makefile
       - name: Verify
         run: |
           test -s AETHEROS.nds
