@@ -14,7 +14,7 @@ LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(TARGET).map
 LIBS := -lfat -lnds9
 LIBPATHS := -L$(LIBNDS)/lib
 
-OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o $(BUILD)/engine_modules.o $(BUILD)/aether_audio.o $(BUILD)/network_fabric.o $(BUILD)/radio_gateway.o $(BUILD)/remote_compute.o
+OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o $(BUILD)/engine_modules.o $(BUILD)/aether_audio.o $(BUILD)/network_fabric.o $(BUILD)/radio_gateway.o $(BUILD)/remote_compute.o $(BUILD)/gateway_protocol.o $(BUILD)/gateway_session.o $(BUILD)/gateway_security.o
 
 .PHONY: all clean
 all: $(TARGET).nds
@@ -53,6 +53,15 @@ $(BUILD)/radio_gateway.o: source/radio/radio_gateway.cpp | $(BUILD)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 $(BUILD)/remote_compute.o: source/compute/remote_compute.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/gateway_protocol.o: source/network/gateway_protocol.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/gateway_session.o: source/network/gateway_session.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/gateway_security.o: source/network/gateway_security.cpp | $(BUILD)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 $(TARGET).elf: $(OBJECTS)
