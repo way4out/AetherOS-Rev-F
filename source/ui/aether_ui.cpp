@@ -157,6 +157,7 @@ static void actionPanel(int m){
     case MOD_MARAUDER: iprintf("A Sample + analyze\nX Analyze\nY Consent/acknowledge\nL Passive RF\nR Lab Simulation\nSELECT Reset"); break;
     case MOD_STUDIO: iprintf("A Play/trigger\nX Performance hit\nY Stop\nL/R View/step\nSELECT Reset"); break;
     case MOD_SYSTEM: iprintf("A Mission refresh\nX Diagnostics snapshot\nY Recovery heartbeat\nSELECT Safe mode"); break;
+    case MOD_ANIMAL: iprintf("A Analyze animal signal\nX Animal > Human\nY Human > Animal\nL/R Species\nSELECT Reset"); break;
     case MOD_SETTINGS: iprintf("A Apply\nX Save config\nY Reset layout\nL/R Choose\nSELECT Save\nLANG %s",i18n::languageName()); break;
     }
     iprintf("\n%sL/R Module  B Home  TOUCH Direct%s",theme::accent(),"\x1b[37m");
