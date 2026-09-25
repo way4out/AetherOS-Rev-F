@@ -45,7 +45,7 @@ void update(const SystemState&){}
 
 static void card(int n,const SystemState&s){
     bool active=(n==s.selectedModule);
-    iprintf("%s%s %-10s",active?"\\x1b[33m>":"\\x1b[37m ",glyphs[n]);
+    iprintf("%s%s",active?"\\x1b[33m>":"\\x1b[37m "); iprintf("%-10s",glyphs[n]);
     if((n&1)==1) iprintf("\\n");
 }
 static void statusRibbon(const SystemState&s){
@@ -96,8 +96,8 @@ static void settingsScreen(const SystemState&s){
     title("PERSONALIZE / SETTINGS",s); selectTop();
     const auto&p=settings::current();
     char lat[20],lon[20];
-    snprintf(lat,sizeof(lat),"%s%d.%03d",p.latitudeE3<0?"-":"",p.latitudeE3<0?(-p.latitudeE3)/1000:p.latitudeE3/1000,p.latitudeE3<0?(-p.latitudeE3)%1000:p.latitudeE3%1000);
-    snprintf(lon,sizeof(lon),"%s%d.%03d",p.longitudeE3<0?"-":"",p.longitudeE3<0?(-p.longitudeE3)/1000:p.longitudeE3/1000,p.longitudeE3<0?(-p.longitudeE3)%1000:p.longitudeE3%1000);
+    snprintf(lat,sizeof(lat),"%s%d.%03d",p.latitudeE3<0?"-":"",(int)(p.latitudeE3<0?(-p.latitudeE3)/1000:p.latitudeE3/1000),(int)(p.latitudeE3<0?(-p.latitudeE3)%1000:p.latitudeE3%1000));
+    snprintf(lon,sizeof(lon),"%s%d.%03d",p.longitudeE3<0?"-":"",(int)(p.longitudeE3<0?(-p.longitudeE3)/1000:p.longitudeE3/1000),(int)(p.longitudeE3<0?(-p.longitudeE3)%1000:p.longitudeE3%1000));
     const u8 sel=p.selectedSetting;
     settingLine(0,"THEME",settings::themeName(p.theme),sel==0);
     settingLine(1,"LAYOUT",settings::layoutName(p.layout),sel==1);
