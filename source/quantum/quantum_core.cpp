@@ -18,7 +18,7 @@ void runBell(Simulator&q){reset(q);hadamard(q,0);cnot(q,0,1);q.bellState=true;q.
 void runGrover2(Simulator&q){q.qubits=2;reset(q);hadamard(q,0);hadamard(q,1);for(int i=0;i<nstates;i++)if(i==3){re[i]*=-1;im[i]*=-1;}float mr=0;for(int i=0;i<nstates;i++)mr+=re[i];mr/=nstates;for(int i=0;i<nstates;i++)re[i]=2*mr-re[i];normalize();q.algorithm=2;tick(q);}
 void runDeutschJozsa(Simulator&q){q.qubits=2;reset(q);hadamard(q,0);hadamard(q,1);cnot(q,0,1);hadamard(q,0);q.algorithm=3;tick(q);}
 void runQFT2(Simulator&q){q.qubits=2;reset(q);hadamard(q,0);cnot(q,0,1);hadamard(q,1);q.algorithm=4;tick(q);}
-void runTeleportation(Simulator&q){q.qubits=3;reset(q);hadamard(q,1);cnot(q,1,2);cnot(q,0,1);hadamard(q,0);q.algorithm=5;q.algorithm=2;tick(q);}
+void runTeleportation(Simulator&q){q.qubits=3;reset(q);hadamard(q,1);cnot(q,1,2);cnot(q,0,1);hadamard(q,0);q.algorithm=5;tick(q);}
 int measure(Simulator&q){int s=sample();q.lastMeasurement=s;q.shots++;collapse(s);tick(q);return s;}
 void tick(Simulator&q){for(int i=0;i<8;i++)q.probability[i]=(i<nstates)?re[i]*re[i]+im[i]*im[i]:0;}
 }
