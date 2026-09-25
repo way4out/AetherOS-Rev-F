@@ -59,7 +59,7 @@ static void doAction(SystemState&s){
     case MOD_NETWORK: network::tick(); break;
     case MOD_PROJECTS: engine::saveProject(); break;
     case MOD_RF: ++s.rfSamples; break;
-    case MOD_MARAUDER: ++s.marauderFrames; break;
+    case MOD_MARAUDER: security::sample(); security::analyze(); if(security::report().mode==security::LAB_SIMULATION) security::runLabSimulation(); ++s.marauderFrames; break;
     case MOD_STUDIO: studio::trigger(60+(s.studioTicks&7),100); ++s.studioTicks; break;
     case MOD_SETTINGS: settings::adjust(1); break;
     default: ++s.coreTicks; break;
