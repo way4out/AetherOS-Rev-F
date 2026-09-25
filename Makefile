@@ -1,14 +1,9 @@
 #---------------------------------------------------------------------------------
-# AetherOS Rev:F — Nintendo DS/DSi ARM9 build
-# Based on the current devkitPro NDS build rules.
-#---------------------------------------------------------------------------------
-
 .SUFFIXES:
-
+#---------------------------------------------------------------------------------
 ifeq ($(strip $(DEVKITARM)),)
-$(error "Please set DEVKITARM in your environment.")
+$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
 endif
-
 include $(DEVKITARM)/ds_rules
 
 TARGET := AETHEROS
@@ -17,14 +12,15 @@ SOURCES := source
 INCLUDES := include
 
 ARCH := -march=armv5te -mtune=arm946e-s -mthumb
-
-CFLAGS := -g -Wall -O2 -ffunction-sections -fdata-sections $(ARCH) -DARM9
-CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++17
+CFLAGS := -g -Wall -O2 -ffunction-sections -fdata-sections \
+	$(ARCH)
+CFLAGS += $(INCLUDE) -DARM9
+CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
 ASFLAGS := -g $(ARCH)
 LDFLAGS = -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 LIBS := -lnds9
-LIBDIRS := $(LIBNDS) $(PORTLIBS)
+LIBDIRS := $(LIBNDS)
 
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 
@@ -44,9 +40,9 @@ endif
 
 export OFILES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 
-export INCLUDE := $(foreach dir,$(INCLUDES),-iquote $(CURDIR)/$(dir)) \
-$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
--I$(CURDIR)/$(BUILD)
+export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+	$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+	-I$(CURDIR)/$(BUILD)
 
 export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
@@ -60,14 +56,15 @@ $(BUILD):
 
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds
+	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds $(TARGET).ds.gba
 
 else
 
-$(OUTPUT).nds: $(OUTPUT).elf
+DEPENDS := $(OFILES:.o=.d)
 
+$(OUTPUT).nds: $(OUTPUT).elf
 $(OUTPUT).elf: $(OFILES)
 
--include $(DEPSDIR)/*.d
+-include $(DEPENDS)
 
 endif
