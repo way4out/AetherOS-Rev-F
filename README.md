@@ -54,3 +54,7 @@ F6 usability/UI pass: dual-screen dashboard, clearer module navigation, touch ac
 - Completed action routing for DSP, RF, network, AI, and project workflows while preserving existing quantum, studio, settings, diagnostics, HIL, gateway, and recovery flows.
 - System health now exposes a single readiness score and subsystem matrix.
 - Pass 3 does not add unsafe jamming, credential theft, covert interception, unauthorized access, or destructive functions.
+
+
+## Rev8
+Visual/theme cleanup removes the Hobbit fallback entirely. Rev8 keeps configurable Aether, Night, Ocean, Quantum, and Forest themes with the dual-screen control surface, telemetry, module panels, settings, gateway diagnostics, and safety-locked security lab integrated into the DSi UI.
