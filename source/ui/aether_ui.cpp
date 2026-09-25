@@ -2,6 +2,9 @@
 #include "aether_ui.h"
 #include "../quantum/quantum_core.h"
 #include "../engine/engine_modules.h"
+#include "../dsp/aether_dsp.h"
+#include "../lab/aether_lab.h"
+#include "../ai/aether_ai.h"
 #include <nds.h>
 
 namespace aether::ui {
