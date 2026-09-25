@@ -59,9 +59,15 @@ jobs:
           grep -q "AETHEROS REVOLUTION X" source/ui/aether_ui.cpp
           test -f source/i18n/aether_i18n.cpp
           test -f source/i18n/aether_i18n.h
+          test -f source/animal/aether_animal.cpp
+          test -f source/animal/aether_animal.h
           grep -q "LANG_ZH" source/i18n/aether_i18n.h
           grep -q "LANG_AR" source/i18n/aether_i18n.h
+          grep -q "LANG_SIGN_ASL" source/i18n/aether_i18n.h
+          grep -q "MOD_ANIMAL" source/core/aether_core.h
+          grep -q "AETHER UNIVERSAL COMMUNICATION" source/ui/aether_ui.cpp
           grep -q "aether_i18n.o" Makefile
+          grep -q "aether_animal.o" Makefile
           ! grep -R "HOBBIT" source README.md || true
           grep -q "mission_control.o" Makefile
       - name: Verify
