@@ -29,6 +29,7 @@
 #include "../animal/aether_animal.h"
 #include "../codex/aether_yhwh_codex.h"
 #include "../harmonic/aether_prime_harmonic.h"
+#include "../heritage/aether_heritage.h"
 
 namespace { aether::quantum::Simulator q; bool servicesStarted=false; }
 
@@ -39,7 +40,7 @@ void init(SystemState&s){
     vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
     consoleDemoInit(); consoleClear(); s.touchReady=true;
     quantum::init(q); engine::init(); graph::init(); recovery::init(); governor::init(); diag::init(); hil::init(); mission::init(); capacity::init();
-    studio::init(); gate::init(); compute::init(); settings::init(); i18n::init(); codex::init(); harmonic::init(); i18n::adjust((int)settings::current().language-1); theme::init(); securitylab::init(); animal::init(); ui::init();
+    studio::init(); gate::init(); compute::init(); settings::init(); i18n::init(); codex::init(); harmonic::init(); i18n::adjust((int)settings::current().language-1); theme::init(); securitylab::init(); animal::init(); heritage::init(); ui::init();
 }
 static void startDeferredServices(SystemState&s){
     if(servicesStarted) return;
@@ -149,7 +150,7 @@ void update(SystemState&s){
         if((s.frame&63)==0){(void)dsp::metrics();ai::generate();}
         if(s.selectedModule==MOD_NETWORK&&(s.frame&127)==0)network::tick();
         gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame); securitylab::tick(); mission::tick(); capacity::tick(); ++s.securityTicks; ++s.missionTicks;
-        settings::tick(); i18n::tick(); animal::tick(); codex::tick(); harmonic::tick();
+        settings::tick(); i18n::tick(); animal::tick(); codex::tick(); harmonic::tick(); heritage::tick();
     }
     ui::update(s);
 }
