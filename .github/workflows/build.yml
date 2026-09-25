@@ -31,6 +31,10 @@ jobs:
           grep -q "HIL" source/ui/aether_ui.cpp
           grep -q "fft128" source/dsp/aether_dsp.h
           test -f source/studio/aether_studio.cpp
+          test -f source/settings/aether_settings.cpp
+          test -f source/theme/aether_theme.cpp
+          grep -q "MOD_SETTINGS" source/core/aether_core.h
+          grep -q "SETTINGS.CFG" source/settings/aether_settings.cpp
       - name: Verify
         run: |
           test -s AETHEROS.nds
