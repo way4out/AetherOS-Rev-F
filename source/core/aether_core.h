@@ -6,7 +6,7 @@ namespace aether {
 enum Module {
     MOD_CORE=0, MOD_QUANTUM, MOD_SOUND, MOD_DSP, MOD_LAB, MOD_AI,
     MOD_NETWORK, MOD_PROJECTS, MOD_RF, MOD_MARAUDER, MOD_STUDIO, MOD_SYSTEM,
-    MOD_COUNT
+    MOD_SETTINGS, MOD_COUNT
 };
 
 struct SystemState {
