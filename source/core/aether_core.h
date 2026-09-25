@@ -6,7 +6,7 @@ namespace aether {
 enum Module {
     MOD_CORE=0, MOD_QUANTUM, MOD_SOUND, MOD_DSP, MOD_LAB, MOD_AI,
     MOD_NETWORK, MOD_PROJECTS, MOD_RF, MOD_MARAUDER, MOD_STUDIO, MOD_SYSTEM,
-    MOD_ANIMAL, MOD_SETTINGS, MOD_COUNT
+    MOD_ANIMAL, MOD_CODEX, MOD_HARMONIC, MOD_SETTINGS, MOD_COUNT
 };
 
 struct SystemState {
@@ -14,7 +14,7 @@ struct SystemState {
     bool sdWriteReady; bool audioReady; bool quantumReady; bool projectSaved;
     u32 frame; int selectedModule; int screen; bool networkReady; bool gatewayConfigured;
     u32 dspTicks; u32 labTicks; u32 aiTicks; u32 rfSamples; u32 marauderFrames;
-    u32 studioTicks; u32 coreTicks; u32 securityTicks; u32 missionTicks; u32 animalTicks;
+    u32 studioTicks; u32 coreTicks; u32 securityTicks; u32 missionTicks; u32 animalTicks; u32 codexTicks; u32 harmonicTicks;
 };
 
 void init(SystemState&);
