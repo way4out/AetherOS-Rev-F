@@ -14,6 +14,7 @@
 #include "../theme/aether_theme.h"
 #include "../security/aether_security_lab.h"
 #include "../core/capacity_engine.h"
+#include "../i18n/aether_i18n.h"
 #include <nds.h>
 
 namespace aether::ui {
@@ -29,7 +30,7 @@ static void clearBottom(){selectBottom();consoleClear();}
 static void title(const char* t,const SystemState&s){
     clearTop(); selectTop();
     char stamp[40]; settings::timestamp(stamp,sizeof(stamp));
-    iprintf("%sAETHEROS REV9*%s // %s\n","\x1b[36m","\x1b[37m",t);
+    iprintf("%sAETHEROS REVOLUTION X%s // %s\n","\x1b[36m","\x1b[37m",t);
     iprintf("%s%s%s\n",theme::accent(),theme::sky(),"\x1b[37m");
     iprintf("%s%s%s\n",theme::accent(),theme::ground(),"\x1b[37m");
     iprintf("%s%s  %s%s\n",theme::accent(),theme::icon(),stamp,"\x1b[37m");
@@ -154,7 +155,7 @@ static void actionPanel(int m){
     case MOD_MARAUDER: iprintf("A Sample + analyze\nX Analyze\nY Consent/acknowledge\nL Passive RF\nR Lab Simulation\nSELECT Reset"); break;
     case MOD_STUDIO: iprintf("A Play/trigger\nX Performance hit\nY Stop\nL/R View/step\nSELECT Reset"); break;
     case MOD_SYSTEM: iprintf("A Mission refresh\nX Diagnostics snapshot\nY Recovery heartbeat\nSELECT Safe mode"); break;
-    case MOD_SETTINGS: iprintf("A Apply\nX Save config\nY Reset layout\nL/R Choose\nSELECT Save"); break;
+    case MOD_SETTINGS: iprintf("A Apply\nX Save config\nY Reset layout\nL/R Choose\nSELECT Save\nLANG %s",i18n::languageName()); break;
     }
     iprintf("\n%sL/R Module  B Home  TOUCH Direct%s",theme::accent(),"\x1b[37m");
 }

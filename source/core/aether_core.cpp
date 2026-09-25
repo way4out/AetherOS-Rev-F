@@ -1,4 +1,5 @@
 #include "aether_core.h"
+#include "../i18n/aether_i18n.h"
 #include "../benchmark/benchmark.h"
 #include "../hardware/hardware_profile.h"
 #include "../ui/aether_ui.h"
@@ -35,7 +36,7 @@ void init(SystemState&s){
     vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
     consoleDemoInit(); consoleClear(); s.touchReady=true;
     quantum::init(q); engine::init(); graph::init(); recovery::init(); governor::init(); diag::init(); hil::init(); mission::init(); capacity::init();
-    studio::init(); gate::init(); compute::init(); settings::init(); theme::init(); securitylab::init(); ui::init();
+    studio::init(); gate::init(); compute::init(); settings::init(); i18n::init(); i18n::adjust((int)settings::current().language-1); theme::init(); securitylab::init(); ui::init();
 }
 static void startDeferredServices(SystemState&s){
     if(servicesStarted) return;
@@ -133,7 +134,7 @@ void update(SystemState&s){
         if((s.frame&63)==0){(void)dsp::metrics();ai::generate();}
         if(s.selectedModule==MOD_NETWORK&&(s.frame&127)==0)network::tick();
         gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame); securitylab::tick(); mission::tick(); capacity::tick(); ++s.securityTicks; ++s.missionTicks;
-        settings::tick();
+        settings::tick(); i18n::tick();
     }
     ui::update(s);
 }

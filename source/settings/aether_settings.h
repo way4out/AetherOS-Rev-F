@@ -25,6 +25,7 @@ struct Profile {
     u8 visualLevel;
     u8 networkQuality;
     u8 selectedSetting;
+    u8 language;
 };
 
 void init();
