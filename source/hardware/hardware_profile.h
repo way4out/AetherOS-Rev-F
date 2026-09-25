@@ -1,2 +1,8 @@
 #pragma once
-namespace aether::hardware { bool sdAvailable(); }
+#include <nds.h>
+
+namespace aether::hardware {
+bool sdAvailable();
+bool ensureDirectories();
+bool writeBootMarker();
+}
