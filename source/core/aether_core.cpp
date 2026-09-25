@@ -8,9 +8,7 @@
 #include "../dsp/aether_dsp.h"
 #include "../lab/aether_lab.h"
 #include "../ai/aether_ai.h"
-#include "../dsp/aether_dsp.h"
-#include "../lab/aether_lab.h"
-#include "../ai/aether_ai.h"
+#include "../network/network_fabric.h"
 #include "../network/network_fabric.h"
 #include "../radio/radio_gateway.h"
 #include "../network/gateway_session.h"
@@ -49,7 +47,6 @@ static void startDeferredServices(SystemState&s){
     security::init();
     s.quantumReady=true;
     s.audioReady=audio::init();
-    dsp::init(); lab::init(); ai::init();
     dsp::init(); lab::init(); ai::init();
     s.networkReady=false;
     s.gatewayConfigured=radio::configured();
@@ -97,7 +94,9 @@ void update(SystemState&s){
         if(d&KEY_SELECT){quantum::reset(q);audio::stop();}
         if(!s.safeMode) quantum::tick(q);
         dsp::tick(); lab::tick(); ai::tick();
-        dsp::tick(); lab::tick(); ai::tick();
+        engine::tick();
+        if((s.frame & 63)==0){ dsp::Metrics dm=dsp::metrics(); (void)dm; ai::generate(); }
+        if(s.selectedModule==MOD_NETWORK && (s.frame & 127)==0) network::tick();
         graph::tick(); governor::tick(); recovery::heartbeat();
     }
     ui::update(s);
