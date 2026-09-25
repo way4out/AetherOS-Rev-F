@@ -13,6 +13,7 @@
 #include "../settings/aether_settings.h"
 #include "../theme/aether_theme.h"
 #include "../security/aether_security_lab.h"
+#include "../core/capacity_engine.h"
 #include <nds.h>
 
 namespace aether::ui {
@@ -28,7 +29,7 @@ static void clearBottom(){selectBottom();consoleClear();}
 static void title(const char* t,const SystemState&s){
     clearTop(); selectTop();
     char stamp[40]; settings::timestamp(stamp,sizeof(stamp));
-    iprintf("%sAETHEROS REV8%s // %s\n","\x1b[36m","\x1b[37m",t);
+    iprintf("%sAETHEROS REV9*%s // %s\n","\x1b[36m","\x1b[37m",t);
     iprintf("%s%s%s\n",theme::accent(),theme::sky(),"\x1b[37m");
     iprintf("%s%s%s\n",theme::accent(),theme::ground(),"\x1b[37m");
     iprintf("%s%s  %s%s\n",theme::accent(),theme::icon(),stamp,"\x1b[37m");
@@ -166,7 +167,7 @@ static void module(const SystemState&s){
     case MOD_LAB:{auto mtr=lab::metrics();iprintf("AETHER LAB\nSCIENCE + PROCEDURAL\nENTROPY %u\nMONTE %u\nAUTOMATA %u\nPHYSICS %u",mtr.entropy,mtr.monteCarlo,mtr.automata,mtr.physics);break;}
     case MOD_AI:{auto r=ai::result();auto ga=gate::status(gate::GATE_AI);iprintf("AETHER AI\nLOCAL MICRO-AI + GATEWAY\nCLASS %u CONF %u%%\nPATTERN %lu\nGATEWAY %s", (unsigned)r.classId,r.confidence,(unsigned long)r.pattern,ga.online?"ONLINE":"READY");break;}
     case MOD_NETWORK: iprintf("NETWORK FABRIC\nWIFI %s\n5G EXTERNAL GATEWAY\nSAT EXTERNAL GATEWAY\nBT EXTERNAL GATEWAY\nSDR EXTERNAL GATEWAY\nQPU EXTERNAL GATEWAY\nAUTHORIZED HARDWARE ONLY",s.networkReady?"LINK":"OFF");break;
-    case MOD_PROJECTS: iprintf("PROJECT SPACE\nAPRJ / CIRCUITS / SAMPLES\nPRESETS / PLUGINS\nCURRENT: %s\nA SAVE  X FABRIC",s.projectSaved?"SAVED":"NEW");break;
+    case MOD_PROJECTS: { auto cp=capacity::report(); iprintf("PROJECT SPACE\nAPRJ / CIRCUITS / SAMPLES\nPRESETS / PLUGINS\nCURRENT: %s\nA SAVE  X FABRIC\nCAPACITY %s",s.projectSaved?"SAVED":"NEW",capacity::status());break;}
     case MOD_RF: iprintf("RF LAB\nRECEIVE-ONLY / AUTHORIZED\nSPECTRUM / WATERFALL\nPEAKS / RSSI / BANDWIDTH\nSDR/TINYSA GATEWAY\nSAMPLES %lu",(unsigned long)s.rfSamples);break;
     case MOD_MARAUDER:{auto sr=securitylab::report();iprintf("AETHER MARAUDER / SECURITY LAB\nMODE %s\nCONSENT %s\nTX LOCKED %s\nCRED CAPTURE LOCKED %s\n\nPASSIVE RF: RSSI / CHANNEL / WATERFALL\nAUTHORIZED NET: OWNED/LAB TRAFFIC METADATA\nLAB SIM: SAFE ATTACK-CONCEPT SIMULATION\nGATEWAY HARDEN: PROTOCOL / AUTH / CRC\n\nSAMPLES %lu DEVICES %lu PACKETS %lu\nALERTS %lu LAB RUNS %lu\n\n%s",securitylab::modeName(sr.mode),sr.consent?"YES":"REQUIRED",sr.txLocked?"YES":"NO",sr.credentialCaptureLocked?"YES":"NO",(unsigned long)sr.samples,(unsigned long)sr.devices,(unsigned long)sr.packets,(unsigned long)sr.alerts,(unsigned long)sr.labRuns,securitylab::warning());break;}
     case MOD_STUDIO:{auto st=studio::state();iprintf("AETHER STUDIO\nDAW / TRACKER / PERFORMANCE\nBPM %u STEP %u/16 NOTE %u\nVOICES %u\nQUANTUM -> MUSIC\nLAB -> AUDIO",st.bpm,st.step,st.note,st.voices);break;}

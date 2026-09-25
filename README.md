@@ -58,3 +58,7 @@ F6 usability/UI pass: dual-screen dashboard, clearer module navigation, touch ac
 
 ## Rev8
 Visual/theme cleanup removes the Hobbit fallback entirely. Rev8 keeps configurable Aether, Night, Ocean, Quantum, and Forest themes with the dual-screen control surface, telemetry, module panels, settings, gateway diagnostics, and safety-locked security lab integrated into the DSi UI.
+
+
+## AetherOS REV9*
+Rev9* preserves all 13 control surfaces and adds a capacity engine exposing a 1024 MB-class SD-backed workspace model, 256 MB cache target, asset indexing, project telemetry, and capacity status in the Core and Projects surfaces. The executable remains sized for practical DSi boot compatibility; expansion is backed by SD rather than wasting boot-critical memory on padding. External QPU/AI/5G/SAT/SDR functions remain gateway capabilities.

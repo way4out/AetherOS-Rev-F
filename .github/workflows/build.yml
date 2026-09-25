@@ -1,4 +1,4 @@
-name: Build AetherOS for Nintendo DSi
+name: Build AetherOS REV9* for Nintendo DSi
 on:
   workflow_dispatch:
   push:
@@ -54,6 +54,10 @@ jobs:
           test -f source/core/mission_control.cpp
           grep -q "MISSION CONTROL" source/ui/aether_ui.cpp
           grep -q "mission::tick" source/core/aether_core.cpp
+          test -f source/core/capacity_engine.cpp
+          grep -q "1024" source/core/capacity_engine.cpp
+          grep -q "AETHEROS REV9" source/ui/aether_ui.cpp
+          ! grep -R "HOBBIT" source README.md || true
           grep -q "mission_control.o" Makefile
       - name: Verify
         run: |

@@ -14,7 +14,7 @@ LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(TARGET).map
 LIBS := -ldswifi9 -lfat -lnds9
 LIBPATHS := -L$(LIBNDS)/lib
 
-OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o $(BUILD)/engine_modules.o $(BUILD)/aether_audio.o $(BUILD)/aether_dsp.o $(BUILD)/aether_lab.o $(BUILD)/aether_ai.o $(BUILD)/network_fabric.o $(BUILD)/radio_gateway.o $(BUILD)/remote_compute.o $(BUILD)/gateway_protocol.o $(BUILD)/gateway_session.o $(BUILD)/gateway_security.o $(BUILD)/wifi_transport.o $(BUILD)/gateway_client.o $(BUILD)/gateway_manager.o $(BUILD)/system_graph.o $(BUILD)/recovery.o $(BUILD)/governor.o $(BUILD)/diagnostics.o $(BUILD)/hil.o $(BUILD)/aether_studio.o $(BUILD)/aether_settings.o $(BUILD)/aether_theme.o $(BUILD)/mission_control.o $(BUILD)/aether_security_lab.o
+OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o $(BUILD)/engine_modules.o $(BUILD)/aether_audio.o $(BUILD)/aether_dsp.o $(BUILD)/aether_lab.o $(BUILD)/aether_ai.o $(BUILD)/network_fabric.o $(BUILD)/radio_gateway.o $(BUILD)/remote_compute.o $(BUILD)/gateway_protocol.o $(BUILD)/gateway_session.o $(BUILD)/gateway_security.o $(BUILD)/wifi_transport.o $(BUILD)/gateway_client.o $(BUILD)/gateway_manager.o $(BUILD)/system_graph.o $(BUILD)/recovery.o $(BUILD)/governor.o $(BUILD)/diagnostics.o $(BUILD)/hil.o $(BUILD)/aether_studio.o $(BUILD)/aether_settings.o $(BUILD)/aether_theme.o $(BUILD)/mission_control.o $(BUILD)/aether_security_lab.o $(BUILD)/capacity_engine.o
 
 .PHONY: all clean
 all: $(TARGET).nds
@@ -62,3 +62,5 @@ $(BUILD)/aether_theme.o: source/theme/aether_theme.cpp | $(BUILD); $(COMPILE)
 
 $(BUILD)/mission_control.o: source/core/mission_control.cpp | $(BUILD); $(COMPILE)
 $(BUILD)/aether_security_lab.o: source/security/aether_security_lab.cpp | $(BUILD); $(COMPILE)
+
+$(BUILD)/capacity_engine.o: source/core/capacity_engine.cpp | $(BUILD); $(COMPILE)
