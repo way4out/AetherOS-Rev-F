@@ -26,6 +26,7 @@
 #include "../settings/aether_settings.h"
 #include "../theme/aether_theme.h"
 #include "../security/aether_security_lab.h"
+#include "../animal/aether_animal.h"
 
 namespace { aether::quantum::Simulator q; bool servicesStarted=false; }
 
@@ -36,7 +37,7 @@ void init(SystemState&s){
     vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
     consoleDemoInit(); consoleClear(); s.touchReady=true;
     quantum::init(q); engine::init(); graph::init(); recovery::init(); governor::init(); diag::init(); hil::init(); mission::init(); capacity::init();
-    studio::init(); gate::init(); compute::init(); settings::init(); i18n::init(); i18n::adjust((int)settings::current().language-1); theme::init(); securitylab::init(); ui::init();
+    studio::init(); gate::init(); compute::init(); settings::init(); i18n::init(); i18n::adjust((int)settings::current().language-1); theme::init(); securitylab::init(); animal::init(); ui::init();
 }
 static void startDeferredServices(SystemState&s){
     if(servicesStarted) return;
@@ -66,6 +67,7 @@ static void doAction(SystemState&s){
     case MOD_MARAUDER: securitylab::sample(); securitylab::analyze(); if(securitylab::report().mode==securitylab::LAB_SIMULATION) securitylab::runLabSimulation(); ++s.marauderFrames; break;
     case MOD_STUDIO: studio::trigger(60+(s.studioTicks&7),100); ++s.studioTicks; break;
     case MOD_SYSTEM: mission::refresh(); diag::tick(s.frame); recovery::heartbeat(); break;
+    case MOD_ANIMAL: animal::analyze(); animal::synthesize(); ++s.animalTicks; break;
     case MOD_SETTINGS: settings::adjust(1); break;
     default: ++s.coreTicks; break;
     }
@@ -111,6 +113,8 @@ void update(SystemState&s){
             if(d&KEY_Y&&s.selectedModule==MOD_CORE) recovery::heartbeat();
             if(d&KEY_Y&&s.selectedModule==MOD_AI) ai::generate();
             if(d&KEY_Y&&s.selectedModule==MOD_LAB) lab::tick();
+            if(d&KEY_X&&s.selectedModule==MOD_ANIMAL) animal::analyze();
+            if(d&KEY_Y&&s.selectedModule==MOD_ANIMAL) animal::synthesize();
             if(d&KEY_Y&&s.selectedModule==MOD_DSP) (void)dsp::metrics();
             if(d&KEY_Y&&s.selectedModule==MOD_PROJECTS) engine::resetProject();
             if(d&KEY_SELECT){quantum::reset(q);audio::stop();}
@@ -134,7 +138,7 @@ void update(SystemState&s){
         if((s.frame&63)==0){(void)dsp::metrics();ai::generate();}
         if(s.selectedModule==MOD_NETWORK&&(s.frame&127)==0)network::tick();
         gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame); securitylab::tick(); mission::tick(); capacity::tick(); ++s.securityTicks; ++s.missionTicks;
-        settings::tick(); i18n::tick();
+        settings::tick(); i18n::tick(); animal::tick();
     }
     ui::update(s);
 }
