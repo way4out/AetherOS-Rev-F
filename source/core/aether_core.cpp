@@ -18,6 +18,8 @@
 #include "recovery.h"
 #include "governor.h"
 #include "diagnostics.h"
+#include "hil.h"
+#include "../studio/aether_studio.h"
 
 namespace { aether::quantum::Simulator q; bool servicesStarted=false; }
 
@@ -37,6 +39,8 @@ void init(SystemState&s){
     recovery::init();
     governor::init();
     diag::init();
+    hil::init();
+    studio::init();
     gate::init();
     compute::init();
     ui::init();
@@ -52,7 +56,7 @@ static void startDeferredServices(SystemState&s){
     security::init();
     s.quantumReady=true;
     s.audioReady=audio::init();
-    dsp::init(); lab::init(); ai::init();
+    dsp::init(); lab::init(); ai::init(); studio::init();
     network::init();
     s.networkReady=network::status(network::LINK_WIFI).available;
     s.gatewayConfigured=radio::configured();
@@ -87,7 +91,7 @@ void update(SystemState&s){
                 case MOD_PROJECTS: engine::saveProject(); break;
                 case MOD_RF: ++s.rfSamples; break;
                 case MOD_MARAUDER: ++s.marauderFrames; break;
-                case MOD_STUDIO: ++s.studioTicks; break;
+                case MOD_STUDIO: studio::trigger(60+(s.studioTicks&7),100); ++s.studioTicks; break;
                 default: ++s.coreTicks; break;
             }
             s.projectSaved=engine::projectExists();
@@ -99,7 +103,7 @@ void update(SystemState&s){
         if(d&KEY_X&&s.selectedModule==MOD_STUDIO){audio::tone(660,180);++s.studioTicks;}
         if(d&KEY_SELECT){quantum::reset(q);audio::stop();}
         if(!s.safeMode) quantum::tick(q);
-        dsp::tick(); lab::tick(); ai::tick();
+        dsp::tick(); lab::tick(); ai::tick(); studio::tick(); hil::tick();
         engine::tick();
         if((s.frame&63)==0){(void)dsp::metrics();ai::generate();}
         if(s.selectedModule==MOD_NETWORK&&(s.frame&127)==0)network::tick();
