@@ -38,12 +38,12 @@ const char* ground(){
 }
 const char* accent(){
     switch(active()){
-    case settings::THEME_HOBBIT:return "[33m";
-    case settings::THEME_OCEAN:return "[36m";
-    case settings::THEME_QUANTUM:return "[35m";
-    case settings::THEME_NIGHT:return "[34m";
-    case settings::THEME_FOREST:return "[32m";
-    default:return "[36m";
+    case settings::THEME_HOBBIT:return "\\x1b[33m";
+    case settings::THEME_OCEAN:return "\\x1b[36m";
+    case settings::THEME_QUANTUM:return "\\x1b[35m";
+    case settings::THEME_NIGHT:return "\\x1b[34m";
+    case settings::THEME_FOREST:return "\\x1b[32m";
+    default:return "\\x1b[36m";
     }
 }
 const char* icon(){
