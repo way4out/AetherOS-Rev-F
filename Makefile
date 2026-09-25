@@ -11,7 +11,7 @@ CFLAGS := -g -Wall -O2 -ffunction-sections -fdata-sections $(ARCH) -DARM9
 CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
 INCLUDES := -I$(CURDIR)/source -I$(CURDIR)/include -I$(CURDIR)/build -I$(LIBNDS)/include
 LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(TARGET).map
-LIBS := -lnds9
+LIBS := -lfat -lnds9
 LIBPATHS := -L$(LIBNDS)/lib
 
 OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o
