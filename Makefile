@@ -6,51 +6,47 @@ include $(DEVKITARM)/ds_rules
 
 TARGET := AETHEROS
 BUILD := build
-SOURCES := source source/core source/hardware source/benchmark source/ui source/quantum
-INCLUDES := include source build
-
 ARCH := -march=armv5te -mtune=arm946e-s -mthumb
-CFLAGS := -g -Wall -O2 -ffunction-sections -fdata-sections $(ARCH)
-CFLAGS += $(INCLUDE) -DARM9
+CFLAGS := -g -Wall -O2 -ffunction-sections -fdata-sections $(ARCH) -DARM9
 CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
-ASFLAGS := -g $(ARCH)
-LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
-
+INCLUDES := -I$(CURDIR)/source -I$(CURDIR)/include -I$(CURDIR)/build -I$(LIBNDS)/include
+LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(TARGET).map
 LIBS := -lnds9
-LIBDIRS := $(LIBNDS)
+LIBPATHS := -L$(LIBNDS)/lib
 
-ifneq ($(BUILD),$(notdir $(CURDIR)))
-export OUTPUT := $(CURDIR)/$(TARGET)
-export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
-export DEPSDIR := $(CURDIR)/$(BUILD)
+OBJECTS := $(BUILD)/main.o $(BUILD)/aether_core.o $(BUILD)/hardware_profile.o $(BUILD)/benchmark.o $(BUILD)/aether_ui.o $(BUILD)/quantum_core.o
 
-CFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-SFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-
-ifeq ($(strip $(CPPFILES)),)
-export LD := $(CC)
-else
-export LD := $(CXX)
-endif
-
-export OFILES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
-export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) $(foreach dir,$(LIBDIRS),-I$(dir)/include) -I$(CURDIR)/$(BUILD)
-export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
-
-.PHONY: all $(BUILD) clean
-all: $(OUTPUT).nds
+.PHONY: all clean
+all: $(TARGET).nds
 
 $(BUILD):
-	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@mkdir -p $@
+
+$(BUILD)/main.o: source/main.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/aether_core.o: source/core/aether_core.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/hardware_profile.o: source/hardware/hardware_profile.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/benchmark.o: source/benchmark/benchmark.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/aether_ui.o: source/ui/aether_ui.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(BUILD)/quantum_core.o: source/quantum/quantum_core.cpp | $(BUILD)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+$(TARGET).elf: $(OBJECTS)
+	@$(CXX) $(LIBPATHS) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
+
+$(TARGET).nds: $(TARGET).elf
+	@ndstool -c $@ -9 $(TARGET).elf
+
+-include $(BUILD)/*.d
 
 clean:
-	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds $(TARGET).ds.gba
-
-else
-DEPENDS := $(OFILES:.o=.d)
-$(OUTPUT).nds: $(OUTPUT).elf
-$(OUTPUT).elf: $(OFILES)
--include $(DEPENDS)
-endif
+	@rm -rf $(BUILD) $(TARGET).elf $(TARGET).nds $(TARGET).map
