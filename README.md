@@ -45,3 +45,12 @@ F6 usability/UI pass: dual-screen dashboard, clearer module navigation, touch ac
 - Gateway Hardening mode focuses on protocol framing, CRC, authentication state, diagnostics, and resilience.
 - Transmit/jamming, credential capture, covert interception, unauthorized access, and destructive operations are deliberately locked out of the Rev7 on-device security interface. External radio hardware is still required for RF functions.
 - The interface displays the authorization/safety state before security-lab operation.
+
+
+## AetherOS Revolution 7+ — Pass 3
+- Integrated Mission Control health surface spanning boot, SD/config, project storage, local compute modules, network, gateway, recovery, and the security boundary.
+- Added persistent runtime heartbeat/health scoring without pretending unavailable external hardware is online.
+- Completed Marauder controls: authorization acknowledgement, passive-RF mode selection, and non-transmitting lab-simulation mode selection from the DSi controls.
+- Completed action routing for DSP, RF, network, AI, and project workflows while preserving existing quantum, studio, settings, diagnostics, HIL, gateway, and recovery flows.
+- System health now exposes a single readiness score and subsystem matrix.
+- Pass 3 does not add unsafe jamming, credential theft, covert interception, unauthorized access, or destructive functions.
