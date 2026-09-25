@@ -7,12 +7,12 @@ enum Language : u8 {
  LANG_RU, LANG_UK, LANG_BG, LANG_SR, LANG_HR, LANG_SL, LANG_HE, LANG_AR, LANG_FA, LANG_HI,
  LANG_BN, LANG_UR, LANG_TA, LANG_TE, LANG_MR, LANG_GU, LANG_KN, LANG_ML, LANG_TH, LANG_VI,
  LANG_ID, LANG_MS, LANG_FIL, LANG_SW, LANG_AM, LANG_ZU, LANG_XH, LANG_YO, LANG_JA, LANG_KO,
- LANG_ZH, LANG_SIGN_ASL, LANG_SIGN_BSL, LANG_SIGN_ISL, LANG_SIGN_JSL, LANG_COUNT
+ LANG_ZH, LANG_SIGN_ASL, LANG_SIGN_BSL, LANG_SIGN_ISL, LANG_SIGN_JSL, LANG_PACK, LANG_COUNT
 };
 struct LanguageInfo { Language id; const char* code; const char* name; bool builtIn; };
 void init(); void tick(); bool loadPack(const char* code); bool save();
 void next(); void previous(); void adjust(int delta);
-Language current(); const LanguageInfo& info(Language);
+Language current(); const LanguageInfo& info(Language); const char* currentCode();
 const char* text(const char* key); const char* languageName();
 bool externalPackReady(); unsigned languageCount(); bool selectCode(const char* code);
 }
