@@ -65,9 +65,21 @@ jobs:
           grep -q "LANG_AR" source/i18n/aether_i18n.h
           grep -q "LANG_SIGN_ASL" source/i18n/aether_i18n.h
           grep -q "MOD_ANIMAL" source/core/aether_core.h
+          grep -q "MOD_CODEX" source/core/aether_core.h
+          grep -q "MOD_HARMONIC" source/core/aether_core.h
+          test -f source/codex/aether_yhwh_codex.cpp
+          test -f source/codex/aether_yhwh_codex.h
+          test -f source/harmonic/aether_prime_harmonic.cpp
+          test -f source/harmonic/aether_prime_harmonic.h
+          test -f "assets/nitrofs/REVF/BIBLIO/YHWH-CODEX/Revelations"
+          grep -q "REVOLUTION_INVARIANT" source/codex/aether_yhwh_codex.h
+          grep -q "PRIME NUMERICAL HARMONIC NODE" source/ui/aether_ui.cpp
           grep -q "AETHER UNIVERSAL COMMUNICATION" source/ui/aether_ui.cpp
           grep -q "aether_i18n.o" Makefile
           grep -q "aether_animal.o" Makefile
+          grep -q "aether_yhwh_codex.o" Makefile
+          grep -q "aether_prime_harmonic.o" Makefile
+          grep -q "assets/nitrofs" Makefile
           ! grep -R "HOBBIT" source README.md || true
           grep -q "mission_control.o" Makefile
       - name: Verify
