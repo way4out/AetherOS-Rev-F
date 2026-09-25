@@ -109,7 +109,7 @@ static void bottomDesktop(const SystemState&s){
     iprintf("PROFILE: YOU
 THEME: %s
 LAYOUT: %s
-",theme::themeName(theme::active()),settings::layoutName(p.layout));
+",settings::themeName(theme::active()),settings::layoutName(p.layout));
     iprintf("%s
 ",settings::locationLabel());
     iprintf("
@@ -152,7 +152,7 @@ static void settingsScreen(const SystemState&s){
     settingLine(10,"LOCATION",p.locationValid?"SET":"UNSET",sel==10);
     settingLine(11,"LAT",lat,sel==11);
     settingLine(12,"LON",lon,sel==12);
-    settingLine(13,"UTC MIN",p.utcOffsetMinutes>=0?"+/-":"SET",sel==13);
+    settingLine(13,"UTC MIN",p.utcOffsetMinutes>=0?"+":"-",sel==13);
     settingLine(14,"QUBITS","2-8",sel==14);
     settingLine(15,"VOICES","1-16",sel==15);
     settingLine(16,"VISUAL","0-4",sel==16);
