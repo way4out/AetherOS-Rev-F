@@ -62,3 +62,7 @@ Visual/theme cleanup removes the Hobbit fallback entirely. Rev8 keeps configurab
 
 ## AetherOS REV9*
 Rev9* preserves all 13 control surfaces and adds a capacity engine exposing a 1024 MB-class SD-backed workspace model, 256 MB cache target, asset indexing, project telemetry, and capacity status in the Core and Projects surfaces. The executable remains sized for practical DSi boot compatibility; expansion is backed by SD rather than wasting boot-critical memory on padding. External QPU/AI/5G/SAT/SDR functions remain gateway capabilities.
+
+
+## Rev9 Operability
+All 13 surfaces expose dedicated controls, action feedback, and direct touch/button navigation.
