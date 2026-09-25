@@ -139,21 +139,24 @@ static void settingsBottom(const SystemState&s){
 }
 static void actionPanel(int m){
     clearBottom(); selectBottom();
-    iprintf("%s%s / ACTIONS%s\n",theme::accent(),names[m],"\x1b[37m");
-    iprintf("----------------\n");
+    iprintf("%s%s / CONTROL SURFACE%s\n",theme::accent(),names[m],"\x1b[37m");
+    iprintf("------------------------\n");
     switch(m){
-    case MOD_QUANTUM: iprintf("A Bell  X Grover\nY Measure\nL Deutsch-Jozsa\nR QFT\nSELECT Reset"); break;
-    case MOD_STUDIO: iprintf("A Play/trigger\nX Performance\nL/R View\nSELECT Stop"); break;
-    case MOD_NETWORK: iprintf("A Link test\nX Gateway view\nSELECT Reset"); break;
-    case MOD_DSP: iprintf("A Analyze\nX FFT snapshot\nSELECT Reset"); break;
-    case MOD_AI: iprintf("A Generate\nX Classify\nSELECT Reset"); break;
-    case MOD_LAB: iprintf("A Run lab tick\nX New sample\nSELECT Reset"); break;
-    case MOD_PROJECTS: iprintf("A Save project\nX Fabric\nSELECT Reset"); break;
-    case MOD_RF: iprintf("A Sample\nX Analyze band\nSELECT Reset"); break;
-    case MOD_MARAUDER: iprintf("A Sample / Analyze\nX Analyze\nY Acknowledge\nL Passive RF\nR Lab Simulation\nSELECT Reset"); break;
-    default: iprintf("A Open action\nB Home\nSELECT Reset"); break;
+    case MOD_CORE: iprintf("A System tick / refresh\nX Health snapshot\nY Recovery heartbeat\nSELECT Safe reset"); break;
+    case MOD_QUANTUM: iprintf("A Bell / trigger\nX Grover search\nY Measure\nL Deutsch-Jozsa\nR QFT\nSELECT Reset"); break;
+    case MOD_SOUND: iprintf("A Test tone\nX Performance tone\nY Stop audio\nL/R Pitch step\nSELECT Reset"); break;
+    case MOD_DSP: iprintf("A Analyze signal\nX FFT snapshot\nY Recompute\nSELECT Reset"); break;
+    case MOD_LAB: iprintf("A Run experiment\nX New sample\nY Recompute\nSELECT Reset"); break;
+    case MOD_AI: iprintf("A Generate pattern\nX Classify\nY Regenerate\nSELECT Reset"); break;
+    case MOD_NETWORK: iprintf("A Refresh links\nX Gateway/remote view\nY Queue test\nSELECT Reset"); break;
+    case MOD_PROJECTS: iprintf("A Save project\nX Fabric view\nY New project\nSELECT Reset"); break;
+    case MOD_RF: iprintf("A Capture sample\nX Analyze band\nY Refresh telemetry\nSELECT Reset"); break;
+    case MOD_MARAUDER: iprintf("A Sample + analyze\nX Analyze\nY Consent/acknowledge\nL Passive RF\nR Lab Simulation\nSELECT Reset"); break;
+    case MOD_STUDIO: iprintf("A Play/trigger\nX Performance hit\nY Stop\nL/R View/step\nSELECT Reset"); break;
+    case MOD_SYSTEM: iprintf("A Mission refresh\nX Diagnostics snapshot\nY Recovery heartbeat\nSELECT Safe mode"); break;
+    case MOD_SETTINGS: iprintf("A Apply\nX Save config\nY Reset layout\nL/R Choose\nSELECT Save"); break;
     }
-    iprintf("\n%sL/R Module  B Home%s",theme::accent(),"\x1b[37m");
+    iprintf("\n%sL/R Module  B Home  TOUCH Direct%s",theme::accent(),"\x1b[37m");
 }
 static void module(const SystemState&s){
     const int m=s.selectedModule;
