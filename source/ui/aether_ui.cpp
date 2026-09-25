@@ -45,7 +45,7 @@ static void card(int n,const SystemState&s){
     if((n&1)==1) iprintf("\n");
 }
 static void topDesktop(const SystemState&s){
-    title("AETHER DESKTOP",&s);
+    title("AETHER DESKTOP",s);
     selectTop();
     iprintf("\x1b[32m        A E T H E R   V A L L E Y\n");
     iprintf("\x1b[37m     /\\        .        /\\       .\n");
