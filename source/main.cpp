@@ -5,7 +5,7 @@ int main() {
     aether::SystemState state{};
     aether::init(state);
 
-    while (pmMainLoop()) {
+    while (1) {
         aether::update(state);
         aether::render(state);
         swiWaitForVBlank();
