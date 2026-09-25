@@ -1,4 +1,5 @@
 #include "wifi_transport.h"
+#include <nds.h>
 #include <dswifi9.h>
 #include <sys/socket.h>
 #include <netdb.h>
