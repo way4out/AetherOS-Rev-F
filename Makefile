@@ -1,70 +1,35 @@
-#---------------------------------------------------------------------------------
 .SUFFIXES:
-#---------------------------------------------------------------------------------
 ifeq ($(strip $(DEVKITARM)),)
-$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+$(error "Please set DEVKITARM in your environment.")
 endif
 include $(DEVKITARM)/ds_rules
 
 TARGET := AETHEROS
 BUILD := build
-SOURCES := source
-INCLUDES := include build
-
+SOURCE := source/main.cpp
 ARCH := -march=armv5te -mtune=arm946e-s -mthumb
-CFLAGS := -g -Wall -O2 -ffunction-sections -fdata-sections \
-	$(ARCH)
-CFLAGS += $(INCLUDE) -DARM9
+CFLAGS := -g -Wall -O2 -ffunction-sections -fdata-sections $(ARCH) -DARM9
 CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
-ASFLAGS := -g $(ARCH)
-LDFLAGS = -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
-
+INCLUDES := -I$(CURDIR)/source -I$(CURDIR)/build -I$(LIBNDS)/include
+LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(TARGET).map
 LIBS := -lnds9
-LIBDIRS := $(LIBNDS)
+LIBPATHS := -L$(LIBNDS)/lib
 
-ifneq ($(BUILD),$(notdir $(CURDIR)))
-
-export OUTPUT := $(CURDIR)/$(TARGET)
-export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
-export DEPSDIR := $(CURDIR)/$(BUILD)
-
-CFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-SFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-
-ifeq ($(strip $(CPPFILES)),)
-export LD := $(CC)
-else
-export LD := $(CXX)
-endif
-
-export OFILES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
-
-export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
-	$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-	-I$(CURDIR)/$(BUILD)
-
-export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
-
-.PHONY: all $(BUILD) clean
-
-all: $(OUTPUT).nds
+.PHONY: all clean
+all: $(TARGET).nds
 
 $(BUILD):
-	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@mkdir -p $@
 
-clean:
-	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds $(TARGET).ds.gba
+$(BUILD)/main.o: $(SOURCE) | $(BUILD)
+	@echo compiling main.cpp
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
-else
+$(TARGET).elf: $(BUILD)/main.o
+	@echo linking $(TARGET).elf
+	@$(CXX) $(LIBPATHS) $(LDFLAGS) $^ $(LIBS) -o $@
 
-DEPENDS := $(OFILES:.o=.d)
+$(TARGET).nds: $(TARGET).elf
+	@echo packaging $(TARGET).nds
 
-$(OUTPUT).nds: $(OUTPUT).elf
-$(OUTPUT).elf: $(OFILES)
-
--include $(DEPENDS)
-
-endif
+-include $(BUILD)/*.d
