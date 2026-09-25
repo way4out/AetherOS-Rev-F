@@ -22,6 +22,7 @@
 #include "../studio/aether_studio.h"
 #include "../settings/aether_settings.h"
 #include "../theme/aether_theme.h"
+#include "../security/aether_security_lab.h"
 
 namespace { aether::quantum::Simulator q; bool servicesStarted=false; }
 
@@ -32,7 +33,7 @@ void init(SystemState&s){
     vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
     consoleDemoInit(); consoleClear(); s.touchReady=true;
     quantum::init(q); engine::init(); graph::init(); recovery::init(); governor::init(); diag::init(); hil::init();
-    studio::init(); gate::init(); compute::init(); settings::init(); theme::init(); ui::init();
+    studio::init(); gate::init(); compute::init(); settings::init(); theme::init(); security::init(); ui::init();
 }
 static void startDeferredServices(SystemState&s){
     if(servicesStarted) return; servicesStarted=true;
@@ -112,7 +113,7 @@ void update(SystemState&s){
         dsp::tick(); lab::tick(); ai::tick(); studio::tick(); hil::tick(); engine::tick();
         if((s.frame&63)==0){(void)dsp::metrics();ai::generate();}
         if(s.selectedModule==MOD_NETWORK&&(s.frame&127)==0)network::tick();
-        gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame);
+        gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame); security::tick(); ++s.securityTicks;
         settings::tick();
     }
     ui::update(s);
