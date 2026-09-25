@@ -27,17 +27,19 @@
 #include "../theme/aether_theme.h"
 #include "../security/aether_security_lab.h"
 #include "../animal/aether_animal.h"
+#include "../codex/aether_yhwh_codex.h"
+#include "../harmonic/aether_prime_harmonic.h"
 
 namespace { aether::quantum::Simulator q; bool servicesStarted=false; }
 
 namespace aether {
 void init(SystemState&s){
-    s={false,false,false,false,false,false,false,false,0,0,0,false,false,0,0,0,0,0,0,0,0};
+    s={false,false,false,false,false,false,false,false,0,0,0,false,false,0,0,0,0,0,0,0,0,0,0,0};
     videoSetMode(MODE_0_2D); videoSetModeSub(MODE_0_2D);
     vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
     consoleDemoInit(); consoleClear(); s.touchReady=true;
     quantum::init(q); engine::init(); graph::init(); recovery::init(); governor::init(); diag::init(); hil::init(); mission::init(); capacity::init();
-    studio::init(); gate::init(); compute::init(); settings::init(); i18n::init(); i18n::adjust((int)settings::current().language-1); theme::init(); securitylab::init(); animal::init(); ui::init();
+    studio::init(); gate::init(); compute::init(); settings::init(); i18n::init(); codex::init(); harmonic::init(); i18n::adjust((int)settings::current().language-1); theme::init(); securitylab::init(); animal::init(); ui::init();
 }
 static void startDeferredServices(SystemState&s){
     if(servicesStarted) return;
@@ -68,6 +70,8 @@ static void doAction(SystemState&s){
     case MOD_STUDIO: studio::trigger(60+(s.studioTicks&7),100); ++s.studioTicks; break;
     case MOD_SYSTEM: mission::refresh(); diag::tick(s.frame); recovery::heartbeat(); break;
     case MOD_ANIMAL: animal::analyze(); animal::synthesize(); ++s.animalTicks; break;
+    case MOD_CODEX: codex::tick(); ++s.codexTicks; break;
+    case MOD_HARMONIC: harmonic::tick(); ++s.harmonicTicks; break;
     case MOD_SETTINGS: settings::adjust(1); break;
     default: ++s.coreTicks; break;
     }
@@ -117,6 +121,11 @@ void update(SystemState&s){
             if(d&KEY_Y&&s.selectedModule==MOD_ANIMAL){ animal::setDirection(animal::HUMAN_TO_ANIMAL); animal::synthesize(); }
             if(d&KEY_L&&s.selectedModule==MOD_ANIMAL) animal::setSpecies((animal::Species)((animal::report().species+animal::SPECIES_COUNT-1)%animal::SPECIES_COUNT));
             if(d&KEY_R&&s.selectedModule==MOD_ANIMAL) animal::setSpecies((animal::Species)((animal::report().species+1)%animal::SPECIES_COUNT));
+            if(d&KEY_X&&s.selectedModule==MOD_HARMONIC) harmonic::nextPrime();
+            if(d&KEY_Y&&s.selectedModule==MOD_HARMONIC) harmonic::setVoid((s16)(harmonic::node().voidVector+1));
+            if(d&KEY_L&&s.selectedModule==MOD_HARMONIC) harmonic::setDampener(harmonic::node().dampener>100?harmonic::node().dampener-100:0);
+            if(d&KEY_R&&s.selectedModule==MOD_HARMONIC) harmonic::setAmplifier(harmonic::node().amplifier+100);
+            if(d&KEY_X&&s.selectedModule==MOD_CODEX) codex::init();
             if(d&KEY_Y&&s.selectedModule==MOD_DSP) (void)dsp::metrics();
             if(d&KEY_Y&&s.selectedModule==MOD_PROJECTS) engine::resetProject();
             if(d&KEY_SELECT){quantum::reset(q);audio::stop();}
@@ -140,7 +149,7 @@ void update(SystemState&s){
         if((s.frame&63)==0){(void)dsp::metrics();ai::generate();}
         if(s.selectedModule==MOD_NETWORK&&(s.frame&127)==0)network::tick();
         gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame); securitylab::tick(); mission::tick(); capacity::tick(); ++s.securityTicks; ++s.missionTicks;
-        settings::tick(); i18n::tick(); animal::tick();
+        settings::tick(); i18n::tick(); animal::tick(); codex::tick(); harmonic::tick();
     }
     ui::update(s);
 }
