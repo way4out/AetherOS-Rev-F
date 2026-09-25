@@ -47,6 +47,8 @@ $(BUILD)/system_graph.o: source/core/system_graph.cpp | $(BUILD); $(COMPILE)
 $(BUILD)/recovery.o: source/core/recovery.cpp | $(BUILD); $(COMPILE)
 $(BUILD)/governor.o: source/core/governor.cpp | $(BUILD); $(COMPILE)
 $(BUILD)/diagnostics.o: source/core/diagnostics.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/hil.o: source/core/hil.cpp | $(BUILD); $(COMPILE)
+$(BUILD)/aether_studio.o: source/studio/aether_studio.cpp | $(BUILD); $(COMPILE)
 $(TARGET).elf: $(OBJECTS)
 	@$(CXX) $(LIBPATHS) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
 $(TARGET).nds: $(TARGET).elf
