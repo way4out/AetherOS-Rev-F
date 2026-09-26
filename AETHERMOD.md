@@ -1,23 +1,31 @@
 # AetherMod 7.0 Apex — Nintendo DSi / DS Release
 
-Pass 1 / 5 foundation release.
+## Pass 2 / 5 — Corpus + Interactive Data Foundation
 
-## Pass 1 foundation
-- New AetherMod 7.0 Apex identity.
-- Three-second START-button recovery path opens a confirmation screen.
-- Confirming BASE RESET restores factory/default runtime and settings, removes the saved settings file, and recreates a clean base save when storage is available.
-- Installed corpus/data files are preserved by reset.
-- Reset mode is protected from normal module-state validation.
-- Universal recovery behavior is designed for DSi/DS button operation and will be expanded across touch UI in later passes.
+Pass 1 established the recovery foundation and three-second START-button BASE RESET. Pass 2 expands the offline data layer used by the Codex and Animal AI systems while preserving DSi-safe, local-first behavior.
 
-## Planned five-pass expansion
-- YHWH Biblio Codex corpus/index and integration engine.
-- Animal AI interaction/analysis expansion.
-- Marauder/RF authorized gateway and warning/index expansion.
-- TinySA hybrid visual + text interface.
-- Calculator touch keypad and advanced display.
-- DAW, DSP/FFT, telemetry, AI Home, Network Gateway, AI Safety, Family Safety, System/Service, General Settings, Quantum Core and unified touch/navigation upgrades.
+### YHWH Biblio Codex
+- Added `data/AetherMod/codex_manifest.txt` with the complete indexed book list, YHWH/יהוה/LORD/ADONAI name-layer metadata, and a structured-corpus contract.
+- Offline corpus remains SD-first.
+- Recommended structured format: `BOOK|CHAPTER|VERSE|TEXT`.
+- Full text can be supplied through public-domain or properly licensed UTF-8 corpus files.
+- The application does not represent a particular translation as divinely authored.
 
-The Codex framework supports public-domain or properly licensed UTF-8 corpora. The software does not claim divine authorship or authority; corpus text is supplied by its respective source/license.
+### Animal AI
+- Added `data/AetherMod/animal_profiles.txt`.
+- Expanded the profile vocabulary to pitch, energy, rhythm, spectrum, onsets, duration and spectral centroid.
+- Added per-species feature emphasis for the onboard 15-profile set.
+- Classification remains probabilistic/educational rather than literal animal-language translation.
+- Optional external AI remains explicitly labeled as an external gateway.
 
-Stock DSi/DS hardware limitations remain explicit: external RF/TinySA/5G/satellite/QPU functions require compatible external hardware or gateways.
+### Release architecture
+- DSi/DS local-first operation remains the baseline.
+- External RF, TinySA, 5G, satellite and QPU capabilities require compatible external hardware/gateways; the software does not fabricate stock hardware capabilities.
+- Existing three-second START recovery path remains the system recovery mechanism.
+
+### Remaining passes
+1. Codex + Animal deeper runtime integration.
+2. Marauder/RF + TinySA expansion.
+3. Calculator + DAW + DSP/FFT expansion.
+4. Telemetry + AI Home + Network Gateway expansion.
+5. AI Safety + Family Safety + System/Service + General Settings + Quantum Core + final UI hardening.
