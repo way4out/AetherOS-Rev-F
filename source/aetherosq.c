@@ -69,6 +69,8 @@ static int normalizeSelection(int value);
 static void canonicalizeSelection(void);
 static void setSelection(int value);
 static u32 hash32(const void *ptr,size_t n);
+static void defaults(void);
+static void ensureDirs(void);
 
 static int storageReady(void){
     FILE *f=fopen("fat:/data/AetherMod/.aether_test","wb");
