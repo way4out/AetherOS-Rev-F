@@ -56,7 +56,7 @@ static int gatewayState=0, capabilityScore=0, resourceFaults=0;
 static int keyRepeatFrames=0, lastKeys=0, eventBurst=0, frameBudgetFaults=0;
 static int recoveryCount=0, validationFaults=0, moduleGuardFaults=0;
 static int soundId=-1;
-static int aiCursor=0, aiQuery=0, browserCursor=0, graphMode=0, dawView=0, settingsCursor=0;
+static int aiCursor=0, aiQuery=0, browserCursor=0, graphMode=0, dawView=0, settingsCursor=0, codexLine=0, animalFeature=0, telemetryPage=0;
 
 static void saveState(void);
 static void markDirty(void);
@@ -290,7 +290,7 @@ static void quantum(void){
 static void codex(void){
     page("YHWH BIBLIO CODEX");
     iprintf("CODEX READER / INDEX\n");
-    iprintf("Page %d / 10   SEARCH:%s\n\n",codexPage+1,codexSearch?"ON":"OFF");
+    iprintf("Page %d / 10   SEARCH:%s  LINE:%d\n\n",codexPage+1,codexSearch?"ON":"OFF",codexLine);
     switch(codexPage){
       case 0: iprintf("GENESIS  EXODUS  LEVITICUS\nNUMBERS  DEUTERONOMY  JOSHUA\nJUDGES  RUTH  1 SAMUEL  2 SAMUEL\n"); break;
       case 1: iprintf("1 KINGS  2 KINGS  1 CHRONICLES\n2 CHRONICLES  EZRA  NEHEMIAH\nESTHER  JOB  PSALMS  PROVERBS\n"); break;
@@ -311,21 +311,23 @@ static void codex(void){
             fclose(f);
         } else iprintf("\nDATA FILE NOT FOUND\n");
     }
-    footer("UP/DOWN PAGE  A DATA/SEARCH  X SEARCH  B HOME");
+    iprintf("YHWH LAYER: יהוה / YHWH / LORD / ADONAI\n");
+    footer("UP/DOWN PAGE  A SEARCH  X LINE  L/R CORPUS  B HOME");
 }
 
 static void animal(void){
     page("ANIMAL AI / GAME");
-    int a=animalPage%15,m=(int)((frameCounter/8+a)%8);
+    int a=animalPage%15,m=(int)((frameCounter/8+a)%8),feature=animalFeature%5;
     iprintf("SPECIES %s  STATE %s\n",animalNames[a],animalAnalyzing?"LIVE":"READY");
     iprintf("MIC -> FEATURES -> STATE -> RESPONSE\n");
     iprintf("PITCH %02d ENERGY %02d RHYTHM %02d\n",(a*7+frameCounter)%100,(a*11+frameCounter/2)%100,(a*5+frameCounter)%100);
+    iprintf("FEATURE %s  WINDOW %dms  EVENTS %02d\n",feature==0?"PITCH":feature==1?"ENERGY":feature==2?"RHYTHM":feature==3?"SPECTRUM":"ONSETS",64+(feature*32),(a*13+(int)frameCounter)%100);
     iprintf("STATE %s  CONF %02d%%\n",m<3?"CALM":m<6?"ALERT":"SOCIAL",animalAnalyzing?68+(a%25):0);
     iprintf("PLAY |");for(int i=0;i<16;i++)iprintf("%c",((i+m)%5==0)?'O':'.');iprintf("|\n");
     iprintf("TEXT CUE + TONE + VISUAL STATE\n");
     iprintf("AI GATE %s\n",save.onlineAI?"ONLINE":"LOCAL PROFILE");
     iprintf("Signal classification; not literal animal speech.\n");
-    footer("UP/DOWN SPECIES  A ANALYZE  X VOCALIZE  Y RESET  B HOME");
+    footer("UP/DOWN SPECIES  A ANALYZE  X FEATURE  Y VOCALIZE  B HOME");
 }
 
 static void rfLab(const char *title){
@@ -421,7 +423,13 @@ static void telemetry(void){
     iprintf("CAPABILITY HEALTH %d%%  GATE:%s\n",capabilityScore,gatewayState?"ARMED":"GUARDED");
     iprintf("INPUT EVENTS %lu  REPEAT:%d\n",(unsigned long)inputEvents,keyRepeatFrames);
     iprintf("RESOURCE FAULTS %d\n",resourceFaults);
-    footer("B HOME");
+    iprintf("PAGE %d/2  PRESS A TO CYCLE\n",telemetryPage+1);
+    if(telemetryPage){
+        iprintf("GATEWAYS: RF=%s TINYSA=%s NET=%s AI=%s\n",gatewayState?"ARM":"SAFE",saRunning?"SWEEP":"IDLE",save.browser?"READY":"OFF",save.ai?"READY":"OFF");
+        iprintf("FRAME BUDGET %d  INPUT BURSTS %d\n",frameBudgetFaults,eventBursts);
+        iprintf("SAVE CHECKSUM %s  LAST SAVE %lu\n",saveIntegrity()?"OK":"BAD",(unsigned long)lastSaveFrame);
+    }
+    footer("A PAGE  B HOME");
 }
 
 static void aiHome(void){
