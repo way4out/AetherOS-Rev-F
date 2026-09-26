@@ -51,6 +51,8 @@ static int saSpan=20, saStart=0, saRBW=10, saAtten=0, saMarker=0, saRunning=0, s
 static u32 frameCounter=0;
 static int soundId=-1;
 
+static void saveState(void);
+
 static int normalizeSelection(int value){
     if(value<0) return APP_COUNT-1;
     return value%APP_COUNT;
@@ -446,7 +448,6 @@ static void input(void){
         touchPosition t; touchRead(&t);
         if(mode==0){
             /* Home touch uses two 8-item pages so all 16 modules are reachable. */
-            int pageIndex=(t.py>=108)?1:0;
             int row=((int)t.py-48)/12;
             if(row>=0&&row<8){
                 int r=homeScroll*8+row;
