@@ -185,7 +185,9 @@ static void serviceInput(u32 keys){
     else if(!keys && eventBurst>0) eventBurst--;
     lastKeys=(int)keys;
 }
-\n\nstatic void updateCapabilityHealth(void){
+
+
+static void updateCapabilityHealth(void){
     capabilityScore=100;
     if(!isDSiMode()) capabilityScore-=5;
     if(save.wireless) capabilityScore-=0;
