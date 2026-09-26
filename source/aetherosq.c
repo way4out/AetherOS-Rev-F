@@ -152,7 +152,6 @@ static void ensureDirs(void){
 
 static void markDirty(void){ dirtyState=1; }\n\nstatic void updateCapabilityHealth(void){
     capabilityScore=100;
-    if(!fatInitDefault()) capabilityScore-=25;
     if(!isDSiMode()) capabilityScore-=5;
     if(save.wireless) capabilityScore-=0;
     if(save.onlineAI && save.privacy) capabilityScore-=10;
