@@ -16,3 +16,12 @@ Philemon Hebrews James 1 Peter 2 Peter 1 John 2 John 3 John Jude Revelation
 
 NAME LAYER
 YHWH / LORD / ADONAI / Hebrew-name cross-reference layer.
+
+
+CORPUS CONTRACT
+---------------
+The Codex reader is designed for a public-domain or properly licensed UTF-8 text corpus stored under data/AetherMod/. The onboard index, YHWH/LORD/ADONAI name layer, section navigation, and text preview work offline. The binary does not silently embed copyrighted modern Bible translations.
+
+RECOMMENDED CORPUS LAYOUT
+bookname.txt -> one UTF-8 text file per book
+Optional: verses.txt or a licensed structured corpus for chapter/verse search.
