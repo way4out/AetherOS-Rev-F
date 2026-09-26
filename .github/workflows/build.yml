@@ -1,4 +1,4 @@
-name: Build AetherMod 7.0 Apex for Nintendo DSi
+name: Build AetherMod 7.0 Apex Pass 3 for Nintendo DSi
 on:
   workflow_dispatch:
   push:
