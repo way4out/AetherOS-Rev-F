@@ -1,4 +1,4 @@
-# AetherMod 5.0 Genesis for Nintendo DSi — Pass 4 / 8
+# AetherMod 6.0 Expansion for Nintendo DSi — Pass 2 / 3
 
 AetherMod is a local-first dual-screen DSi homebrew cockpit with modular quantum simulation,
 codex/data, animal-analysis, RF telemetry, TinySA gateway, calculator, DAW, DSP, telemetry,
@@ -86,3 +86,11 @@ DSi SD card and launch the NDS with a compatible homebrew loader.
 - Added TinySA visual spectrum/marker/current-stat presentation.
 - Expanded Calculator, Quantum, DAW, DSP/FFT, Telemetry, Network/Browser gateway and System surfaces.
 - Stock DSi limitations remain explicitly represented as external gateways where required.
+
+
+## Pass 2 / 3
+- Deeper Codex corpus preview and YHWH name-layer navigation.
+- Expanded Animal AI feature-window visualization and interactive analysis modes.
+- Added telemetry page for gateway, frame-budget, input-burst and save-integrity status.
+- Expanded DAW playback/BPM/track controls and module input routing.
+- Strengthened cross-module DSi-native operation while retaining bounded external gateways.
