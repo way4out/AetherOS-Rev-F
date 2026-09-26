@@ -1,8 +1,9 @@
-name: Build O2S2HaHa DSi
+name: Build AetherOS O2S2HaHa FunCore
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,16 +15,18 @@ jobs:
           make clean
           make
           test -f O2S2HaHa.nds
+          file O2S2HaHa.nds || true
           ls -lh O2S2HaHa.nds
-      - name: Package
+      - name: Package plug-and-play SD bundle
         run: |
           mkdir -p deploy/apps/O2S2HaHa
           cp O2S2HaHa.nds deploy/apps/O2S2HaHa/O2S2HaHa.nds
+          printf '%s\n' 'Copy apps/O2S2HaHa/O2S2HaHa.nds to the SD card.' > deploy/INSTALL.txt
           cd deploy
-          zip -r ../O2S2HaHa-DSi-NextGen.zip .
+          zip -r ../AetherOS-O2S2HaHa-FunCore-DSi.zip .
       - uses: actions/upload-artifact@v4
         with:
-          name: O2S2HaHa-DSi-NextGen
+          name: AetherOS-O2S2HaHa-FunCore-DSi
           path: |
             O2S2HaHa.nds
-            O2S2HaHa-DSi-NextGen.zip
+            AetherOS-O2S2HaHa-FunCore-DSi.zip
