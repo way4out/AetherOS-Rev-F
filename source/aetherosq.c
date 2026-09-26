@@ -63,6 +63,7 @@ static void returnHome(void);
 static void updateCapabilityHealth(void);
 static void serviceInput(u32 keys);
 static int normalizeSelection(int value);
+static void canonicalizeSelection(void);
 static void setSelection(int value);
 static u32 hash32(const void *ptr,size_t n);
 
