@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 7
-#define AETHERMOD_PASS 3
+#define AETHERMOD_PASS 4
 #define AETHERMOD_TOTAL_PASSES 5
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
@@ -213,8 +213,8 @@ static void resetToBase(void){
     selectionPin=0; cursor=0; homeScroll=0; homePulse=0;
     mode=0; safeMode=0; gatewayState=0; dirtyState=0;
     codexPage=0; codexSearch=0; codexLine=0; animalPage=0; animalFeature=0; animalAnalyzing=0; rfWarnIndex=0; rfPushQueue=0; rfAuthGate=0; rfLogCount=0; saView=0; saTraceHold=0; saInputSource=0;
-    calculatorCursor=0; calcA=17; calcB=9; dawTrack=0; dawTrackMute=0; dawPlaying=0;
-    dspScale=1; fftWindow=0; fftPeakHold=0; telemetryPage=0; aiCursor=0; aiQuery=0; browserCursor=0;
+    calculatorCursor=0; calcA=17; calcB=9; calcOp=0; calcInput=0; calcSign=1; calcMemory=0; calcTouchKey=0; dawTrack=0; dawTrackMute=0; dawPlaying=0; dawView=0; dawOctave=4; dawSwing=0; dawFx=0;
+    dspScale=1; fftWindow=0; fftPeakHold=0; dspInputMode=0; dspSampleRate=44100; dspGain=1; dspCursor=0; telemetryPage=0; aiCursor=0; aiQuery=0; browserCursor=0;
     networkSelfTest=0; quantumState=0; rfMode=0; rfBand=0; rfChannel=1; rfPeakHold=0; rfPacketView=0;
     saSpan=20; saStart=0; saRBW=10; saAtten=0; saMarker=0; saRunning=0; saGenArmed=0;
     recoveryNotice=0; resetHoldFrames=0; resetConfirm=0; resetCursor=0; resetNotice=1;
@@ -661,11 +661,32 @@ static void input(void){
         if(d&KEY_X){saMarker+=5;if(saMarker>saSpan)saMarker=0;changed=1;}
         if(d&KEY_Y){if(saRBW==10){saRBW=30;saAtten=10;}else if(saRBW==30){saRBW=100;saAtten=20;}else{saRBW=10;saAtten=0;}changed=1;}
     } else if(mode==6){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){calculatorCursor=(calculatorCursor+11)%12;changed=1;} if(d&KEY_DOWN){calculatorCursor=(calculatorCursor+1)%12;changed=1;} if(d&KEY_A){tone();calcA+=1;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;calcB+=2;changed=1;}
+        if(d&KEY_B){mode=0;changed=1;}
+        if(d&KEY_UP){calcOp=(calcOp+11)%12;changed=1;}
+        if(d&KEY_DOWN){calcOp=(calcOp+1)%12;changed=1;}
+        if(d&KEY_LEFT){calcInput^=1;changed=1;}
+        if(d&KEY_RIGHT){calcSign=-calcSign;changed=1;}
+        if(d&KEY_A){calcA=(int)calcResult();calcInput=0;changed=1;}
+        if(d&KEY_X){int t=calcA;calcA=calcB;calcB=t;changed=1;}
+        if(d&KEY_Y){calcOp=(calcOp+1)%12;changed=1;}
     } else if(mode==7){
-        if(d&KEY_B){dawPlaying=0;saveState();mode=0;changed=1;} if(d&KEY_UP){save.dawStep=(save.dawStep+15)%16;changed=1;} if(d&KEY_DOWN){save.dawStep=(save.dawStep+1)%16;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;} if(d&KEY_LEFT){dawTrack=(dawTrack+2)%3;changed=1;} if(d&KEY_RIGHT){dawTrack=(dawTrack+1)%3;changed=1;} if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;saveState();changed=1;} if(dawPlaying&&(frameCounter%15)==0){tone();save.dawStep=(save.dawStep+1)%16;changed=1;}
+        if(d&KEY_B){dawPlaying=0;saveState();mode=0;changed=1;}
+        if(d&KEY_UP){save.dawStep=(save.dawStep+15)%16;changed=1;}
+        if(d&KEY_DOWN){save.dawStep=(save.dawStep+1)%16;changed=1;}
+        if(d&KEY_A){dawPattern[dawTrack][save.dawStep]^=1;markDirty();tone();changed=1;}
+        if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;}
+        if(d&KEY_LEFT){dawTrack=(dawTrack+3)%4;changed=1;}
+        if(d&KEY_RIGHT){dawTrack=(dawTrack+1)%4;changed=1;}
+        if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;markDirty();changed=1;}
+        if(d&KEY_SELECT){dawView^=1;changed=1;}
+        if(dawPlaying&&(frameCounter%15)==0){dawStepAdvance();changed=1;}
     } else if(mode==8){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){frameCounter+=31;changed=1;} if(d&KEY_X){fftWindow^=1;changed=1;} if(d&KEY_Y){fftPeakHold^=1;dspScale=(dspScale%3)+1;changed=1;}
+        if(d&KEY_B){mode=0;changed=1;}
+        if(d&KEY_A){frameCounter+=31;changed=1;}
+        if(d&KEY_X){fftWindow^=1;changed=1;}
+        if(d&KEY_Y){fftPeakHold^=1;dspScale=(dspScale%3)+1;changed=1;}
+        if(d&KEY_LEFT){dspInputMode=0;changed=1;} if(d&KEY_RIGHT){dspInputMode=1;changed=1;}
+        if(d&KEY_UP){if(dspGain<8)dspGain++;changed=1;} if(d&KEY_DOWN){if(dspGain>1)dspGain--;changed=1;}
     } else if(mode==9||mode==10){if(d&KEY_B){mode=0;changed=1;} if(mode==9&&d&KEY_A){telemetryPage^=1;changed=1;} if(mode==10&&d&KEY_UP){aiCursor=(aiCursor+5)%6;changed=1;} if(mode==10&&d&KEY_DOWN){aiCursor=(aiCursor+1)%6;changed=1;} if(mode==10&&d&KEY_A){aiQuery++;tone();changed=1;} if(mode==10&&d&KEY_X){save.onlineAI^=1;changed=1;} if(mode==10&&d&KEY_Y){save.privacy^=1;changed=1;}
     } else if(mode==11){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.wireless^=1;gatewayState=save.wireless;markDirty();changed=1;} if(d&KEY_X){networkSelfTest=1;changed=1;} if(d&KEY_Y){networkSelfTest=0;changed=1;}
