@@ -9,7 +9,7 @@ GAME_SUBTITLE1 := DSi Quantum Cockpit
 GAME_SUBTITLE2 := Interactive Edition
 include $(DEVKITARM)/ds_rules
 
-TARGET := O2S2HaHa
+TARGET := QuantumAetherOSQ
 BUILD := build
 SOURCES := source
 INCLUDES := include
