@@ -140,7 +140,7 @@ static const char *apps[APP_COUNT]={
     "AETHER HOME","QUANTUM CORE","YHWH CODEX","ANIMAL AI",
     "MARAUDER/RF","TINySA LAB","CALCULATOR","DAW STUDIO",
     "DSP/FFT","TELEMETRY","AI HOME","NETWORK GATEWAY",
-    "AI SAFETY","FAMILY SAFETY","SYSTEM","ABOUT"
+    "AI SAFETY","FAMILY SAFETY","SYSTEM","GENERAL SETTINGS"
 };
 
 static const char *langs[10]={
@@ -567,24 +567,6 @@ static void input(void){
             saveState();
         }
     }
-    if(mode==2){
-        if(d&KEY_UP){codexPage=(codexPage+9)%10;changed=1;}
-        if(d&KEY_DOWN){codexPage=(codexPage+1)%10;changed=1;}
-        if(d&KEY_A){codexSearch^=1;changed=1;}
-        if(d&KEY_X){codexLine=(codexLine+1)%16;changed=1;}
-    } else if(mode==3){
-        if(d&KEY_UP){animalPage=(animalPage+14)%15;changed=1;}
-        if(d&KEY_DOWN){animalPage=(animalPage+1)%15;changed=1;}
-        if(d&KEY_X){animalFeature=(animalFeature+1)%5;changed=1;}
-        if(d&KEY_Y){animalAnalyzing=!animalAnalyzing;changed=1;}
-    } else if(mode==9){
-        if(d&KEY_A){telemetryPage^=1;changed=1;}
-    } else if(mode==7){
-        if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;}
-        if(d&KEY_Y){save.dawBpm=(save.dawBpm>=200)?60:save.dawBpm+10;changed=1;}
-        if(d&KEY_LEFT&&dawTrack>0){dawTrack--;changed=1;}
-        if(d&KEY_RIGHT&&dawTrack<2){dawTrack++;changed=1;}
-    }
     if(mode==0){
         if(d&KEY_UP){inputEvents++;setSelection(selectionPin-1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
         if(d&KEY_DOWN){inputEvents++;setSelection(selectionPin+1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
@@ -596,9 +578,9 @@ static void input(void){
     } else if(mode==1){
         if(d&KEY_B){returnHome();changed=1;} if(d&KEY_A){quantumState=(quantumState+1)%4;frameCounter+=97;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;frameCounter+=1009;changed=1;} if(d&KEY_Y){quantumState=0;changed=1;}
     } else if(mode==2){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){codexPage=(codexPage+9)%10;changed=1;} if(d&KEY_DOWN){codexPage=(codexPage+1)%10;changed=1;} if(d&KEY_A){codexSearch^=1;changed=1;} if(d&KEY_X){codexSearch=1;changed=1;}
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){codexPage=(codexPage+9)%10;changed=1;} if(d&KEY_DOWN){codexPage=(codexPage+1)%10;changed=1;} if(d&KEY_A){codexSearch^=1;changed=1;} if(d&KEY_X){codexLine=(codexLine+1)%16;changed=1;}
     } else if(mode==3){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){animalPage=(animalPage+14)%15;animalAnalyzing=0;changed=1;} if(d&KEY_DOWN){animalPage=(animalPage+1)%15;animalAnalyzing=0;changed=1;} if(d&KEY_A){animalAnalyzing=1;tone();changed=1;} if(d&KEY_X){tone();changed=1;} if(d&KEY_Y){animalAnalyzing=0;changed=1;}
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){animalPage=(animalPage+14)%15;animalAnalyzing=0;changed=1;} if(d&KEY_DOWN){animalPage=(animalPage+1)%15;animalAnalyzing=0;changed=1;} if(d&KEY_LEFT){animalFeature=(animalFeature+4)%5;changed=1;} if(d&KEY_RIGHT){animalFeature=(animalFeature+1)%5;changed=1;} if(d&KEY_A){animalAnalyzing=1;tone();changed=1;} if(d&KEY_X){tone();changed=1;} if(d&KEY_Y){animalAnalyzing=0;changed=1;}
     } else if(mode==4){
         if(d&KEY_B){mode=0;changed=1;}
         if(d&KEY_UP){rfMode=(rfMode+3)%4;changed=1;} if(d&KEY_DOWN){rfMode=(rfMode+1)%4;changed=1;}
@@ -618,7 +600,7 @@ static void input(void){
         if(d&KEY_B){dawPlaying=0;saveState();mode=0;changed=1;} if(d&KEY_UP){save.dawStep=(save.dawStep+15)%16;changed=1;} if(d&KEY_DOWN){save.dawStep=(save.dawStep+1)%16;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;} if(d&KEY_LEFT){dawTrack=(dawTrack+2)%3;changed=1;} if(d&KEY_RIGHT){dawTrack=(dawTrack+1)%3;changed=1;} if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;saveState();changed=1;} if(dawPlaying&&(frameCounter%15)==0){tone();save.dawStep=(save.dawStep+1)%16;changed=1;}
     } else if(mode==8){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){frameCounter+=31;changed=1;} if(d&KEY_X){fftWindow^=1;changed=1;} if(d&KEY_Y){fftPeakHold^=1;dspScale=(dspScale%3)+1;changed=1;}
-    } else if(mode==9||mode==10){if(d&KEY_B){mode=0;changed=1;} if(mode==10&&d&KEY_UP){aiCursor=(aiCursor+5)%6;changed=1;} if(mode==10&&d&KEY_DOWN){aiCursor=(aiCursor+1)%6;changed=1;} if(mode==10&&d&KEY_A){aiQuery++;tone();changed=1;} if(mode==10&&d&KEY_X){save.onlineAI^=1;changed=1;} if(mode==10&&d&KEY_Y){save.privacy^=1;changed=1;}
+    } else if(mode==9||mode==10){if(d&KEY_B){mode=0;changed=1;} if(mode==9&&d&KEY_A){telemetryPage^=1;changed=1;} if(mode==10&&d&KEY_UP){aiCursor=(aiCursor+5)%6;changed=1;} if(mode==10&&d&KEY_DOWN){aiCursor=(aiCursor+1)%6;changed=1;} if(mode==10&&d&KEY_A){aiQuery++;tone();changed=1;} if(mode==10&&d&KEY_X){save.onlineAI^=1;changed=1;} if(mode==10&&d&KEY_Y){save.privacy^=1;changed=1;}
     } else if(mode==11){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.wireless^=1;gatewayState=save.wireless;markDirty();changed=1;} if(d&KEY_X){networkSelfTest=1;changed=1;} if(d&KEY_Y){networkSelfTest=0;changed=1;}
     } else if(mode==12){
