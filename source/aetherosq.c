@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 6
-#define AETHERMOD_PASS 1
+#define AETHERMOD_PASS 2
 #define AETHERMOD_TOTAL_PASSES 3
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
@@ -566,6 +566,24 @@ static void input(void){
             else {if(mode==12)save.onlineAI^=1;else if(mode==11)save.wireless^=1;else if(mode==2)codexSearch^=1;changed=1;}
             saveState();
         }
+    }
+    if(mode==2){
+        if(d&KEY_UP){codexPage=(codexPage+9)%10;changed=1;}
+        if(d&KEY_DOWN){codexPage=(codexPage+1)%10;changed=1;}
+        if(d&KEY_A){codexSearch^=1;changed=1;}
+        if(d&KEY_X){codexLine=(codexLine+1)%16;changed=1;}
+    } else if(mode==3){
+        if(d&KEY_UP){animalPage=(animalPage+14)%15;changed=1;}
+        if(d&KEY_DOWN){animalPage=(animalPage+1)%15;changed=1;}
+        if(d&KEY_X){animalFeature=(animalFeature+1)%5;changed=1;}
+        if(d&KEY_Y){animalAnalyzing=!animalAnalyzing;changed=1;}
+    } else if(mode==9){
+        if(d&KEY_A){telemetryPage^=1;changed=1;}
+    } else if(mode==7){
+        if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;}
+        if(d&KEY_Y){save.dawBpm=(save.dawBpm>=200)?60:save.dawBpm+10;changed=1;}
+        if(d&KEY_LEFT&&dawTrack>0){dawTrack--;changed=1;}
+        if(d&KEY_RIGHT&&dawTrack<2){dawTrack++;changed=1;}
     }
     if(mode==0){
         if(d&KEY_UP){inputEvents++;setSelection(selectionPin-1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
