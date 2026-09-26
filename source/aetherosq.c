@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 5
-#define AETHERMOD_PASS 3
+#define AETHERMOD_PASS 4
 #define AETHERMOD_TOTAL_PASSES 8
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
@@ -51,9 +51,12 @@ static int saSpan=20, saStart=0, saRBW=10, saAtten=0, saMarker=0, saRunning=0, s
 static u32 frameCounter=0;
 static u32 lastSaveFrame=0, sessionErrors=0, inputEvents=0;
 static int diagnosticsPass=0, recoveryNotice=0, lastDiagnosticFrame=0;
+static int dirtyState=0, bootCount=0, lastMode=0;
 static int soundId=-1;
 
 static void saveState(void);
+static void markDirty(void);
+static void returnHome(void);
 static int normalizeSelection(int value);
 static void setSelection(int value);
 static u32 hash32(const void *ptr,size_t n);
@@ -145,6 +148,10 @@ static void ensureDirs(void){
     mkdir(a,0777); mkdir(b,0777);
 }
 
+static void markDirty(void){ dirtyState=1; }
+
+static void returnHome(void){ lastMode=mode; mode=0; homeScroll=(selectionPin>=8); setSelection(selectionPin); saveState(); }
+
 static void saveState(void){
     if(safeMode) return;
     ensureDirs();
@@ -155,7 +162,8 @@ static void saveState(void){
 }
 
 static void loadState(void){
-    defaults(); ensureDirs();
+    defaults();
+    bootCount=1; ensureDirs();
     char p[120]; snprintf(p,sizeof(p),"%sdata/AetherMod/save.dat",root);
     FILE *f=fopen(p,"rb"); if(!f) return;
     SaveData t; if(fread(&t,1,sizeof(t),f)==sizeof(t)){
@@ -167,6 +175,7 @@ static void loadState(void){
     fclose(f);
     canonicalizeSelection();
     if(!saveIntegrity()) recoveryNotice=1;
+    dirtyState=0;
 }
 
 static const char *langName(void){return langs[save.language%10];}
@@ -370,6 +379,8 @@ static void telemetry(void){
     runDiagnostics();
     page("TELEMETRY");
     iprintf("FRAME       %lu\n",(unsigned long)frameCounter);
+    iprintf("BOOT COUNT  %d\n",bootCount);
+    iprintf("DIRTY STATE %s\n",dirtyState?"PENDING":"CLEAN");
     iprintf("LAUNCHES    %lu\n",(unsigned long)save.launches);
     iprintf("STORAGE     SD/FAT\n");
     iprintf("MEMORY      STATIC/BOUNDED\n");
@@ -446,7 +457,7 @@ static void systemPage(void){
 
 static void about(void){
     page("ABOUT AETHERMOD");
-    iprintf("AETHERMOD FOR DSi\n");
+    iprintf("AETHERMOD 5.0 GENESIS / PASS 4\n");
     iprintf("ALL-ENCOMPASSING COCKPIT\n\n");
     iprintf("Local-first. Modular. Gateway-ready.\n");
     iprintf("Quantum-inspired computation.\n");
@@ -516,7 +527,7 @@ static void input(void){
         if(d&KEY_X){setSelection(1);homeScroll=0;mode=1;save.launches++;saveState();changed=1;}
         if(d&KEY_Y){setSelection(9);homeScroll=1;mode=10;save.launches++;saveState();changed=1;}
     } else if(mode==1){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){quantumState=(quantumState+1)%4;frameCounter+=97;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;frameCounter+=1009;changed=1;} if(d&KEY_Y){quantumState=0;changed=1;}
+        if(d&KEY_B){returnHome();changed=1;} if(d&KEY_A){quantumState=(quantumState+1)%4;frameCounter+=97;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;frameCounter+=1009;changed=1;} if(d&KEY_Y){quantumState=0;changed=1;}
     } else if(mode==2){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){codexPage=(codexPage+9)%10;changed=1;} if(d&KEY_DOWN){codexPage=(codexPage+1)%10;changed=1;} if(d&KEY_A){codexSearch^=1;changed=1;} if(d&KEY_X){codexSearch=1;changed=1;}
     } else if(mode==3){
@@ -575,6 +586,7 @@ int main(void){
         swiWaitForVBlank();
         frameCounter++;
         input();
+        if((frameCounter&31)==0 && dirtyState && !safeMode) saveState();
         if((frameCounter&3)==0){ if(mode==0) homePulse=0; draw(); }
     }
     return 0;
