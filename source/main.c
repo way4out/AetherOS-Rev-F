@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 #include "config.h"
 
 typedef struct {
@@ -18,6 +19,10 @@ typedef struct {
 static SaveData save;
 static int mode = 0, cursor = 0, safeMode = 0;
 static u32 frameCounter = 0;
+static PrintConsole topConsole;
+static PrintConsole bottomConsole;
+static bool storageReady = false;
+static const char *storageRoot = "fat:/";
 
 static u32 checksum32(const void *ptr, size_t n) {
     const u8 *p = (const u8 *)ptr;
@@ -38,15 +43,20 @@ static void defaults(void) {
 }
 
 static void ensure_save_dir(void) {
-    mkdir("fat:/data", 0777);
-    mkdir("fat:/data/O2S2HaHa", 0777);
+    char p1[64], p2[64];
+    snprintf(p1, sizeof(p1), "%sdata", storageRoot);
+    snprintf(p2, sizeof(p2), "%sdata/O2S2HaHa", storageRoot);
+    mkdir(p1, 0777);
+    mkdir(p2, 0777);
 }
 
 static void load_save(void) {
     defaults();
     ensure_save_dir();
 
-    FILE *f = fopen("fat:/data/O2S2HaHa/save.dat", "rb");
+    char path[96];
+    snprintf(path, sizeof(path), "%sdata/O2S2HaHa/save.dat", storageRoot);
+    FILE *f = fopen(path, "rb");
     if (!f) return;
 
     SaveData t;
@@ -69,15 +79,18 @@ static void save_state(void) {
     save.checksum = 0;
     save.checksum = checksum32(&save, sizeof(save));
 
-    FILE *f = fopen("fat:/data/O2S2HaHa/save.dat", "wb");
+    char path[96];
+    snprintf(path, sizeof(path), "%sdata/O2S2HaHa/save.dat", storageRoot);
+    FILE *f = fopen(path, "wb");
     if (!f) return;
     fwrite(&save, 1, sizeof(save), f);
     fclose(f);
 }
 
 static void header(const char *t) {
+    consoleSelect(&bottomConsole);
     consoleClear();
-    iprintf("\x1b[0;0HAETHEROS O2S2HaHa FUNCORE %s\n", APP_VERSION);
+    iprintf("AETHEROS O2S2HAHA FUNCORE %s\n", APP_VERSION);
     iprintf("--------------------------------\n%s\n\n", t);
 }
 
@@ -92,6 +105,13 @@ static void hub(void) {
 
     iprintf("\nA SELECT  UP/DOWN NAV\nX FUN  Y TELEMETRY\n");
     iprintf("Launches: %lu\n", (unsigned long)save.launches);
+    consoleSelect(&topConsole);
+    consoleClear();
+    iprintf("AETHEROS\nO2S2HAHA\n\nFUNCORE ONLINE\n\n");
+    iprintf("FRAME %lu\n", (unsigned long)frameCounter);
+    iprintf("MODE %s\n", safeMode ? "SAFE" : "LIVE");
+    iprintf("DSi %s\n", isDSiMode() ? "MODE" : "DS/COMPAT");
+    consoleSelect(&bottomConsole);
 }
 
 static void haha(void) {
@@ -157,6 +177,8 @@ static void input(void) {
     u32 d = keysDown();
     u32 h = keysHeld();
 
+    if (d & KEY_TOUCH) { touchPosition t; touchRead(&t); if (t.py < 80) mode = 1; else if (t.py < 160) mode = 2; else mode = 0; }
+
     if (d & KEY_SELECT) {
         safeMode = !safeMode;
         if (safeMode) {
@@ -197,22 +219,32 @@ static void input(void) {
 int main(void) {
     powerOn(POWER_ALL_2D);
     videoSetMode(MODE_0_2D);
-    vramSetBankA(VRAM_A_MAIN_BG);
-    consoleDemoInit();
+    videoSetModeSub(MODE_0_2D);
+    vramDefault();
+    consoleInit(&topConsole, 0, BgType_Text4bpp, BgSize_T_256x256, 22, 3, true, true);
+    consoleInit(&bottomConsole, 0, BgType_Text4bpp, BgSize_T_256x256, 22, 3, false, true);
+    consoleSelect(&topConsole);
+    consoleClear();
+    iprintf("AETHEROS O2S2HAHA\nBOOTING...\n");
+    swiWaitForVBlank();
 
     if (!fatInitDefault()) {
         safeMode = 1;
         defaults();
+        consoleSelect(&bottomConsole);
         header("RAM SAFE MODE");
         iprintf("SD/FAT unavailable.\n");
         iprintf("Running without persistence.\n");
     } else {
+        storageReady = true;
+        if (isDSiMode()) storageRoot = "sd:/";
         load_save();
         save.launches++;
         save_state();
     }
 
     draw();
+    consoleSelect(&bottomConsole);
 
     while (1) {
         swiWaitForVBlank();
