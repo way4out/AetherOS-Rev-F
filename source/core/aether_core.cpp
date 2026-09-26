@@ -55,7 +55,11 @@ static void startDeferredServices(SystemState&s){
     s.networkReady=network::status(network::LINK_WIFI).available; s.gatewayConfigured=radio::configured(); s.projectSaved=engine::projectExists();
 }
 static void touchHome(SystemState&s,touchPosition&t){
-    if(t.py<192){ s.selectedModule=(t.py/(192/MOD_COUNT))%MOD_COUNT; s.screen=s.selectedModule+1; }
+    if(t.px<256 && t.py<192){
+        const int col=t.px/64, row=t.py/48;
+        const int m=row*4+col;
+        if(m>=0 && m<MOD_COUNT){ s.selectedModule=m; s.screen=m+1; }
+    }
 }
 static void doAction(SystemState&s){
     switch(s.selectedModule){
