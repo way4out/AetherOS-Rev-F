@@ -522,7 +522,7 @@ static void tone(void){
 }
 
 static void input(void){
-    scanKeys(); u32 d=keysDown(); int changed=0;
+    scanKeys(); u32 d=keysDown(); serviceInput(d); int changed=0;
     if(d&KEY_SELECT){safeMode=!safeMode;if(safeMode){save.onlineAI=0;save.wireless=0;save.downloads=0;gatewayState=0;mode=0;}saveState();changed=1;}
     if(d&KEY_TOUCH){
         touchPosition t; touchRead(&t);
@@ -612,7 +612,6 @@ int main(void){
     while(1){
         swiWaitForVBlank();
         frameCounter++;
-    serviceInput(keysDown());
         input();
         if((frameCounter&31)==0 && dirtyState && !safeMode) saveState();
         if((frameCounter&3)==0){ if(mode==0) homePulse=0; draw(); }
