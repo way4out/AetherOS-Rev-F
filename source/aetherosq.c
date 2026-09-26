@@ -135,7 +135,7 @@ static const char *langName(void){return langs[save.language%10];}
 
 static void topBg(const char *title){
     consoleSelect(&topConsole); consoleClear();
-    iprintf("      A E T H E R M O D  4.5\n");
+    iprintf("      A E T H E R M O D  5.0\n");
     iprintf("  ========================\n");
     iprintf("  %s\n\n",title);
     iprintf("  [%s]  QCORE:%s  AI:%s\n",
