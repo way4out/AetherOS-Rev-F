@@ -75,3 +75,14 @@ DSi SD card and launch the NDS with a compatible homebrew loader.
 - Final release source identity set to Pass 8 / 8.
 - Release configuration and workflow artifact identity finalized.
 - This pass targets the bootable `.nds` release artifact plus SD bundle from CI.
+
+
+## AetherMod 6.0 Expansion — Pass 1 / 3
+- Replaced public Projects surface with AI Home / Aether Bot.
+- Added General Settings surface with working persistent controls.
+- Expanded YHWH Biblio Codex navigation/name-layer architecture.
+- Expanded Animal AI into a DSi-native signal-analysis game workflow.
+- Expanded Marauder/RF into authorized survey/analysis with bounded push queue.
+- Added TinySA visual spectrum/marker/current-stat presentation.
+- Expanded Calculator, Quantum, DAW, DSP/FFT, Telemetry, Network/Browser gateway and System surfaces.
+- Stock DSi limitations remain explicitly represented as external gateways where required.
