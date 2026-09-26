@@ -1,68 +1,30 @@
-# AetherOS Rev:F
+# AetherMod 5.0 Genesis
 
-A Nintendo DSi-native experimental desktop, quantum-simulation, audio/DSP, science, AI, networking and external-gateway platform.
+Nintendo DSi-native local-first cockpit and homebrew platform.
 
-## Phase 5
-- Real framed gateway protocol over TCP/Wi-Fi with CRC32 validation.
-- Reference external gateway server in `tools/aether_gateway.py`.
-- Automated gateway protocol hardware-in-loop foundation test.
-- On-device protocol self-test and HIL health score.
-- Expanded 128-point FFT DSP engine.
-- Expanded lightweight AI energy classification.
-- Aether Studio step sequencer/performance engine.
-- External gateway architecture for 5G, satellite, Bluetooth, SDR, remote QPU and heavy AI.
+## Pass 1 / 8
+- Canonical home selection/PIN state for marker, number, label and launch target.
+- Full 16-module touchscreen access through two 8-module home pages.
+- 5.0 Genesis release identity and stale 4.5/Q2 UI metadata removed.
+- Persisted selection remains compatible with the existing V4 save format.
+- CI builds a DSi-enhanced NDS and packages the complete SD workspace.
 
-### Hardware boundary
-The original DSi does not contain native 5G, satellite, Bluetooth, SDR, or a physical QPU. Rev:F exposes those as external gateway interfaces; the DSi remains the controller/client and local quantum simulator. Actual external hardware is required for those links.
+## Modules
+Quantum Core, YHWH Biblio Codex, Animal AI, Marauder/RF, TinySA Lab, Quantum Calculator,
+Aether DAW/Studio, DSP/FFT, Telemetry, Projects, Network Gateway, AI Safety,
+Family Safety, System and About.
+
+## Hardware boundary
+The original DSi does not contain native 5G, satellite, Bluetooth, SDR or a physical QPU.
+Those are represented as external gateway interfaces. Local quantum functions are deterministic
+software simulations.
+
+## RF safety
+RF/Marauder functions are receive/analyze/telemetry-oriented and require appropriate external
+hardware for real RF capture. No jamming, deauthentication, credential theft or unauthorized
+access tooling is included.
 
 ## Build
-GitHub Actions builds `AETHEROS.nds` with devkitPro/devkitARM. The SD card workspace is documented in the source and releases.
+GitHub Actions uses devkitPro/devkitARM to build `AetherMod.nds` and a complete SD bundle.
 
-## Safe RF policy
-RF/Marauder features are receive-only/authorized telemetry and analysis. No jamming, credential capture, or unauthorized access tooling is included.
-
-## Project
-https://github.com/way4out/AetherOS-Rev-F
-
-
-### Rev:F6
-F6 usability/UI pass: dual-screen dashboard, clearer module navigation, touch actions, and action panels while preserving Phase 5 gateway, quantum, DSP, AI, lab, RF, studio, and diagnostics capabilities.
-
-
-## AetherOS Revolution 7+ — Pass 1
-- Persistent user Settings surface with theme, layout, density, animation, audio, clock, telemetry, quote, location, quantum, voice, and visual controls.
-- MySpace-inspired personal-space home layout with direct touchscreen module access while retaining D-pad/button navigation.
-- Theme engine with location-aware automatic selection and a Hobbit fallback when no location is configured.
-- Live DSi RTC timestamp shown throughout the UI; location coordinates are user-configurable because original DSi hardware has no native GPS.
-- Settings persist to `REVF/CORE/SETTINGS.CFG` when the SD workspace is writable.
-
-
-## AetherOS Revolution 7+ — Pass 2
-- Added **Aether Marauder / Security Lab** as a safety-gated RF/network analysis workspace.
-- Passive RF mode supports authorized signal telemetry concepts such as samples, devices, RSSI/channel/waterfall-oriented analysis through an external SDR gateway.
-- Authorized Network mode is limited to metadata/diagnostic workflows for systems the operator owns or is authorized to test.
-- Lab Simulation mode provides non-transmitting, non-credential, attack-concept simulations for learning and defensive testing.
-- Gateway Hardening mode focuses on protocol framing, CRC, authentication state, diagnostics, and resilience.
-- Transmit/jamming, credential capture, covert interception, unauthorized access, and destructive operations are deliberately locked out of the Rev7 on-device security interface. External radio hardware is still required for RF functions.
-- The interface displays the authorization/safety state before security-lab operation.
-
-
-## AetherOS Revolution 7+ — Pass 3
-- Integrated Mission Control health surface spanning boot, SD/config, project storage, local compute modules, network, gateway, recovery, and the security boundary.
-- Added persistent runtime heartbeat/health scoring without pretending unavailable external hardware is online.
-- Completed Marauder controls: authorization acknowledgement, passive-RF mode selection, and non-transmitting lab-simulation mode selection from the DSi controls.
-- Completed action routing for DSP, RF, network, AI, and project workflows while preserving existing quantum, studio, settings, diagnostics, HIL, gateway, and recovery flows.
-- System health now exposes a single readiness score and subsystem matrix.
-- Pass 3 does not add unsafe jamming, credential theft, covert interception, unauthorized access, or destructive functions.
-
-
-## Rev8
-Visual/theme cleanup removes the Hobbit fallback entirely. Rev8 keeps configurable Aether, Night, Ocean, Quantum, and Forest themes with the dual-screen control surface, telemetry, module panels, settings, gateway diagnostics, and safety-locked security lab integrated into the DSi UI.
-
-
-## AetherOS REV9*
-Rev9* preserves all 13 control surfaces and adds a capacity engine exposing a 1024 MB-class SD-backed workspace model, 256 MB cache target, asset indexing, project telemetry, and capacity status in the Core and Projects surfaces. The executable remains sized for practical DSi boot compatibility; expansion is backed by SD rather than wasting boot-critical memory on padding. External QPU/AI/5G/SAT/SDR functions remain gateway capabilities.
-
-
-## Rev9 Operability
-All 13 surfaces expose dedicated controls, action feedback, and direct touch/button navigation.
+Repository: https://github.com/way4out/AetherOS-Rev-F
