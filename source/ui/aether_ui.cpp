@@ -20,6 +20,20 @@
 
 namespace aether::ui {
 static PrintConsole topConsole, bottomConsole;
+static int bgTop=-1, bgBottom=-1;
+static u16* topPixels=nullptr;
+static u16* bottomPixels=nullptr;
+static void rect(u16* p,int x0,int y0,int x1,int y1,u16 col){ if(x0<0)x0=0;if(y0<0)y0=0;if(x1>255)x1=255;if(y1>191)y1=191; for(int y=y0;y<=y1;y++){u16* r=p+y*256+x0; for(int x=x0;x<=x1;x++) *r=col;}}
+static void scenery(u16* p, settings::Theme t, u32 frame){
+    u16 sky=ARGB16(1,3,6,13), mid=ARGB16(1,5,12,24), glow=ARGB16(1,0,18,28), land=ARGB16(1,4,12,8), hi=ARGB16(1,0,24,24), dark=ARGB16(1,2,5,9);
+    for(int y=0;y<192;y++){ int v=2+(y*8/192); u16 col=ARGB16(1,2,v/2,v); if(t==settings::THEME_OCEAN) col=ARGB16(1,1,5+v/2,10+v); if(t==settings::THEME_FOREST) col=ARGB16(1,1+v/4,5+v/2,4+v/3); if(t==settings::THEME_NIGHT) col=ARGB16(1,1,2,7+v/3); for(int x=0;x<256;x++)p[y*256+x]=col; }
+    for(int i=0;i<10;i++){int x=(i*47+17)%248;int y=12+(i*19)%72; p[y*256+x]=hi; if(x+1<256)p[y*256+x+1]=hi;}
+    if(t==settings::THEME_OCEAN){ for(int y=126;y<158;y++) for(int x=0;x<256;x++) if(((x+y+(int)(frame/8))&15)<7)p[y*256+x]=glow; }
+    else { for(int y=132;y<192;y++) for(int x=0;x<256;x++) if(((x/9+y/5)&3)==0)p[y*256+x]=land; }
+    rect(p,8,8,247,184,ARGB16(1,0,0,0));
+    // Repaint a translucent-style inset by drawing only a frame; bitmap alpha is opaque, so the scenery remains the backdrop.
+    for(int x=8;x<248;x++){p[8*256+x]=hi;p[184*256+x]=dark;} for(int y=8;y<185;y++){p[y*256+8]=hi;p[y*256+247]=dark;}
+}
 static const char* names[MOD_COUNT]={"CORE","QUANTUM","SOUND","DSP","LAB","AI","NETWORK","PROJECTS","RF LAB","MARAUDER","STUDIO","SYSTEM","ANIMAL","SETTINGS"};
 static const char* glyphs[MOD_COUNT]={"[CORE]","[QBIT]","[SND ]","[DSP ]","[LAB ]","[AI  ]","[NET ]","[FILE]","[RF  ]","[RFX ]","[DAW ]","[SYS ]","[BIO ]","[SET ]"};
 
@@ -40,18 +54,22 @@ static void title(const char* t,const SystemState&s){
 }
 
 void init(){
-    videoSetMode(MODE_0_2D); videoSetModeSub(MODE_0_2D);
+    // Real bitmap backdrops + transparent text UI: graphics stay underneath the controls.
+    videoSetMode(MODE_3_2D); videoSetModeSub(MODE_3_2D);
     vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
-    consoleInit(&topConsole,0,BgType_Text4bpp,BgSize_T_256x256,31,0,true,true);
-    consoleInit(&bottomConsole,0,BgType_Text4bpp,BgSize_T_256x256,31,0,false,true);
+    bgTop=bgInit(3,BgType_Bmp16,BgSize_B16_256x256,1,0);
+    bgBottom=bgInitSub(3,BgType_Bmp16,BgSize_B16_256x256,1,0);
+    topPixels=bgGetGfxPtr(bgTop); bottomPixels=bgGetGfxPtr(bgBottom);
+    scenery(topPixels,settings::THEME_AETHER,0); scenery(bottomPixels,settings::THEME_AETHER,0);
+    consoleInit(&topConsole,0,BgType_Text4bpp,BgSize_T_256x256,0,0,true,true);
+    consoleInit(&bottomConsole,0,BgType_Text4bpp,BgSize_T_256x256,0,0,false,true);
     clearTop(); clearBottom();
 }
 void update(const SystemState&){}
 
 static void card(int n,const SystemState&s){
-    bool active=(n==s.selectedModule);
-    iprintf("%s",active?"\x1b[33m>":"\x1b[37m "); iprintf("%-10s",glyphs[n]);
-    if((n&1)==1) iprintf("\n");
+    bool active=(n==s.selectedModule); const int col=n&1,row=n>>1;
+    iprintf("\x1b[%d;%dH%s[%s] %-9s%s",2+row*2,1+col*16,active?"\x1b[33m>\x1b[47m":"\x1b[37m",active?"*":" ",names[n],active?"\x1b[0m":"\x1b[37m");
 }
 static void statusRibbon(const SystemState&s){
     auto hr=hil::report(); auto st=studio::state(); auto dg=diag::report();
@@ -59,9 +77,10 @@ static void statusRibbon(const SystemState&s){
     iprintf("HIL %u%% GW %u/6 HP %u BPM %u\n",hr.score,(unsigned)gate::onlineCount(),dg.score,st.bpm);
 }
 static void topDesktop(const SystemState&s){
-    title("AETHER HOME",s);
-    selectTop();
-    auto p=settings::current();
+    auto p=settings::current(); scenery(topPixels,theme::active(),s.frame); scenery(bottomPixels,theme::active(),s.frame);
+    title("AETHER HOME",s); selectTop();
+    iprintf("\x1b[1;1H\x1b[36mAETHEROS1.1+\x1b[37m   UNIVERSAL DSi WORKSTATION\n");
+    iprintf("\x1b[4;1H");
     if(p.layout==settings::LAYOUT_MYSPACE){
         iprintf("\x1b[33m AETHER SPACE  \x1b[37m%s\n",p.locationValid?"LOCATION READY":"AETHER DEFAULT");
         iprintf(" %s\n",theme::sky());
@@ -78,14 +97,14 @@ static void topDesktop(const SystemState&s){
         iprintf("\x1b[32m AETHER VALLEY DESKTOP\n\x1b[37m");
         iprintf(" %s\n",theme::ground());
         statusRibbon(s);
-        iprintf("\n MODULES\n");
+        iprintf("\n\x1b[36mMODULE DECK\x1b[37m\n");
         for(int i=0;i<MOD_COUNT;i++)card(i,s);
     }
 }
 static void bottomDesktop(const SystemState&s){
-    clearBottom(); selectBottom();
-    auto p=settings::current();
-    iprintf("%sAETHER SPACE%s\n",theme::accent(),"\x1b[37m");
+    clearBottom(); selectBottom(); auto p=settings::current();
+    iprintf("\x1b[36mAETHEROS1.1+ CONTROL DECK\x1b[37m\n");
+    iprintf("TOUCH A MODULE  •  A OPEN  •  B HOME\n");
     iprintf("PROFILE: YOU\nTHEME: %s\nLAYOUT: %s\n",settings::themeName(theme::active()),settings::layoutName(p.layout));
     iprintf("%s\n",settings::locationLabel());
     iprintf("\n\x1b[36mQUICK CONTROL\n");
@@ -142,8 +161,8 @@ static void settingsBottom(const SystemState&s){
 }
 static void actionPanel(int m){
     clearBottom(); selectBottom();
-    iprintf("%s%s / CONTROL SURFACE%s\n",theme::accent(),names[m],"\x1b[37m");
-    iprintf("------------------------\n");
+    iprintf("\x1b[36m[%02d] %s\x1b[37m   L/R MODULE\n",m+1,names[m]);
+    iprintf("+------------------------------+\n");
     switch(m){
     case MOD_CORE: iprintf("A System tick / refresh\nX Health snapshot\nY Recovery heartbeat\nSELECT Safe reset"); break;
     case MOD_QUANTUM: iprintf("A Bell / trigger\nX Grover search\nY Measure\nL Deutsch-Jozsa\nR QFT\nSELECT Reset"); break;
@@ -160,7 +179,10 @@ static void actionPanel(int m){
     case MOD_ANIMAL: iprintf("A Analyze animal signal\nX Animal > Human\nY Human > Animal\nL/R Species\nSELECT Reset"); break;
     case MOD_SETTINGS: iprintf("A Apply\nX Save config\nY Reset layout\nL/R Choose\nSELECT Save\nLANG %s",i18n::languageName()); break;
     }
-    iprintf("\n%sL/R Module  B Home  TOUCH Direct%s",theme::accent(),"\x1b[37m");
+    iprintf("\n+------------------------------+\n");
+    iprintf("\x1b[33m A\x1b[37m PRIMARY   \x1b[33mX\x1b[37m ALT   \x1b[33mY\x1b[37m SECONDARY\n");
+    iprintf("\x1b[36m TOUCH CENTER\x1b[37m = PRIMARY ACTION\n");
+    iprintf("B HOME   L/R MODULE   SELECT RESET");
 }
 static void module(const SystemState&s){
     const int m=s.selectedModule;
