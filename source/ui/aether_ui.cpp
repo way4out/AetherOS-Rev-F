@@ -30,8 +30,7 @@ static void scenery(u16* p, settings::Theme t, u32 frame){
     for(int i=0;i<10;i++){int x=(i*47+17)%248;int y=12+(i*19)%72; p[y*256+x]=hi; if(x+1<256)p[y*256+x+1]=hi;}
     if(t==settings::THEME_OCEAN){ for(int y=126;y<158;y++) for(int x=0;x<256;x++) if(((x+y+(int)(frame/8))&15)<7)p[y*256+x]=glow; }
     else { for(int y=132;y<192;y++) for(int x=0;x<256;x++) if(((x/9+y/5)&3)==0)p[y*256+x]=land; }
-    rect(p,8,8,247,184,ARGB16(1,0,0,0));
-    // Repaint a translucent-style inset by drawing only a frame; bitmap alpha is opaque, so the scenery remains the backdrop.
+    // Keep the scenic pixels intact; the console layer provides the interactive chrome.
     for(int x=8;x<248;x++){p[8*256+x]=hi;p[184*256+x]=dark;} for(int y=8;y<185;y++){p[y*256+8]=hi;p[y*256+247]=dark;}
 }
 static const char* names[MOD_COUNT]={"CORE","QUANTUM","SOUND","DSP","LAB","AI","NETWORK","PROJECTS","RF LAB","MARAUDER","STUDIO","SYSTEM","ANIMAL","SETTINGS"};
