@@ -46,3 +46,11 @@ DSi SD card and launch the NDS with a compatible homebrew loader.
 - Navigation now uses a centralized home-return path that restores the canonical selection.
 - Home exposes dirty state and last module context.
 - Telemetry exposes boot count and persistence state.
+
+
+## Pass 5 / 8
+- Added a capability-health layer for runtime status reporting.
+- Added explicit guarded/armed gateway state for external hardware paths.
+- Safe Mode now clears gateway state alongside wireless/external controls.
+- RF and TinySA actions explicitly transition the gateway state when armed.
+- Health polling avoids repeated FAT initialization.
