@@ -1,5 +1,5 @@
 #pragma once
-#define APP_NAME "Quantum AetherOSQ"
-#define APP_VERSION "Q1.0"
-#define SAVE_MAGIC 0x51414551u
-#define SAVE_VERSION 1
+#define APP_NAME "AetherMod"
+#define APP_VERSION "AetherMod Q1"
+#define SAVE_MAGIC 0x414D4F44u
+#define SAVE_VERSION 2
