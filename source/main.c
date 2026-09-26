@@ -45,7 +45,7 @@ static void defaults(void) {
 static void ensure_save_dir(void) {
     char p1[64], p2[64];
     snprintf(p1, sizeof(p1), "%sdata", storageRoot);
-    snprintf(p2, sizeof(p2), "%sdata/O2S2HaHa", storageRoot);
+    snprintf(p2, sizeof(p2), "%sdata/Quantum AetherOSQ", storageRoot);
     mkdir(p1, 0777);
     mkdir(p2, 0777);
 }
@@ -55,7 +55,7 @@ static void load_save(void) {
     ensure_save_dir();
 
     char path[96];
-    snprintf(path, sizeof(path), "%sdata/O2S2HaHa/save.dat", storageRoot);
+    snprintf(path, sizeof(path), "%sdata/QuantumAetherOSQ/save.dat", storageRoot);
     FILE *f = fopen(path, "rb");
     if (!f) return;
 
@@ -80,7 +80,7 @@ static void save_state(void) {
     save.checksum = checksum32(&save, sizeof(save));
 
     char path[96];
-    snprintf(path, sizeof(path), "%sdata/O2S2HaHa/save.dat", storageRoot);
+    snprintf(path, sizeof(path), "%sdata/Quantum AetherOSQ/save.dat", storageRoot);
     FILE *f = fopen(path, "wb");
     if (!f) return;
     fwrite(&save, 1, sizeof(save), f);
@@ -90,14 +90,14 @@ static void save_state(void) {
 static void header(const char *t) {
     consoleSelect(&bottomConsole);
     consoleClear();
-    iprintf("AETHEROS O2S2HAHA FUNCORE %s\n", APP_VERSION);
+    iprintf("AETHEROS QUANTUM AETHEROSQ FUNCORE %s\n", APP_VERSION);
     iprintf("--------------------------------\n%s\n\n", t);
 }
 
 static void hub(void) {
-    header("NEXT-GEN INTERACTIVE HUB");
+    header("QUANTUM COCKPIT");
     const char *items[] = {
-        "O2S2HaHa FUN", "AETHER TELEMETRY", "SETTINGS",
+        "Quantum AetherOSQ FUN", "AETHER TELEMETRY", "SETTINGS",
         "SAFE TEST", "ABOUT"
     };
     for (int x = 0; x < 5; x++)
@@ -107,7 +107,7 @@ static void hub(void) {
     iprintf("Launches: %lu\n", (unsigned long)save.launches);
     consoleSelect(&topConsole);
     consoleClear();
-    iprintf("AETHEROS\nO2S2HAHA\n\nFUNCORE ONLINE\n\n");
+    iprintf("AETHEROS\nQUANTUM AETHEROSQ\n\nFUNCORE ONLINE\n\n");
     iprintf("FRAME %lu\n", (unsigned long)frameCounter);
     iprintf("MODE %s\n", safeMode ? "SAFE" : "LIVE");
     iprintf("DSi %s\n", isDSiMode() ? "MODE" : "DS/COMPAT");
@@ -115,7 +115,7 @@ static void hub(void) {
 }
 
 static void haha(void) {
-    header("CHAOS LAB");
+    header("QUANTUM LAB");
     int e = (frameCounter / 3) % 101;
     iprintf("FUN ENGINE: ONLINE\n\nENERGY [");
     for (int i = 0; i < 20; i++) iprintf("%c", i < e / 5 ? '#' : '.');
@@ -157,9 +157,9 @@ static void safe_test(void) {
 
 static void about(void) {
     header("ABOUT");
-    iprintf("AetherOS O2S2HaHa FunCore\n");
-    iprintf("DSi Interactive Next Generation\n\n");
-    iprintf("Quantum-themed software UI\n");
+    iprintf("AetherOS Quantum AetherOSQ FunCore\n");
+    iprintf("DSi Quantum Cockpit\n\n");
+    iprintf("Quantum-inspired software UI\n");
     iprintf("No special hardware required.\n\nB=BACK\n");
 }
 
@@ -225,7 +225,7 @@ int main(void) {
     consoleInit(&bottomConsole, 0, BgType_Text4bpp, BgSize_T_256x256, 22, 3, false, true);
     consoleSelect(&topConsole);
     consoleClear();
-    iprintf("AETHEROS O2S2HAHA\nBOOTING...\n");
+    iprintf("AETHEROS QUANTUM AETHEROSQ\nBOOTING...\n");
     swiWaitForVBlank();
 
     if (!fatInitDefault()) {
