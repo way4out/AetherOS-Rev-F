@@ -36,10 +36,12 @@ typedef struct {
 static SaveData save;
 static PrintConsole topConsole, bottomConsole;
 static const char *root = "fat:/";
-static int mode=0, cursor=0, appCursor=0, codexPage=0, animalPage=0;
+static int mode=0, cursor=0, codexPage=0, animalPage=0;
 static int safeMode=0, spectrumCursor=0, calculatorCursor=0;
 static int codexSearch=0, animalAnalyzing=0, fftWindow=0, fftPeakHold=0;
 static int networkSelfTest=0, quantumState=0, dawPlaying=0, dawTrack=0;
+static int rfMode=0, rfBand=0, rfChannel=1, rfPeakHold=0, rfPacketView=0;
+static int saSpan=20, saStart=0, saRBW=10, saAtten=0, saMarker=0, saRunning=0, saGenArmed=0;
 static u32 frameCounter=0;
 static int soundId=-1;
 
@@ -201,43 +203,52 @@ static void animal(void){
 
 static void rfLab(const char *title){
     page(title);
-    iprintf("PASSIVE RF / MARAUDER LAB\n");
-    iprintf("Mode: RECEIVE / ANALYZE ONLY\n");
-    iprintf("Unauthorized interference: NOT IMPLEMENTED\n\n");
-    iprintf("Channel map: 1-13 / local regulatory set\n");
-    iprintf("RSSI proxy: %d dBm\n",-30-(int)(frameCounter%55));
-    iprintf("Noise floor: -%d dBm\n",80+(int)(frameCounter%20));
-    iprintf("Packets/scan: %lu\n",(unsigned long)(frameCounter%1000));
-    iprintf("Capture: %s\n",save.wireless?"GATEWAY":"SIMULATION");
-    footer("A SCAN  X SAVE  Y CLEAR  B HOME");
+    const char *modes[]={"SURVEY","CHANNEL VIEW","PACKET META","RSSI HISTORY"};
+    const char *bands[]={"2.4GHz ISM","5GHz ISM","CUSTOM GATE"};
+    iprintf("MARAUDER RECEIVE/ANALYZE CONSOLE\n");
+    iprintf("MODE       %s\n",modes[rfMode&3]);
+    iprintf("BAND       %s\n",bands[rfBand%3]);
+    iprintf("CHANNEL    %d\n",rfChannel);
+    iprintf("RSSI       %d dBm\n",-32-(int)(frameCounter%48));
+    iprintf("NOISE      -%d dBm\n",78+(int)(frameCounter%17));
+    iprintf("SNR        %d dB\n",18-(int)(frameCounter%8));
+    iprintf("BEACON/META %lu\n",(unsigned long)((frameCounter*3)%997));
+    iprintf("PACKET VIEW %s\n",rfPacketView?"ON":"OFF");
+    iprintf("PEAK HOLD   %s\n",rfPeakHold?"ON":"OFF");
+    iprintf("CAPTURE     %s\n",save.wireless?"EXTERNAL GATE":"LOCAL SIM");
+    iprintf("TX/DEAUTH/JAM/CRED-CAPTURE: DISABLED\n");
+    footer("UP/DOWN MODE  A SCAN  X META  Y PEAK  LEFT/RIGHT BAND  B HOME");
 }
 
 static void tinysa(void){
     page("TINySA LAB");
-    iprintf("SPECTRUM ANALYZER CONSOLE\n");
-    iprintf("INPUT      %s\n",save.wireless?"GATEWAY":"SIM");
-    iprintf("START      %d MHz\n",spectrumCursor*10);
-    iprintf("SPAN       %d MHz\n",10+(spectrumCursor%8)*10);
-    iprintf("RBW        %s\n",spectrumCursor%2?"30 kHz":"10 kHz");
-    iprintf("ATTEN      %d dB\n",(spectrumCursor%8)*2);
-    iprintf("PEAK       %d dBm\n",-20-(int)(frameCounter%35));
-    iprintf("POINTS     145\n");
-    iprintf("SWEEP      ACTIVE\n");
-    iprintf("GENERATOR  GATED\n");
-    iprintf("AM/FM      CONFIGURABLE\n");
-    footer("UP/DOWN PARAM  A SWEEP  X MARKER  B HOME");
+    int stop=saStart+saSpan;
+    iprintf("EXTERNAL TINySA CONTROL / TELEMETRY\n");
+    iprintf("INPUT       %s\n",save.wireless?"EXTERNAL":"SIMULATED");
+    iprintf("START       %d MHz\n",saStart);
+    iprintf("STOP        %d MHz\n",stop);
+    iprintf("SPAN        %d MHz\n",saSpan);
+    iprintf("RBW         %d kHz\n",saRBW);
+    iprintf("ATTENUATION  %d dB\n",saAtten);
+    iprintf("POINTS      450\n");
+    iprintf("MARKER      %d MHz  %s\n",saMarker,saRunning?"TRACKING":"READY");
+    iprintf("SWEEP       %s\n",saRunning?"RUNNING":"STOPPED");
+    iprintf("GENERATOR   %s\n",saGenArmed?"CONFIGURED":"SAFE/OFF");
+    iprintf("AM/FM       CONFIG PAGE\n");
+    iprintf("SAFE GATE   external TX only\n");
+    iprintf("\nSCPI-LIKE QUEUE:\n");
+    iprintf("scan %d %d %d %d\n",saStart,stop,saRBW,saAtten);
+    footer("UP/DOWN SPAN  A SWEEP  X MARKER  Y RBW/ATTEN  L/R START  B HOME");
 }
-
-static long long ipow10i(int n){long long r=1;while(n-->0)r*=10;return r;}
 
 static void calculator(void){
     page("QUANTUM CALCULATOR");
     long long a=(long long)(frameCounter%1000)+7, b=(long long)((frameCounter/17)%97)+3, result=0;
     const char *fn="ADD";
-    switch(calculatorCursor%6){
+    switch(calculatorCursor%8){
       case 0: result=a+b; fn="ADD"; break; case 1: result=a-b; fn="SUB"; break;
       case 2: result=a*b; fn="MUL"; break; case 3: result=b?a/b:0; fn="DIV"; break;
-      case 4: result=(a&1)^(b&1); fn="XOR/Q"; break; default: result=(a+b)&1; fn="PARITY/Q"; break;
+      case 4: result=(a&1)^(b&1); fn="XOR/Q"; break; case 5: result=(a*b)%257; fn="MOD-257"; break; case 6: result=(a*a+b*b)%1009; fn="Q-NORM"; break; default: result=(a+b)&1; fn="PARITY/Q"; break;
     }
     iprintf("A=%lld  B=%lld\nFUNCTION %s\nRESULT %lld\n",a,b,fn,result);
     iprintf("SUPERPOSITION BIT %d\n",(int)((a^b)&1));
@@ -317,7 +328,7 @@ static void network(void){
     iprintf("BLUETOOTH        EXTERNAL\n");
     iprintf("QPU             EXTERNAL\n");
     iprintf("SDR             EXTERNAL\n");
-    iprintf("FRAMED CRC GATE  READY\n");
+    iprintf("FRAMED CRC32 GATE READY\nRX/TX QUEUES    BOUNDED\n");
     iprintf("SELFTEST        %s\n",networkSelfTest?"PASS":"READY");
     footer("A ARM GATE  X SELFTEST  Y RESET  B HOME");
 }
@@ -347,7 +358,7 @@ static void family(void){
 
 static void systemPage(void){
     page("SYSTEM");
-    iprintf("AETHERMOD OS    Q1\n");
+    iprintf("AETHERMOD OS    Q2\n");
     iprintf("DUAL OS          %s\n",mode?"APP":"HOME");
     iprintf("BRIGHTNESS       %u/4\n",save.brightness);
     iprintf("THEME            %s\n",save.theme?"AETHER":"CLASSIC");
@@ -423,10 +434,21 @@ static void input(void){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){codexPage=(codexPage+9)%10;changed=1;} if(d&KEY_DOWN){codexPage=(codexPage+1)%10;changed=1;} if(d&KEY_A){codexSearch^=1;changed=1;} if(d&KEY_X){codexSearch=1;changed=1;}
     } else if(mode==3){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){animalPage=(animalPage+14)%15;animalAnalyzing=0;changed=1;} if(d&KEY_DOWN){animalPage=(animalPage+1)%15;animalAnalyzing=0;changed=1;} if(d&KEY_A){animalAnalyzing=1;tone();changed=1;} if(d&KEY_X){tone();changed=1;} if(d&KEY_Y){animalAnalyzing=0;changed=1;}
-    } else if(mode==4||mode==5){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){spectrumCursor=(spectrumCursor+7)%8;changed=1;} if(d&KEY_DOWN){spectrumCursor=(spectrumCursor+1)%8;changed=1;} if(d&KEY_A){save.wireless=1;changed=1;} if(d&KEY_X){spectrumCursor=0;changed=1;}
+    } else if(mode==4){
+        if(d&KEY_B){mode=0;changed=1;}
+        if(d&KEY_UP){rfMode=(rfMode+3)%4;changed=1;} if(d&KEY_DOWN){rfMode=(rfMode+1)%4;changed=1;}
+        if(d&KEY_LEFT){rfBand=(rfBand+2)%3;changed=1;} if(d&KEY_RIGHT){rfBand=(rfBand+1)%3;changed=1;}
+        if(d&KEY_A){save.wireless=1;rfPacketView=0;frameCounter+=11;changed=1;}
+        if(d&KEY_X){rfPacketView^=1;changed=1;} if(d&KEY_Y){rfPeakHold^=1;changed=1;}
+    } else if(mode==5){
+        if(d&KEY_B){mode=0;changed=1;}
+        if(d&KEY_UP){saSpan+=5;if(saSpan>200)saSpan=5;changed=1;} if(d&KEY_DOWN){saSpan-=5;if(saSpan<5)saSpan=200;changed=1;}
+        if(d&KEY_LEFT){saStart-=5;if(saStart<0)saStart=0;changed=1;} if(d&KEY_RIGHT){saStart+=5;if(saStart>800)saStart=800;changed=1;}
+        if(d&KEY_A){saRunning=!saRunning;save.wireless=1;changed=1;}
+        if(d&KEY_X){saMarker+=5;if(saMarker>saSpan)saMarker=0;changed=1;}
+        if(d&KEY_Y){if(saRBW==10){saRBW=30;saAtten=10;}else if(saRBW==30){saRBW=100;saAtten=20;}else{saRBW=10;saAtten=0;}changed=1;}
     } else if(mode==6){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){calculatorCursor=(calculatorCursor+5)%6;changed=1;} if(d&KEY_DOWN){calculatorCursor=(calculatorCursor+1)%6;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;changed=1;}
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){calculatorCursor=(calculatorCursor+7)%8;changed=1;} if(d&KEY_DOWN){calculatorCursor=(calculatorCursor+1)%8;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;changed=1;}
     } else if(mode==7){
         if(d&KEY_B){dawPlaying=0;saveState();mode=0;changed=1;} if(d&KEY_UP){save.dawStep=(save.dawStep+15)%16;changed=1;} if(d&KEY_DOWN){save.dawStep=(save.dawStep+1)%16;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;} if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;saveState();changed=1;} if(dawPlaying&&(frameCounter%15)==0){tone();save.dawStep=(save.dawStep+1)%16;changed=1;}
     } else if(mode==8){
