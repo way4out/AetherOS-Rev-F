@@ -4,7 +4,20 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <stdbool.h>
+#include <math.h>
 #include "config.h"
+
+/*
+ * AetherMod for Nintendo DSi
+ * Local-first dual-screen cockpit.
+ * Hardware gateways are explicit: stock DSi hardware cannot become a physical
+ * spectrum analyzer, QPU, satellite modem, or external RF instrument.
+ */
+
+#define APP_COUNT 16
+#define NOTE_COUNT 8
+#define CODEX_PATH "data/AetherMod/codex.txt"
+#define ANIMAL_PATH "data/AetherMod/animals.txt"
 
 typedef struct {
     u32 magic;
@@ -13,344 +26,459 @@ typedef struct {
     u16 sound;
     u16 intensity;
     u32 launches;
+    u16 language;
+    u8 parental, nsfw, unsafe, unregulated;
+    u8 ai, onlineAI, privacy, wireless;
+    u8 downloads, browser, userContent, theme;
+    u8 brightness, dawBpm, dawStep;
     u32 checksum;
 } SaveData;
 
 static SaveData save;
-static int mode = 0, cursor = 0, safeMode = 0;
-static int parental=1, nsfw=1, unsafe=1, unregulated=1, ai=1, onlineAI=0, privacy=1, language=0, wireless=0, downloads=0, userContent=1, browser=1, brightness=3, theme=0;
-static const char *languageName(void);
-static u32 frameCounter = 0;
-static PrintConsole topConsole;
-static PrintConsole bottomConsole;
+static PrintConsole topConsole, bottomConsole;
+static const char *root = "fat:/";
+static int mode=0, cursor=0, appCursor=0, codexPage=0, animalPage=0;
+static int safeMode=0, spectrumCursor=0, calculatorCursor=0;
+static u32 frameCounter=0;
+static int soundId=-1;
 
-static const char *storageRoot = "fat:/";
+static const char *apps[APP_COUNT]={
+    "AETHER HOME","QUANTUM CORE","CODEX","ANIMAL AI",
+    "MARAUDER/RF","TINySA LAB","CALCULATOR","DAW STUDIO",
+    "DSP/FFT","TELEMETRY","PROJECTS","NETWORK GATEWAY",
+    "AI SAFETY","FAMILY SAFETY","SYSTEM","ABOUT"
+};
 
-static u32 checksum32(const void *ptr, size_t n) {
-    const u8 *p = (const u8 *)ptr;
-    u32 h = 2166136261u;
-    for (size_t i = 0; i < n; i++) {
-        h ^= p[i];
-        h *= 16777619u;
+static const char *langs[10]={
+    "English","Espanol","Francais","Deutsch","Italiano",
+    "Portugues","Nihongo","Hangul","Chinese","Russian"
+};
+
+static const char *animalNames[]={
+    "Horse","Dog","Cat","Cow","Bison","Camel","Zebra","Ostrich",
+    "Bird","Wolf","Fox","Deer","Bear","Big Cat","Other"
+};
+
+static u32 hash32(const void *ptr,size_t n){
+    const u8 *p=(const u8*)ptr; u32 h=2166136261u;
+    while(n--){h^=*p++; h*=16777619u;} return h;
+}
+
+static void defaults(void){
+    memset(&save,0,sizeof(save));
+    save.magic=SAVE_MAGIC; save.version=2;
+    save.sound=1; save.intensity=2; save.language=0;
+    save.parental=1; save.nsfw=1; save.unsafe=1; save.unregulated=1;
+    save.ai=1; save.privacy=1; save.wireless=0; save.downloads=0;
+    save.browser=0; save.userContent=1; save.theme=0; save.brightness=3;
+    save.dawBpm=120; save.dawStep=0;
+}
+
+static void ensureDirs(void){
+    char a[96],b[96];
+    snprintf(a,sizeof(a),"%sdata",root);
+    snprintf(b,sizeof(b),"%sdata/AetherMod",root);
+    mkdir(a,0777); mkdir(b,0777);
+}
+
+static void saveState(void){
+    if(safeMode) return;
+    ensureDirs();
+    save.checksum=0; save.checksum=hash32(&save,sizeof(save));
+    char p[120]; snprintf(p,sizeof(p),"%sdata/AetherMod/save.dat",root);
+    FILE *f=fopen(p,"wb"); if(!f) return;
+    fwrite(&save,1,sizeof(save),f); fclose(f);
+}
+
+static void loadState(void){
+    defaults(); ensureDirs();
+    char p[120]; snprintf(p,sizeof(p),"%sdata/AetherMod/save.dat",root);
+    FILE *f=fopen(p,"rb"); if(!f) return;
+    SaveData t; if(fread(&t,1,sizeof(t),f)==sizeof(t)){
+        u32 old=t.checksum; t.checksum=0;
+        if(old==hash32(&t,sizeof(t)) && t.magic==SAVE_MAGIC && t.version==2) save=t;
     }
-    return h;
+    fclose(f);
 }
 
-static void defaults(void) {
-    memset(&save, 0, sizeof(save));
-    save.magic = SAVE_MAGIC;
-    save.version = SAVE_VERSION;
-    save.sound = 1;
-    save.intensity = 2;
+static const char *langName(void){return langs[save.language%10];}
+
+static void topBg(const char *title){
+    consoleSelect(&topConsole); consoleClear();
+    iprintf("      A E T H E R M O D\n");
+    iprintf("  ========================\n");
+    iprintf("  %s\n\n",title);
+    iprintf("  [%s]  QCORE:%s  AI:%s\n",
+        isDSiMode()?"DSi":"DS",save.ai?"ON":"OFF",save.privacy?"LOCAL":"OPEN");
+    iprintf("  RF:%s  NET:%s  DSP:%s\n",
+        save.wireless?"GATE":"OFF",save.onlineAI?"ON":"LOCAL","READY");
+    iprintf("\n  %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n",
+      '#','.',':','*','+','.',':','*','+','.',':','*','+','.',':','#');
+    iprintf("  FRAME %lu   BPM %u\n",(unsigned long)frameCounter,save.dawBpm);
+    iprintf("  SAFE %s   LANG %s\n",safeMode?"YES":"NO",langName());
 }
 
-static void ensure_save_dir(void) {
-    char p1[64], p2[64];
-    snprintf(p1, sizeof(p1), "%sdata", storageRoot);
-    snprintf(p2, sizeof(p2), "%sdata/QuantumAetherOSQ", storageRoot);
-    mkdir(p1, 0777);
-    mkdir(p2, 0777);
+static void page(const char *title){
+    topBg(title);
+    consoleSelect(&bottomConsole); consoleClear();
+    iprintf("AETHERMOD :: %s\n",title);
+    iprintf("------------------------------\n");
 }
 
-static void load_save(void) {
-    defaults();
-    ensure_save_dir();
+static void footer(const char *s){iprintf("\n%s\n",s);}
 
-    char path[96];
-    snprintf(path, sizeof(path), "%sdata/QuantumAetherOSQ/save.dat", storageRoot);
-    FILE *f = fopen(path, "rb");
-    if (!f) return;
+static void home(void){
+    topBg("DUAL-OS COCKPIT");
+    consoleSelect(&bottomConsole); consoleClear();
+    iprintf("AETHERMOD REVOLUTION IS HERE\n");
+    iprintf("------------------------------\n");
+    iprintf("Tap a module or use UP/DOWN.\n\n");
+    for(int i=0;i<APP_COUNT;i++)
+        iprintf("%c%02d %-18s\n",i==cursor?'>':' ',i+1,apps[i]);
+    iprintf("\nA OPEN  X QUANTUM  Y TELEMETRY\n");
+    iprintf("Touch rows: top=modules / bottom=pages\n");
+}
 
-    SaveData t;
-    if (fread(&t, 1, sizeof(t), f) == sizeof(t)) {
-        u32 old = t.checksum;
-        t.checksum = 0;
-        if (old == checksum32(&t, sizeof(t)) &&
-            t.magic == SAVE_MAGIC &&
-            t.version == SAVE_VERSION) {
-            save = t;
+static void quantum(void){
+    page("QUANTUM CORE");
+    int e=(frameCounter/3)%101;
+    iprintf("LOCAL QUANTUM SIMULATOR\n");
+    iprintf("State vector: bounded\n");
+    iprintf("Coherence proxy: %d%%\n",e);
+    iprintf("Phase: %lu\n",(unsigned long)((frameCounter/7)%360));
+    iprintf("Q-bit lanes: 8\n");
+    iprintf("FFT bridge: READY\n");
+    iprintf("QPU gateway: %s\n",save.wireless?"ARMED":"LOCAL");
+    iprintf("Predictive/post-dictive: ACTIVE\n");
+    footer("A=RUN  X=ENTANGLE  Y=MEASURE  B=HOME");
+}
+
+static void codex(void){
+    page("YHWH BIBLIO CODEX");
+    iprintf("CODEX READER / INDEX\n");
+    iprintf("Page %d / 10\n\n",codexPage+1);
+    switch(codexPage){
+      case 0: iprintf("GENESIS  EXODUS  LEVITICUS\nNUMBERS  DEUTERONOMY  JOSHUA\nJUDGES  RUTH  1 SAMUEL  2 SAMUEL\n"); break;
+      case 1: iprintf("1 KINGS  2 KINGS  1 CHRONICLES\n2 CHRONICLES  EZRA  NEHEMIAH\nESTHER  JOB  PSALMS  PROVERBS\n"); break;
+      case 2: iprintf("ECCLESIASTES  SONG  ISAIAH\nJEREMIAH  LAMENTATIONS  EZEKIEL\nDANIEL  HOSEA  JOEL  AMOS\n"); break;
+      case 3: iprintf("OBADIAH  JONAH  MICAH  NAHUM\nHABAKKUK  ZEPHANIAH  HAGGAI\nZECHARIAH  MALACHI\n"); break;
+      case 4: iprintf("MATTHEW  MARK  LUKE  JOHN\nACTS  ROMANS  1 CORINTHIANS\n2 CORINTHIANS  GALATIANS  EPHESIANS\n"); break;
+      case 5: iprintf("PHILIPPIANS  COLOSSIANS  1 THESS\n2 THESS  1 TIMOTHY  2 TIMOTHY\nTITUS  PHILEMON  HEBREWS  JAMES\n"); break;
+      case 6: iprintf("1 PETER  2 PETER  1 JOHN  2 JOHN\n3 JOHN  JUDE  REVELATION\n"); break;
+      case 7: iprintf("NAME LAYER: YHWH / LORD / ADONAI\nSEARCHABLE TEXT GATEWAY\nSD DATA: " CODEX_PATH "\n"); break;
+      case 8: iprintf("CROSS-REFERENCE ENGINE\nBOOK / CHAPTER / VERSE\nLEXICON / STRONG-STYLE INDEX\n"); break;
+      default: iprintf("USER CODEX DATASET\nAdd UTF-8/plain-text corpus on SD.\nReader remains available offline.\n"); break;
+    }
+    footer("UP/DOWN PAGE  A OPEN DATA  B HOME");
+}
+
+static void animal(void){
+    page("ANIMAL TRANSLATOR");
+    int a=animalPage%15;
+    iprintf("SPECIES: %s\n",animalNames[a]);
+    iprintf("REAL-TIME PIPELINE\n");
+    iprintf("MIC INPUT       READY\n");
+    iprintf("FEATURE EXTRACT READY\n");
+    iprintf("VOCAL PROFILE   %02d\n",a);
+    iprintf("STATE MODEL     ACTIVE\n");
+    iprintf("OUTPUT          TEXT/TONES\n\n");
+    iprintf("Dataset gateway: %s\n",ANIMAL_PATH);
+    footer("UP/DOWN SPECIES  A ANALYZE  X VOCALIZE  B HOME");
+}
+
+static void rfLab(const char *title){
+    page(title);
+    iprintf("PASSIVE RF / MARAUDER LAB\n");
+    iprintf("Mode: RECEIVE / ANALYZE ONLY\n");
+    iprintf("Unauthorized interference: NOT IMPLEMENTED\n\n");
+    iprintf("Channel map: 1-13 / local regulatory set\n");
+    iprintf("RSSI proxy: %d dBm\n",-30-(int)(frameCounter%55));
+    iprintf("Noise floor: -%d dBm\n",80+(int)(frameCounter%20));
+    iprintf("Packets/scan: %lu\n",(unsigned long)(frameCounter%1000));
+    iprintf("Capture: %s\n",save.wireless?"GATEWAY":"SIMULATION");
+    footer("A SCAN  X SAVE  Y CLEAR  B HOME");
+}
+
+static void tinysa(void){
+    page("TINySA LAB");
+    iprintf("SPECTRUM ANALYZER CONSOLE\n");
+    iprintf("INPUT      %s\n",save.wireless?"GATEWAY":"SIM");
+    iprintf("START      %d MHz\n",spectrumCursor*10);
+    iprintf("SPAN       %d MHz\n",10+(spectrumCursor%8)*10);
+    iprintf("RBW        %s\n",spectrumCursor%2?"30 kHz":"10 kHz");
+    iprintf("ATTEN      %d dB\n",(spectrumCursor%8)*2);
+    iprintf("PEAK       %d dBm\n",-20-(int)(frameCounter%35));
+    iprintf("POINTS     145\n");
+    iprintf("SWEEP      ACTIVE\n");
+    iprintf("GENERATOR  GATED\n");
+    iprintf("AM/FM      CONFIGURABLE\n");
+    footer("UP/DOWN PARAM  A SWEEP  X MARKER  B HOME");
+}
+
+static long long ipow10i(int n){long long r=1;while(n-->0)r*=10;return r;}
+
+static void calculator(void){
+    page("QUANTUM CALCULATOR");
+    long long a=(long long)(frameCounter%10000)+1;
+    long long b=(long long)((frameCounter/17)%999)+1;
+    long long q=a*b;
+    iprintf("A = %lld\nB = %lld\n",a,b);
+    iprintf("A+B = %lld\nA-B = %lld\nA*B = %lld\n",a+b,a-b,q);
+    iprintf("A/B = %lld.%02lld\n",a/b,(a%b)*100/b);
+    iprintf("A^2 = %lld\n",a*a);
+    iprintf("10^n demo = %lld\n",ipow10i(calculatorCursor%6));
+    iprintf("QFUNC = %s\n",calculatorCursor&1?"INTERFERENCE":"SUPERPOSITION");
+    footer("UP/DOWN QFUNC  A CALCULATE  X QSTATE  B HOME");
+}
+
+static void daw(void){
+    page("AETHER DAW / STUDIO");
+    iprintf("16-STEP SEQUENCER\n");
+    iprintf("BPM %u   STEP %02u\n",save.dawBpm,save.dawStep);
+    iprintf("TRACK1 [");
+    for(int i=0;i<16;i++) iprintf("%c",(i==save.dawStep)?'>':((i%3)==0?'X':'.'));
+    iprintf("]\nTRACK2 [");
+    for(int i=0;i<16;i++) iprintf("%c",(i%4)==0?'O':'.');
+    iprintf("]\nTRACK3 [");
+    for(int i=0;i<16;i++) iprintf("%c",(i%5)==0?'+':'.');
+    iprintf("]\n\n");
+    iprintf("OSC: PSG + PCM\nMIX: 3 TRACKS\nFX: GATE / PAN / LEVEL\n");
+    footer("UP/DOWN STEP  A TONE  X PLAY  Y BPM  B HOME");
+}
+
+static void dsp(void){
+    page("DSP / FFT");
+    iprintf("128-POINT INTEGER FFT PIPELINE\n");
+    for(int i=0;i<16;i++){
+        int v=(i*7+(int)(frameCounter/4))%18;
+        iprintf("%02d ",i);
+        for(int j=0;j<v;j++) iprintf("#");
+        iprintf("\n");
+    }
+    footer("A REFRAME  X WINDOW  Y PEAK-HOLD  B HOME");
+}
+
+static void telemetry(void){
+    page("TELEMETRY");
+    iprintf("FRAME       %lu\n",(unsigned long)frameCounter);
+    iprintf("LAUNCHES    %lu\n",(unsigned long)save.launches);
+    iprintf("STORAGE     SD/FAT\n");
+    iprintf("MEMORY      STATIC/BOUNDED\n");
+    iprintf("CPU MODE    DSi ARM9\n");
+    iprintf("TOUCH       ACTIVE\n");
+    iprintf("MIC         AVAILABLE\n");
+    iprintf("CAMERA      SYSTEM GATEWAY\n");
+    iprintf("EXTERNAL    GATEWAY ONLY\n");
+    footer("B HOME");
+}
+
+static void projects(void){
+    page("PROJECTS");
+    iprintf("AETHER FAMILY\n\n");
+    iprintf("AQ.1 QUANTUM PHONE       LINK\n");
+    iprintf("OEQL/OEQC                 LINK\n");
+    iprintf("AETHEROS REV E/F         CORE\n");
+    iprintf("HORSE RESCUE PLATFORM    DATA\n");
+    iprintf("ANIMAL INTERPRETER       DATA\n");
+    iprintf("BISON / EXOTICS          DATA\n");
+    footer("A OPEN  B HOME");
+}
+
+static void network(void){
+    page("NETWORK GATEWAY");
+    iprintf("LOCAL LINK       READY\n");
+    iprintf("WIFI             %s\n",save.wireless?"ARMED":"GUARDED");
+    iprintf("5G               EXTERNAL\n");
+    iprintf("SATELLITE        EXTERNAL\n");
+    iprintf("BLUETOOTH        EXTERNAL\n");
+    iprintf("QPU             EXTERNAL\n");
+    iprintf("SDR             EXTERNAL\n");
+    iprintf("FRAMED CRC GATE  READY\n");
+    footer("A ARM GATE  X SELFTEST  B HOME");
+}
+
+static void aiSafety(void){
+    page("AI SAFETY / CONTROL");
+    iprintf("LOCAL AI       %s\n",save.ai?"ON":"OFF");
+    iprintf("ONLINE AI      %s\n",save.onlineAI?"ON":"OFF");
+    iprintf("PRIVACY        %s\n",save.privacy?"LOCK":"OPEN");
+    iprintf("NSFW FILTER    %s\n",save.nsfw?"ON":"OFF");
+    iprintf("UNSAFE FILTER  %s\n",save.unsafe?"ON":"OFF");
+    iprintf("UNREG FILTER   %s\n",save.unregulated?"ON":"OFF");
+    footer("A LOCAL  X ONLINE  Y PRIVACY  B HOME");
+}
+
+static void family(void){
+    page("FAMILY / SAFETY");
+    iprintf("PARENTAL      %s\n",save.parental?"STRICT":"OPEN");
+    iprintf("NSFW          %s\n",save.nsfw?"BLOCK":"ALLOW");
+    iprintf("UNSAFE        %s\n",save.unsafe?"BLOCK":"ALLOW");
+    iprintf("UNREGULATED   %s\n",save.unregulated?"BLOCK":"ALLOW");
+    iprintf("USER CONTENT  %s\n",save.userContent?"FILTER":"BLOCK");
+    iprintf("BROWSER       %s\n",save.browser?"ALLOW":"BLOCK");
+    iprintf("DOWNLOADS     %s\n",save.downloads?"ALLOW":"BLOCK");
+    footer("A STRICT  X CONTENT  Y NETWORK  B HOME");
+}
+
+static void systemPage(void){
+    page("SYSTEM");
+    iprintf("AETHERMOD OS    Q1\n");
+    iprintf("DUAL OS          %s\n",mode?"APP":"HOME");
+    iprintf("BRIGHTNESS       %u/4\n",save.brightness);
+    iprintf("THEME            %s\n",save.theme?"AETHER":"CLASSIC");
+    iprintf("LANGUAGE         %s\n",langName());
+    iprintf("SOUND            %s\n",save.sound?"ON":"OFF");
+    iprintf("SAFE MODE        %s\n",safeMode?"ON":"OFF");
+    footer("UP/DOWN BRIGHT  A THEME  X SOUND  B HOME");
+}
+
+static void about(void){
+    page("ABOUT AETHERMOD");
+    iprintf("AETHERMOD FOR DSi\n");
+    iprintf("ALL-ENCOMPASSING COCKPIT\n\n");
+    iprintf("Local-first. Modular. Gateway-ready.\n");
+    iprintf("Quantum-inspired computation.\n");
+    iprintf("RF tools require compatible external hardware.\n");
+    iprintf("No stock DSi hardware is misrepresented.\n");
+    footer("B HOME");
+}
+
+static void draw(void){
+    switch(mode){
+      case 0: home(); break;
+      case 1: quantum(); break;
+      case 2: codex(); break;
+      case 3: animal(); break;
+      case 4: rfLab("MARAUDER / RF"); break;
+      case 5: tinysa(); break;
+      case 6: calculator(); break;
+      case 7: daw(); break;
+      case 8: dsp(); break;
+      case 9: telemetry(); break;
+      case 10: projects(); break;
+      case 11: network(); break;
+      case 12: aiSafety(); break;
+      case 13: family(); break;
+      case 14: systemPage(); break;
+      default: about(); break;
+    }
+}
+
+static void tone(void){
+    if(!save.sound) return;
+    static const u16 notes[]={262,294,330,349,392,440,494,523};
+    soundPlayPSG(DutyCycle_50,notes[save.dawStep%NOTE_COUNT],90,64);
+}
+
+static void input(void){
+    scanKeys(); u32 d=keysDown(); u32 h=keysHeld();
+
+    if(d&KEY_TOUCH){
+        touchPosition t; touchRead(&t);
+        if(mode==0){
+            int r=t.py/16;
+            if(r>=0 && r<APP_COUNT){cursor=r; mode=r+1; save.launches++; saveState();}
+        } else {
+            if(t.py<48) mode=0;
+            else if(t.px<128 && t.py<128) { if(mode==13) save.parental^=1; else if(mode==12) save.ai^=1; }
+            else if(t.px>=128 && t.py<128) { if(mode==12) save.onlineAI^=1; else if(mode==11) save.wireless^=1; }
+            else if(t.py>=128 && t.py<192) { if(mode==2) codexPage=(codexPage+1)%10; else if(mode==3) animalPage=(animalPage+1)%15; }
+            else mode=0;
         }
     }
-    fclose(f);
-}
 
-static void save_state(void) {
-    if (safeMode) return;
-    ensure_save_dir();
+    if(d&KEY_SELECT){safeMode=!safeMode;if(safeMode){save.onlineAI=0;save.wireless=0;save.downloads=0;mode=0;}saveState();}
 
-    save.checksum = 0;
-    save.checksum = checksum32(&save, sizeof(save));
-
-    char path[96];
-    snprintf(path, sizeof(path), "%sdata/QuantumAetherOSQ/save.dat", storageRoot);
-    FILE *f = fopen(path, "wb");
-    if (!f) return;
-    fwrite(&save, 1, sizeof(save), f);
-    fclose(f);
-}
-
-static void header(const char *t) {
-    consoleSelect(&bottomConsole);
-    consoleClear();
-    iprintf("QUANTUM AETHEROSQ %s\n", APP_VERSION);
-    iprintf("--------------------------------\n%s\n\n", t);
-}
-
-static void hub(void) {
-    header("QUANTUM COCKPIT");
-    const char *items[] = {
-        "QUANTUM LAB","TELEMETRY","SETTINGS","SAFE TEST","ABOUT",
-        "FAMILY & SAFETY","AI SAFETY","LANGUAGE","SYSTEM TOOLS",
-        "APP LIBRARY","PRIVACY VAULT","FUNCORE"
-    };
-    for (int x=0; x<12; x++)
-        iprintf("%s %02d  %s\n", x==cursor?">":" ", x+1, items[x]);
-    iprintf("\nA=OPEN  UP/DOWN=NAV  X=LAB  Y=TELEMETRY\n");
-    iprintf("Touch top=Safety  middle=AI  lower=Language\n");
-    iprintf("Launches: %lu\n",(unsigned long)save.launches);
-    consoleSelect(&topConsole);
-    consoleClear();
-    iprintf("      A E T H E R O S Q\n\n");
-    iprintf("   QUANTUM COCKPIT ONLINE\n\n");
-    iprintf("  ENERGY   %3d%%\n",(int)((frameCounter/3)%101));
-    iprintf("  PHASE    %02lu\n",(unsigned long)((frameCounter/7)%12));
-    iprintf("  STABLE   %s\n",safeMode?"SAFE":"NOMINAL");
-    iprintf("  AI       %s\n",ai?"LOCAL":"OFF");
-    iprintf("  FILTER   %s\n",nsfw&&unsafe&&unregulated?"STRICT":"CUSTOM");
-    iprintf("\n  [%s] %s\n",isDSiMode()?"DSi":"DS",languageName());
-    consoleSelect(&bottomConsole);
-}
-
-static void quantumLab(void) {
-    header("QUANTUM LAB");
-    int e = (frameCounter / 3) % 101;
-    iprintf("FUN ENGINE: ONLINE\n\nENERGY [");
-    for (int i = 0; i < 20; i++) iprintf("%c", i < e / 5 ? '#' : '.');
-    iprintf("] %d%%\n\n", e);
-    iprintf("Pulse: %lu\nPhase: %lu\nStability: %s\n",
-        (unsigned long)(frameCounter & 65535),
-        (unsigned long)((frameCounter / 7) % 12),
-        safeMode ? "SAFE" : "LIVE");
-    iprintf("\nA=BOOST X=CHAOS Y=CALM\nB=HUB\n");
-    if (frameCounter % 45 == 0)
-        iprintf("\n>>> QUANTUM EVENT #%lu <<<\n",
-            (unsigned long)(frameCounter / 45));
-}
-
-
-static const char *languageName(void) {
-    static const char *n[]={"English","Espanol","Francais","Deutsch","Italiano","Portugues","Nihongo","Hangul","Chinese","Russian"};
-    return n[language%10];
-}
-static void safetyCenter(void) {
-    header("FAMILY & SAFETY CENTER");
-    iprintf("Parental: %s\nNSFW: %s\nUnsafe: %s\nUnregulated: %s\n",
-      parental?"ON":"OFF",nsfw?"BLOCKED":"ALLOWED",unsafe?"BLOCKED":"ALLOWED",unregulated?"BLOCKED":"ALLOWED");
-    iprintf("AI: %s  ONLINE: %s\nPrivacy Lock: %s\nLanguage: %s\n\n",
-      ai?"ON":"OFF",onlineAI?"ON":"OFF",privacy?"ON":"OFF",languageName());
-    iprintf("X=STRICT  Y=AI  A=NSFW  B=BACK\n");
-}
-static void aiCenter(void) {
-    header("AI SAFETY CENTER");
-    iprintf("Local AI: %s\nOnline AI: %s\nNSFW filter: %s\n",
-      ai?"ON":"OFF",onlineAI?"ON":"OFF",nsfw?"ON":"OFF");
-    iprintf("Unsafe filter: %s\nPrivacy lock: %s\n\n",unsafe?"ON":"OFF",privacy?"ON":"OFF");
-    iprintf("A=AI  X=ONLINE  Y=PRIVACY  B=BACK\n");
-}
-static void languageCenter(void) {
-    header("LANGUAGE");
-    iprintf("Current: %s\n\nUP/DOWN select  A=apply  B=back\n",languageName());
-    iprintf("0 English  1 Espanol  2 Francais  3 Deutsch  4 Italiano\n");
-    iprintf("5 Portugues  6 Nihongo  7 Hangul  8 Chinese  9 Russian\n");
-}
-
-
-static void statusBar(void) {
-    iprintf("Q-AOSQ | %s | %s\n", safeMode?"SAFE":"LIVE", isDSiMode()?"DSi":"DS");
-    iprintf("--------------------------------\n");
-}
-static void systemTools(void) {
-    header("SYSTEM TOOLS");
-    iprintf("DISPLAY     %u/4\n", brightness);
-    iprintf("THEME       %s\n", theme?"AETHER":"CLASSIC");
-    iprintf("WIRELESS    %s\n", wireless?"ENABLED":"GUARDED");
-    iprintf("DOWNLOADS   %s\n", downloads?"ALLOWED":"GUARDED");
-    iprintf("BROWSER     %s\n", browser?"ALLOWED":"BLOCKED");
-    iprintf("USER DATA   %s\n\n", userContent?"FILTERED":"BLOCKED");
-    iprintf("UP/DOWN DISPLAY  A THEME\nX WIRELESS  Y DOWNLOADS\nB=BACK\n");
-}
-static void appLibrary(void) {
-    header("AETHER APP LIBRARY");
-    iprintf("[01] Quantum Lab       READY\n");
-    iprintf("[02] FunCore            READY\n");
-    iprintf("[03] Telemetry          READY\n");
-    iprintf("[04] Family Safety      READY\n");
-    iprintf("[05] AI Safety          READY\n");
-    iprintf("[06] Language Hub       READY\n");
-    iprintf("[07] System Tools       READY\n");
-    iprintf("[08] Privacy Vault       READY\n\n");
-    iprintf("All modules are local-first.\nB=BACK\n");
-}
-static void privacyVault(void) {
-    header("PRIVACY VAULT");
-    iprintf("PRIVACY LOCK      %s\n", privacy?"ARMED":"DISARMED");
-    iprintf("ONLINE AI         %s\n", onlineAI?"ENABLED":"DISABLED");
-    iprintf("WIRELESS          %s\n", wireless?"ENABLED":"GUARDED");
-    iprintf("USER CONTENT      %s\n", userContent?"FILTERED":"BLOCKED");
-    iprintf("DOWNLOADS         %s\n\n", downloads?"ALLOWED":"GUARDED");
-    iprintf("A=PRIVACY  X=WIRELESS  Y=ONLINE AI\nB=BACK\n");
-}
-
-static void telemetry(void) {
-    header("AETHER TELEMETRY");
-    iprintf("Frame: %lu\nIntensity: %u\nSound: %s\n",
-        (unsigned long)frameCounter, save.intensity,
-        save.sound ? "ON" : "OFF");
-    iprintf("Memory: bounded/static\nStorage: FAT/SD\nBoot: %s\n\nB=BACK\n",
-        safeMode ? "SAFE" : "NORMAL");
-}
-
-static void settings(void) {
-    header("SETTINGS");
-    iprintf("Intensity: %u\nSound: %s\n\n",
-        save.intensity, save.sound ? "ON" : "OFF");
-    iprintf("UP/DOWN intensity\nA toggle sound\nB save/back\n");
-}
-
-static void safe_test(void) {
-    header("SAFE TEST");
-    iprintf("[OK] bounded runtime\n");
-    iprintf("[OK] save validation\n");
-    iprintf("[OK] SD fallback\n");
-    iprintf("[OK] no network dependency\n");
-    iprintf("[OK] first-boot directory creation\n\nB=BACK\n");
-}
-
-static void about(void) {
-    header("ABOUT");
-    iprintf("Quantum AetherOSQ\n");
-    iprintf("DSi Quantum Cockpit\n\n");
-    iprintf("Quantum-inspired software UI\n");
-    iprintf("No special hardware required.\n\nB=BACK\n");
-}
-
-static void draw(void) {
-    if (mode==0) hub();
-    else if (mode==1) quantumLab();
-    else if (mode==2) telemetry();
-    else if (mode==3) settings();
-    else if (mode==4) safe_test();
-    else if (mode==5) about();
-    else if (mode==6) safetyCenter();
-    else if (mode==7) aiCenter();
-    else if (mode==8) languageCenter();
-    else if (mode==9) systemTools();
-    else if (mode==10) appLibrary();
-    else if (mode==11) privacyVault();
-    else if (mode==12) quantumLab();
-}
-
-static void input(void) {
-    scanKeys();
-    u32 d=keysDown();
-    u32 h=keysHeld();
-
-    if (d & KEY_TOUCH) {
-        touchPosition t; touchRead(&t);
-        if (t.py < 70) mode=6;
-        else if (t.py < 140) mode=7;
-        else if (t.py < 200) mode=8;
-        else mode=0;
-    }
-    if (d & KEY_SELECT) {
-        safeMode=!safeMode;
-        if (safeMode) { save.sound=0; save.intensity=1; mode=0; }
-    }
-
-    if (mode==0) {
-        if (d&KEY_UP) cursor=(cursor+11)%12;
-        if (d&KEY_DOWN) cursor=(cursor+1)%12;
-        if (d&KEY_X) mode=1;
-        if (d&KEY_Y) mode=2;
-        if (d&KEY_A) { mode=cursor+1; save.launches++; save_state(); }
-    } else if (mode==1 || mode==12) {
-        if (d&KEY_B) mode=0;
-        if (d&KEY_X) frameCounter+=97;
-        if (d&KEY_Y) frameCounter/=2;
-        if (h&KEY_A) frameCounter+=2;
-    } else if (mode==2 || mode==4 || mode==5 || mode==10) {
-        if (d&KEY_B) mode=0;
-    } else if (mode==3) {
-        if (d&KEY_UP && save.intensity<4) save.intensity++;
-        if (d&KEY_DOWN && save.intensity>0) save.intensity--;
-        if (d&KEY_A) save.sound^=1;
-        if (d&KEY_B) { save_state(); mode=0; }
-    } else if (mode==6) {
-        if (d&KEY_B) mode=0;
-        if (d&KEY_X) { parental^=1; nsfw=unsafe=unregulated=parental; userContent=parental; browser=!parental; }
-        if (d&KEY_Y) { unsafe^=1; unregulated^=1; }
-        if (d&KEY_A) nsfw^=1;
-    } else if (mode==7) {
-        if (d&KEY_B) mode=0;
-        if (d&KEY_A) ai^=1;
-        if (d&KEY_X) onlineAI^=1;
-        if (d&KEY_Y) privacy^=1;
-    } else if (mode==8) {
-        if (d&KEY_B) mode=0;
-        if (d&KEY_UP) language=(language+9)%10;
-        if (d&KEY_DOWN) language=(language+1)%10;
-        if (d&KEY_A) save_state();
-    } else if (mode==9) {
-        if (d&KEY_B) mode=0;
-        if (d&KEY_UP && brightness<4) brightness++;
-        if (d&KEY_DOWN && brightness>0) brightness--;
-        if (d&KEY_A) theme^=1;
-        if (d&KEY_X) wireless^=1;
-        if (d&KEY_Y) downloads^=1;
-    } else if (mode==11) {
-        if (d&KEY_B) mode=0;
-        if (d&KEY_A) privacy^=1;
-        if (d&KEY_X) wireless^=1;
-        if (d&KEY_Y) onlineAI^=1;
+    if(mode==0){
+        if(d&KEY_UP) cursor=(cursor+APP_COUNT-1)%APP_COUNT;
+        if(d&KEY_DOWN) cursor=(cursor+1)%APP_COUNT;
+        if(d&KEY_A){mode=cursor+1;save.launches++;saveState();}
+        if(d&KEY_X) mode=1;
+        if(d&KEY_Y) mode=9;
+    } else if(mode==1){
+        if(d&KEY_B) mode=0;
+        if(d&KEY_A) frameCounter+=97;
+        if(d&KEY_X) frameCounter+=1009;
+        if(d&KEY_Y) frameCounter/=2;
+    } else if(mode==2){
+        if(d&KEY_B) mode=0;
+        if(d&KEY_UP) codexPage=(codexPage+9)%10;
+        if(d&KEY_DOWN) codexPage=(codexPage+1)%10;
+    } else if(mode==3){
+        if(d&KEY_B) mode=0;
+        if(d&KEY_UP) animalPage=(animalPage+14)%15;
+        if(d&KEY_DOWN) animalPage=(animalPage+1)%15;
+        if(d&KEY_A) tone();
+    } else if(mode==4 || mode==5){
+        if(d&KEY_B) mode=0;
+        if(d&KEY_UP) spectrumCursor=(spectrumCursor+7)%8;
+        if(d&KEY_DOWN) spectrumCursor=(spectrumCursor+1)%8;
+    } else if(mode==6){
+        if(d&KEY_B) mode=0;
+        if(d&KEY_UP) calculatorCursor=(calculatorCursor+5)%6;
+        if(d&KEY_DOWN) calculatorCursor=(calculatorCursor+1)%6;
+        if(d&KEY_A) tone();
+    } else if(mode==7){
+        if(d&KEY_B) mode=0;
+        if(d&KEY_UP && save.dawStep>0) save.dawStep--;
+        if(d&KEY_DOWN) save.dawStep=(save.dawStep+1)%16;
+        if(d&KEY_A) tone();
+        if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;}
+        if(h&KEY_X && (frameCounter%10)==0) tone();
+    } else if(mode==8){
+        if(d&KEY_B) mode=0;
+    } else if(mode==9){
+        if(d&KEY_B) mode=0;
+    } else if(mode==10){
+        if(d&KEY_B) mode=0;
+    } else if(mode==11){
+        if(d&KEY_B) mode=0;
+        if(d&KEY_A) save.wireless^=1;
+        if(d&KEY_X) save.onlineAI^=1;
+    } else if(mode==12){
+        if(d&KEY_B) mode=0;
+        if(d&KEY_A) save.ai^=1;
+        if(d&KEY_X) save.onlineAI^=1;
+        if(d&KEY_Y) save.privacy^=1;
+    } else if(mode==13){
+        if(d&KEY_B) mode=0;
+        if(d&KEY_A){save.parental^=1;save.nsfw=save.unsafe=save.unregulated=save.parental;save.downloads=!save.parental;save.browser=!save.parental;}
+        if(d&KEY_X){save.userContent^=1;save.nsfw^=1;}
+        if(d&KEY_Y){save.wireless^=1;save.downloads^=1;}
+    } else if(mode==14){
+        if(d&KEY_B){saveState();mode=0;}
+        if(d&KEY_UP&&save.brightness<4)save.brightness++;
+        if(d&KEY_DOWN&&save.brightness>0)save.brightness--;
+        if(d&KEY_A)save.theme^=1;
+        if(d&KEY_X)save.sound^=1;
+    } else {
+        if(d&KEY_B) mode=0;
     }
 }
 
-int main(void) {
+int main(void){
     powerOn(POWER_ALL_2D);
-    videoSetMode(MODE_0_2D);
-    videoSetModeSub(MODE_0_2D);
-    vramDefault();
-    consoleInit(&topConsole, 0, BgType_Text4bpp, BgSize_T_256x256, 22, 3, true, true);
-    consoleInit(&bottomConsole, 0, BgType_Text4bpp, BgSize_T_256x256, 22, 3, false, true);
-    consoleSelect(&topConsole);
-    consoleClear();
-    iprintf("QUANTUM AETHEROSQ\nBOOTING...\n");
+    videoSetMode(MODE_0_2D); videoSetModeSub(MODE_0_2D); vramDefault();
+    consoleInit(&topConsole,0,BgType_Text4bpp,BgSize_T_256x256,22,3,true,true);
+    consoleInit(&bottomConsole,0,BgType_Text4bpp,BgSize_T_256x256,22,3,false,true);
+    consoleSelect(&topConsole); consoleClear(); iprintf("AETHERMOD\nBOOTING DUAL-OS...\n");
+    soundEnable();
     swiWaitForVBlank();
 
-    if (!fatInitDefault()) {
-        safeMode = 1;
-        defaults();
-        consoleSelect(&bottomConsole);
-        header("RAM SAFE MODE");
-        iprintf("SD/FAT unavailable.\n");
-        iprintf("Running without persistence.\n");
+    if(!fatInitDefault()){
+        safeMode=1; defaults();
+        consoleSelect(&bottomConsole); consoleClear();
+        iprintf("AETHERMOD SAFE BOOT\nSD/FAT unavailable.\nRunning RAM-only.\n");
     } else {
-        
-        if (isDSiMode()) storageRoot = "sd:/";
-        load_save();
-        save.launches++;
-        save_state();
+        if(isDSiMode()) root="sd:/";
+        loadState(); save.launches++; saveState();
     }
 
-    draw();
-    consoleSelect(&bottomConsole);
-
-    while (1) {
+    while(1){
         swiWaitForVBlank();
         frameCounter++;
         input();
-        if ((frameCounter & 7) == 0) draw();
+        if((frameCounter&7)==0) draw();
     }
-
     return 0;
 }
