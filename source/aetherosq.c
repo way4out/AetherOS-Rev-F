@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 4
-#define AETHERMOD_PASS 3
+#define AETHERMOD_PASS 4
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
 #define ANIMAL_PATH "data/AetherMod/animals.txt"
@@ -32,6 +32,7 @@ typedef struct {
     u8 ai, onlineAI, privacy, wireless;
     u8 downloads, browser, userContent, theme;
     u8 brightness, dawBpm, dawStep;
+    u16 selectionPin;
     u32 checksum;
 } SaveData;
 
@@ -73,12 +74,12 @@ static u32 hash32(const void *ptr,size_t n){
 
 static void defaults(void){
     memset(&save,0,sizeof(save));
-    save.magic=SAVE_MAGIC; save.version=3;
+    save.magic=SAVE_MAGIC; save.version=4;
     save.sound=1; save.intensity=2; save.language=0;
     save.parental=1; save.nsfw=1; save.unsafe=1; save.unregulated=1;
     save.ai=1; save.privacy=1; save.wireless=0; save.downloads=0;
     save.browser=0; save.userContent=1; save.theme=0; save.brightness=3;
-    save.dawBpm=120; save.dawStep=0;
+    save.dawBpm=120; save.dawStep=0; save.selectionPin=0;
 }
 
 static void ensureDirs(void){
@@ -103,9 +104,12 @@ static void loadState(void){
     FILE *f=fopen(p,"rb"); if(!f) return;
     SaveData t; if(fread(&t,1,sizeof(t),f)==sizeof(t)){
         u32 old=t.checksum; t.checksum=0;
-        if(old==hash32(&t,sizeof(t)) && t.magic==SAVE_MAGIC && (t.version==2 || t.version==3)) save=t;
+        if(old==hash32(&t,sizeof(t)) && t.magic==SAVE_MAGIC && t.version==4){
+            save=t; if(save.selectionPin>=APP_COUNT) save.selectionPin=0;
+        }
     }
     fclose(f);
+    if(save.version!=4) save.selectionPin=0;
 }
 
 static const char *langName(void){return langs[save.language%10];}
@@ -136,6 +140,7 @@ static void footer(const char *s){iprintf("\n%s\n",s);}
 
 static void home(void){
     /* One authoritative selectionPin drives the visible designation pin and launch target. */
+    selectionPin=save.selectionPin%APP_COUNT;
     cursor=selectionPin;
     topBg("DUAL-OS COCKPIT");
     consoleSelect(&bottomConsole); consoleClear();
@@ -423,7 +428,7 @@ static void input(void){
         touchPosition t; touchRead(&t);
         if(mode==0){
             int r=((int)t.py-48)/12;
-            if(r>=0&&r<APP_COUNT){selectionPin=r;cursor=selectionPin;mode=selectionPin+1;save.launches++;saveState();changed=1;}
+            if(r>=0&&r<APP_COUNT){selectionPin=r;save.selectionPin=selectionPin;cursor=selectionPin;mode=selectionPin+1;save.launches++;saveState();changed=1;}
             else if(t.py<48){mode=0;changed=1;}
         } else {
             if(t.py<48||t.py>=192){mode=0;changed=1;}
@@ -435,9 +440,9 @@ static void input(void){
         }
     }
     if(mode==0){
-        if(d&KEY_UP){selectionPin=(selectionPin+APP_COUNT-1)%APP_COUNT;cursor=selectionPin;homePulse=1;changed=1;} if(d&KEY_DOWN){selectionPin=(selectionPin+1)%APP_COUNT;cursor=selectionPin;homePulse=1;changed=1;}
+        if(d&KEY_UP){selectionPin=(selectionPin+APP_COUNT-1)%APP_COUNT;save.selectionPin=selectionPin;cursor=selectionPin;homePulse=1;changed=1;} if(d&KEY_DOWN){selectionPin=(selectionPin+1)%APP_COUNT;save.selectionPin=selectionPin;cursor=selectionPin;homePulse=1;changed=1;}
         if(d&KEY_LEFT){selectionPin=(selectionPin+APP_COUNT-1)%APP_COUNT;cursor=selectionPin;homePulse=1;changed=1;} if(d&KEY_RIGHT){selectionPin=(selectionPin+1)%APP_COUNT;cursor=selectionPin;homePulse=1;changed=1;}
-        if(d&KEY_A){cursor=selectionPin;mode=selectionPin+1;save.launches++;saveState();changed=1;} if(d&KEY_X){selectionPin=1;cursor=selectionPin;mode=2;save.launches++;saveState();changed=1;} if(d&KEY_Y){selectionPin=8;cursor=selectionPin;mode=9;save.launches++;saveState();changed=1;}
+        if(d&KEY_A){cursor=selectionPin;mode=selectionPin+1;save.launches++;saveState();changed=1;} if(d&KEY_X){selectionPin=1;save.selectionPin=selectionPin;cursor=selectionPin;mode=2;save.launches++;saveState();changed=1;} if(d&KEY_Y){selectionPin=8;save.selectionPin=selectionPin;cursor=selectionPin;mode=9;save.launches++;saveState();changed=1;}
     } else if(mode==1){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){quantumState=(quantumState+1)%4;frameCounter+=97;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;frameCounter+=1009;changed=1;} if(d&KEY_Y){quantumState=0;changed=1;}
     } else if(mode==2){
@@ -471,7 +476,7 @@ static void input(void){
     } else if(mode==13){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.parental^=1;save.nsfw=save.unsafe=save.unregulated=save.parental;save.downloads=!save.parental;save.browser=!save.parental;saveState();changed=1;} if(d&KEY_X){save.userContent^=1;save.nsfw^=1;saveState();changed=1;} if(d&KEY_Y){save.wireless^=1;save.downloads^=1;saveState();changed=1;}
     } else if(mode==14){
-        if(d&KEY_B){saveState();mode=0;changed=1;} if(d&KEY_UP&&save.brightness<4){save.brightness++;changed=1;} if(d&KEY_DOWN&&save.brightness>0){save.brightness--;changed=1;} if(d&KEY_A){save.theme^=1;saveState();changed=1;} if(d&KEY_X){save.sound^=1;saveState();changed=1;}
+        if(d&KEY_B){save.selectionPin=selectionPin;saveState();mode=0;changed=1;} if(d&KEY_UP&&save.brightness<4){save.brightness++;changed=1;} if(d&KEY_DOWN&&save.brightness>0){save.brightness--;changed=1;} if(d&KEY_A){save.theme^=1;saveState();changed=1;} if(d&KEY_X){save.sound^=1;saveState();changed=1;}
     } else {if(d&KEY_B){mode=0;changed=1;}}
     if(changed)draw();
 }
