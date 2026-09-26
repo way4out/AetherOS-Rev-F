@@ -2,7 +2,7 @@
 
 Nintendo DSi-native local-first cockpit and homebrew platform.
 
-## Pass 2 / 8
+## Pass 3 / 8
 - Runtime save-integrity, SD-write, selection-sync and recovery diagnostics.
 - Telemetry exposes runtime health, last-save frame and error counters.
 - V4 save compatibility is preserved.
@@ -33,3 +33,11 @@ access tooling is included.
 GitHub Actions uses devkitPro/devkitARM to build `AetherMod.nds` and a complete SD bundle.
 
 Repository: https://github.com/way4out/AetherOS-Rev-F
+
+
+### Pass 3 hardening
+- Canonical home PIN remains the single source of selection truth.
+- Home touch navigation now exposes both eight-module pages.
+- Quantum and Telemetry hardware-key shortcuts target their correct modules.
+- Runtime diagnostics reset per diagnostic run and expose the latest diagnostic frame.
+- DSP telemetry exposes the active scale; System branding is 5.0 Genesis.
