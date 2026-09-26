@@ -1,4 +1,4 @@
-name: Build AetherOS QuantumAetherOSQ FunCore
+name: Build AetherMod for Nintendo DSi
 on:
   workflow_dispatch:
   push:
@@ -10,26 +10,27 @@ jobs:
     container: devkitpro/devkitarm:20241104
     steps:
       - uses: actions/checkout@v4
-      - name: Build NDS
+      - name: Build AetherMod
         run: |
           export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
-          command -v arm-none-eabi-gcc
-          command -v arm-none-eabi-ld
           make clean
           make
-          test -f QuantumAetherOSQ.nds
-          file QuantumAetherOSQ.nds || true
-          ls -lh QuantumAetherOSQ.nds
-      - name: Package plug-and-play SD bundle
+          test -f AetherMod.nds
+          file AetherMod.nds || true
+          ls -lh AetherMod.nds
+      - name: Package complete SD bundle
         run: |
-          mkdir -p deploy/apps/QuantumAetherOSQ
-          cp QuantumAetherOSQ.nds deploy/apps/QuantumAetherOSQ/QuantumAetherOSQ.nds
-          printf '%s\n' 'Copy apps/QuantumAetherOSQ/QuantumAetherOSQ.nds to the SD card.' > deploy/INSTALL.txt
+          mkdir -p deploy/apps/AetherMod
+          mkdir -p deploy/data/AetherMod
+          cp AetherMod.nds deploy/apps/AetherMod/AetherMod.nds
+          cp -r data/AetherMod/. deploy/data/AetherMod/
+          cp AETHERMOD.md deploy/AETHERMOD.md
+          printf '%s\n' 'Copy the apps/AetherMod and data/AetherMod directories to the DSi SD card.' > deploy/INSTALL.txt
           cd deploy
-          zip -r ../AetherOS-QuantumAetherOSQ-FunCore-DSi.zip .
+          zip -r ../AetherMod-DSi-Full-Rollout.zip .
       - uses: actions/upload-artifact@v4
         with:
-          name: AetherOS-QuantumAetherOSQ-FunCore-DSi
+          name: AetherMod-DSi-Full-Rollout
           path: |
-            QuantumAetherOSQ.nds
-            AetherOS-QuantumAetherOSQ-FunCore-DSi.zip
+            AetherMod.nds
+            AetherMod-DSi-Full-Rollout.zip
