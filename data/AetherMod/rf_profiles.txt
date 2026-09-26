@@ -1,0 +1,21 @@
+AETHERMOD RF PROFILE PACK / PASS 3
+=================================
+Purpose: authorized receive/analyze/test-gateway metadata.
+
+BANDS
+2.4GHz ISM | common Wi-Fi/Bluetooth/ISM analysis range
+5GHz ISM   | common Wi-Fi analysis range
+CUSTOM GATE | external adapter-defined range
+
+OPERATING MODES
+SURVEY | CHANNEL VIEW | PACKET META | RSSI HISTORY
+
+SAFETY CONTRACT
+- Receive, inspect, classify, log, and authorized test-queue operations only.
+- No jamming, deauthentication, credential capture, or unauthorized access.
+- The stock DSi has no native SDR/RF transmitter interface.
+- Physical transmit/receive requires a compatible, user-authorized external gateway.
+
+PUSH QUEUE
+Maximum UI queue: 8
+Session log: maximum 32 events per runtime session.
