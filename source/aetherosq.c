@@ -19,6 +19,7 @@ typedef struct {
 static SaveData save;
 static int mode = 0, cursor = 0, safeMode = 0;
 static int parental=1, nsfw=1, unsafe=1, unregulated=1, ai=1, onlineAI=0, privacy=1, language=0, wireless=0, downloads=0, userContent=1, browser=1, brightness=3, theme=0;
+static const char *languageName(void);
 static u32 frameCounter = 0;
 static PrintConsole topConsole;
 static PrintConsole bottomConsole;
