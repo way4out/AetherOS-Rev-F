@@ -1,0 +1,6 @@
+AETHERMOD ANIMAL TRANSLATOR DATASET
+===================================
+Species profiles: horse,dog,cat,cow,bison,camel,zebra,ostrich,bird,wolf,fox,deer,bear,big-cat,other.
+Pipeline: microphone -> feature extraction -> species profile -> state classification -> text/tones.
+This is a local data gateway. Model inference beyond the DSi's local compute can be supplied by
+an external AI gateway; the DSi never pretends that a stock microphone is a semantic animal translator.
