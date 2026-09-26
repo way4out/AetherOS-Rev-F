@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 7
-#define AETHERMOD_PASS 1
+#define AETHERMOD_PASS 3
 #define AETHERMOD_TOTAL_PASSES 5
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
@@ -48,6 +48,7 @@ static int codexSearch=0, animalAnalyzing=0, fftWindow=0, fftPeakHold=0;
 static int networkSelfTest=0, quantumState=0, dawPlaying=0, dawTrack=0;
 static int rfMode=0, rfBand=0, rfChannel=1, rfPeakHold=0, rfPacketView=0;
 static int saSpan=20, saStart=0, saRBW=10, saAtten=0, saMarker=0, saRunning=0, saGenArmed=0;
+static int rfWarnIndex=0, rfPushQueue=0, rfAuthGate=0, rfLogCount=0, saView=0, saTraceHold=0, saInputSource=0;
 static u32 frameCounter=0;
 static u32 lastSaveFrame=0, sessionErrors=0, inputEvents=0;
 static int diagnosticsPass=0, recoveryNotice=0, lastDiagnosticFrame=0;
@@ -72,6 +73,7 @@ static u32 hash32(const void *ptr,size_t n);
 static void defaults(void);
 static void page(const char *title);
 static void ensureDirs(void);
+static void rfLogEvent(const char *kind, int value);
 
 static int storageReady(void){
     FILE *f=fopen("fat:/data/AetherMod/.aether_test","wb");
@@ -210,7 +212,7 @@ static void resetToBase(void){
     defaults();
     selectionPin=0; cursor=0; homeScroll=0; homePulse=0;
     mode=0; safeMode=0; gatewayState=0; dirtyState=0;
-    codexPage=0; codexSearch=0; codexLine=0; animalPage=0; animalFeature=0; animalAnalyzing=0;
+    codexPage=0; codexSearch=0; codexLine=0; animalPage=0; animalFeature=0; animalAnalyzing=0; rfWarnIndex=0; rfPushQueue=0; rfAuthGate=0; rfLogCount=0; saView=0; saTraceHold=0; saInputSource=0;
     calculatorCursor=0; calcA=17; calcB=9; dawTrack=0; dawTrackMute=0; dawPlaying=0;
     dspScale=1; fftWindow=0; fftPeakHold=0; telemetryPage=0; aiCursor=0; aiQuery=0; browserCursor=0;
     networkSelfTest=0; quantumState=0; rfMode=0; rfBand=0; rfChannel=1; rfPeakHold=0; rfPacketView=0;
@@ -264,7 +266,7 @@ static const char *langName(void){return langs[save.language%10];}
 
 static void topBg(const char *title){
     consoleSelect(&topConsole); consoleClear();
-    iprintf("      A E T H E R M O D  5.0\n");
+    iprintf("      A E T H E R M O D  7.0\n");
     iprintf("  ========================\n");
     iprintf("  %s\n\n",title);
     iprintf("  [%s]  QCORE:%s  AI:%s\n",
@@ -368,29 +370,45 @@ static void rfLab(const char *title){
     page(title);
     const char *modes[]={"SURVEY","CHANNEL VIEW","PACKET META","RSSI HISTORY"};
     const char *bands[]={"2.4GHz ISM","5GHz ISM","CUSTOM GATE"};
+    const char *warnings[]={"CLEAR","LOW SIGNAL","HIGH NOISE","AUTH REQUIRED","EXTERNAL GATE"};
     int rssi=-32-(int)(frameCounter%48),noise=-78-(int)(frameCounter%17);
+    int snr=rssi-noise;
     iprintf("AUTHORIZED RF RECEIVE / ANALYZE\n");
     iprintf("%s  %s  CH %d\n",modes[rfMode&3],bands[rfBand%3],rfChannel);
-    iprintf("RSSI %d dBm  NOISE %d dBm  SNR %d dB\n",rssi,noise,rssi-noise);
+    iprintf("RSSI %d dBm  NOISE %d dBm  SNR %d dB\n",rssi,noise,snr);
     iprintf("SPECTRUM |");for(int i=0;i<24;i++)iprintf("%c",((i+(frameCounter/3))%7==0)?'^':'.');iprintf("|\n");
     iprintf("META %lu  PACKET %s  PEAK %s\n",(unsigned long)((frameCounter*3)%997),rfPacketView?"ON":"OFF",rfPeakHold?"ON":"OFF");
-    iprintf("PUSH QUEUE %s  GATE %s\n",gatewayState?"READY":"EMPTY",save.wireless?"ARMED":"GUARDED");
-    iprintf("External push is limited to authorized test hardware.\n");
-    iprintf("JAM/DEAUTH/CREDENTIAL CAPTURE DISABLED\n");
-    footer("UP/DOWN MODE  A SURVEY  X META  Y PEAK  L/R BAND  B HOME");
+    iprintf("WARNING[%d] %s\n",rfWarnIndex,warnings[rfWarnIndex]);
+    iprintf("AUTH GATE %s  PUSH QUEUE %d/8\n",rfAuthGate?"ARMED":"LOCKED",rfPushQueue);
+    iprintf("TEST PUSH %s  LOG %d/32\n",(rfAuthGate&&gatewayState)?"READY":"BLOCKED",rfLogCount);
+    iprintf("JAM/DEAUTH/CREDENTIAL CAPTURE: DISABLED\n");
+    iprintf("Transmit path = authorized test queue only; no radio driver claimed.\n");
+    footer("UP/DOWN MODE  L/R BAND/CH  A ARM/QUEUE  X META  Y WARN  B HOME");
+}
+
+static void rfLogEvent(const char *kind, int value){
+    if(rfLogCount<32) rfLogCount++;
+    char p[120]; snprintf(p,sizeof(p),"%sdata/AetherMod/rf_session.log",root);
+    FILE *f=fopen(p,"ab");
+    if(!f) return;
+    fprintf(f,"%lu,%s,%d\n",(unsigned long)frameCounter,kind,value);
+    fclose(f);
 }
 
 static void tinysa(void){
     page("TINySA LAB");
     int stop=saStart+saSpan,markerHz=saStart+saMarker,level=18+(int)((frameCounter/4)%40);
-    iprintf("LIVE SPECTRUM GATEWAY\n");
+    const char *views[]={"SPECTRUM","WATERFALL","TEXT STATS","MARKER"};
+    iprintf("TINySA HYBRID VISUAL + TEXT GATEWAY\n");
+    iprintf("VIEW %s  INPUT %s  SWEEP %s\n",views[saView&3],saInputSource?"EXTERNAL":"SIM",saRunning?"RUN":"STOP");
     iprintf("%4d MHz ",saStart);for(int i=0;i<24;i++)iprintf("%c",i==((saMarker*24)/(saSpan?saSpan:1))?'M':(i%5==0?'|':'.'));iprintf(" %4d\n",stop);
     iprintf("LEVEL %02d dB  PEAK %02d dB  MARK %d MHz\n",level,level+7,markerHz);
     iprintf("SPAN %d MHz RBW %d kHz ATT %d dB\n",saSpan,saRBW,saAtten);
-    iprintf("SWEEP %s INPUT %s POINTS 450\n",saRunning?"RUN":"STOP",save.wireless?"EXTERNAL":"SIM");
-    iprintf("GENERATOR %s QUEUE %s\n",saGenArmed?"READY":"SAFE/OFF",gatewayState?"ARMED":"GUARDED");
-    iprintf("CURRENT STATS sweep=%lu marker=%d peak=%s\n",(unsigned long)(frameCounter%10000),markerHz,rfPeakHold?"ON":"OFF");
-    footer("UP/DOWN SPAN  A SWEEP  X MARKER  Y RBW/ATT  L/R START  B HOME");
+    iprintf("SWEEP COUNT %lu  POINTS 450  HOLD %s\n",(unsigned long)(frameCounter%10000),saTraceHold?"ON":"OFF");
+    iprintf("STATS MIN %d  MAX %d  AVG %d  PEAKBIN %d\n",level-14,level+7,level-3,(markerHz/5)%90);
+    iprintf("GENERATOR %s  AUTH %s\n",saGenArmed?"TEST READY":"OFF",rfAuthGate?"ARMED":"LOCKED");
+    iprintf("External TinySA requires compatible physical gateway; UI works standalone.\n");
+    footer("UP/DOWN SPAN  L/R START  A SWEEP  X VIEW  Y RBW  TOUCH=MARK  B HOME");
 }
 
 static void calculator(void){
@@ -518,7 +536,7 @@ static void family(void){
 
 static void systemPage(void){
     selfTestRun=(frameCounter&15)==0;page("SYSTEM / SERVICE");
-    iprintf("AETHERMOD 5.0  DSi ARM9\n");
+    iprintf("AETHERMOD 7.0 APEX  DSi ARM9\n");
     iprintf("SELFTEST %s SAFE %s DIRTY %s\n",selfTestRun?"RUN":"READY",safeMode?"ON":"OFF",dirtyState?"YES":"NO");
     iprintf("BRIGHT %u/4 THEME %s LANG %s\n",save.brightness,save.theme?"AETHER":"CLASSIC",langName());
     iprintf("SOUND %s AI %s WIFI %s BROWSER %s\n",save.sound?"ON":"OFF",save.ai?"ON":"OFF",save.wireless?"ON":"OFF",save.browser?"ON":"OFF");
@@ -608,6 +626,8 @@ static void input(void){
             if(t.py<48||t.py>=192){mode=0;changed=1;}
             else if(mode==7 && t.py>=96){dawTrack=(t.py-96)/32;if(dawTrack>2)dawTrack=2;dawTrackMute^=1;changed=1;}
             else if(mode==6 && t.py>=72){calculatorCursor=((t.py-72)/14)%12;changed=1;}
+            else if(mode==4){rfAuthGate=1;if(rfPushQueue<8)rfPushQueue++;rfLogEvent("TOUCH_PUSH_QUEUE",rfPushQueue);changed=1;}
+            else if(mode==5){saMarker=(t.px%240)*saSpan/240;saTraceHold=1;changed=1;}
             else if(t.px<128){if(mode==13)save.parental^=1;else if(mode==12)save.ai^=1;else if(mode==3)animalAnalyzing=1;changed=1;}
             else {if(mode==12)save.onlineAI^=1;else if(mode==11)save.wireless^=1;else if(mode==2)codexSearch^=1;changed=1;}
             saveState();
@@ -630,13 +650,13 @@ static void input(void){
     } else if(mode==4){
         if(d&KEY_B){mode=0;changed=1;}
         if(d&KEY_UP){rfMode=(rfMode+3)%4;changed=1;} if(d&KEY_DOWN){rfMode=(rfMode+1)%4;changed=1;}
-        if(d&KEY_LEFT){rfBand=(rfBand+2)%3;changed=1;} if(d&KEY_RIGHT){rfBand=(rfBand+1)%3;changed=1;}
+        if(d&KEY_LEFT){rfBand=(rfBand+2)%3;rfChannel=(rfChannel+10)%11+1;changed=1;} if(d&KEY_RIGHT){rfBand=(rfBand+1)%3;rfChannel=(rfChannel%11)+1;changed=1;}
         if(d&KEY_A){save.wireless=1;gatewayState=1;rfPacketView=0;frameCounter+=11;markDirty();changed=1;}
         if(d&KEY_X){rfPacketView^=1;changed=1;} if(d&KEY_Y){rfPeakHold^=1;changed=1;}
     } else if(mode==5){
         if(d&KEY_B){mode=0;changed=1;}
         if(d&KEY_UP){saSpan+=5;if(saSpan>200)saSpan=5;changed=1;} if(d&KEY_DOWN){saSpan-=5;if(saSpan<5)saSpan=200;changed=1;}
-        if(d&KEY_LEFT){saStart-=5;if(saStart<0)saStart=0;changed=1;} if(d&KEY_RIGHT){saStart+=5;if(saStart>800)saStart=800;changed=1;}
+        if(d&KEY_LEFT){saStart-=5;if(saStart<0)saStart=0;saInputSource=0;changed=1;} if(d&KEY_RIGHT){saStart+=5;if(saStart>800)saStart=800;saInputSource=1;changed=1;}
         if(d&KEY_A){saRunning=!saRunning;save.wireless=1;gatewayState=saRunning;markDirty();changed=1;}
         if(d&KEY_X){saMarker+=5;if(saMarker>saSpan)saMarker=0;changed=1;}
         if(d&KEY_Y){if(saRBW==10){saRBW=30;saAtten=10;}else if(saRBW==30){saRBW=100;saAtten=20;}else{saRBW=10;saAtten=0;}changed=1;}
