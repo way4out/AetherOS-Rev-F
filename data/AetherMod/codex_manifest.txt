@@ -1,0 +1,44 @@
+AETHERMOD 7.0 APEX — CODEX MANIFEST / PASS 2
+==============================================
+
+PURPOSE
+-------
+Offline corpus manifest for the YHWH Biblio Codex reader.
+
+INDEXED COLLECTION
+-------------------
+Genesis | Exodus | Leviticus | Numbers | Deuteronomy | Joshua | Judges | Ruth
+1 Samuel | 2 Samuel | 1 Kings | 2 Kings | 1 Chronicles | 2 Chronicles | Ezra | Nehemiah | Esther
+Job | Psalms | Proverbs | Ecclesiastes | Song | Isaiah | Jeremiah | Lamentations | Ezekiel | Daniel
+Hosea | Joel | Amos | Obadiah | Jonah | Micah | Nahum | Habakkuk | Zephaniah | Haggai | Zechariah | Malachi
+Matthew | Mark | Luke | John | Acts | Romans | 1 Corinthians | 2 Corinthians | Galatians | Ephesians
+Philippians | Colossians | 1 Thessalonians | 2 Thessalonians | 1 Timothy | 2 Timothy | Titus | Philemon
+Hebrews | James | 1 Peter | 2 Peter | 1 John | 2 John | 3 John | Jude | Revelation
+
+NAME-LAYER INDEX
+----------------
+YHWH
+יהוה
+LORD
+ADONAI
+
+CORPUS RULE
+-----------
+The application provides the reader, index, search/navigation shell and name-layer mapping.
+Full text is loaded from public-domain or properly licensed UTF-8 corpus files placed under
+SD:/data/AetherMod/. Modern copyrighted translations are not silently bundled.
+
+FILE CONTRACT
+-------------
+Recommended: one UTF-8 TXT file per book.
+Optional structured records may use:
+BOOK|CHAPTER|VERSE|TEXT
+
+PASS 2 CAPACITY
+---------------
+- Offline corpus manifest
+- Book-level navigation metadata
+- Name-layer metadata
+- Structured-corpus contract
+- SD-first deployment
+- No-network reading path
