@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 4
-#define AETHERMOD_PASS 2
+#define AETHERMOD_PASS 3
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
 #define ANIMAL_PATH "data/AetherMod/animals.txt"
@@ -41,6 +41,7 @@ static const char *root = "fat:/";
 static int mode=0, cursor=0, codexPage=0, animalPage=0;
 static int safeMode=0, spectrumCursor=0, calculatorCursor=0;
 static int selectionPin=0, homeScroll=0, homePulse=0, selfTestRun=0, coreTick=0;
+static int touchPage=0, calcA=17, calcB=9, dawTrackMute=0, dspScale=1;
 static int codexSearch=0, animalAnalyzing=0, fftWindow=0, fftPeakHold=0;
 static int networkSelfTest=0, quantumState=0, dawPlaying=0, dawTrack=0;
 static int rfMode=0, rfBand=0, rfChannel=1, rfPeakHold=0, rfPacketView=0;
@@ -248,7 +249,7 @@ static void tinysa(void){
 
 static void calculator(void){
     page("QUANTUM CALCULATOR");
-    long long a=(long long)(frameCounter%1000)+7, b=(long long)((frameCounter/17)%97)+3, result=0;
+    long long a=calcA, b=calcB, result=0;
     const char *fn="ADD";
     switch(calculatorCursor%8){
       case 0: result=a+b; fn="ADD"; break; case 1: result=a-b; fn="SUB"; break;
@@ -426,6 +427,8 @@ static void input(void){
             else if(t.py<48){mode=0;changed=1;}
         } else {
             if(t.py<48||t.py>=192){mode=0;changed=1;}
+            else if(mode==7 && t.py>=96){dawTrack=(t.py-96)/32;if(dawTrack>2)dawTrack=2;dawTrackMute^=1;changed=1;}
+            else if(mode==6 && t.py>=72){calculatorCursor=((t.py-72)/14)%8;changed=1;}
             else if(t.px<128){if(mode==13)save.parental^=1;else if(mode==12)save.ai^=1;else if(mode==3)animalAnalyzing=1;changed=1;}
             else {if(mode==12)save.onlineAI^=1;else if(mode==11)save.wireless^=1;else if(mode==2)codexSearch^=1;changed=1;}
             saveState();
@@ -455,11 +458,11 @@ static void input(void){
         if(d&KEY_X){saMarker+=5;if(saMarker>saSpan)saMarker=0;changed=1;}
         if(d&KEY_Y){if(saRBW==10){saRBW=30;saAtten=10;}else if(saRBW==30){saRBW=100;saAtten=20;}else{saRBW=10;saAtten=0;}changed=1;}
     } else if(mode==6){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){calculatorCursor=(calculatorCursor+7)%8;changed=1;} if(d&KEY_DOWN){calculatorCursor=(calculatorCursor+1)%8;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;changed=1;}
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){calculatorCursor=(calculatorCursor+7)%8;changed=1;} if(d&KEY_DOWN){calculatorCursor=(calculatorCursor+1)%8;changed=1;} if(d&KEY_A){tone();calcA+=1;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;calcB+=2;changed=1;}
     } else if(mode==7){
-        if(d&KEY_B){dawPlaying=0;saveState();mode=0;changed=1;} if(d&KEY_UP){save.dawStep=(save.dawStep+15)%16;changed=1;} if(d&KEY_DOWN){save.dawStep=(save.dawStep+1)%16;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;} if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;saveState();changed=1;} if(dawPlaying&&(frameCounter%15)==0){tone();save.dawStep=(save.dawStep+1)%16;changed=1;}
+        if(d&KEY_B){dawPlaying=0;saveState();mode=0;changed=1;} if(d&KEY_UP){save.dawStep=(save.dawStep+15)%16;changed=1;} if(d&KEY_DOWN){save.dawStep=(save.dawStep+1)%16;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;} if(d&KEY_LEFT){dawTrack=(dawTrack+2)%3;changed=1;} if(d&KEY_RIGHT){dawTrack=(dawTrack+1)%3;changed=1;} if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;saveState();changed=1;} if(dawPlaying&&(frameCounter%15)==0){tone();save.dawStep=(save.dawStep+1)%16;changed=1;}
     } else if(mode==8){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){frameCounter+=31;changed=1;} if(d&KEY_X){fftWindow^=1;changed=1;} if(d&KEY_Y){fftPeakHold^=1;changed=1;}
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){frameCounter+=31;changed=1;} if(d&KEY_X){fftWindow^=1;changed=1;} if(d&KEY_Y){fftPeakHold^=1;dspScale=(dspScale%3)+1;changed=1;}
     } else if(mode==9||mode==10){if(d&KEY_B){mode=0;changed=1;}
     } else if(mode==11){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.wireless^=1;changed=1;} if(d&KEY_X){networkSelfTest=1;changed=1;} if(d&KEY_Y){networkSelfTest=0;changed=1;}
