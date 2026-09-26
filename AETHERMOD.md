@@ -1,22 +1,27 @@
-# AetherMod for Nintendo DSi
+# AetherMod 5.0 Genesis for Nintendo DSi — Pass 1 / 8
 
-AetherMod is the unified dual-screen homebrew cockpit for the Aether/Rev family.
+AetherMod is a local-first dual-screen DSi homebrew cockpit with modular quantum simulation,
+codex/data, animal-analysis, RF telemetry, TinySA gateway, calculator, DAW, DSP, telemetry,
+projects, network gateway, AI safety, family safety, system and release diagnostics.
 
-Modules: Quantum Core, YHWH Biblio Codex, Animal AI, Marauder/RF passive analysis,
-TinySA Lab, Quantum Calculator, Aether DAW/Studio, DSP/FFT, Telemetry, Projects,
-Network Gateway, AI Safety, Family Safety, System and About.
+## Pass 1 fixes
+- Canonical selection state: one persisted PIN controls the marker, displayed module number,
+  module name and launch target.
+- Home touchscreen navigation now exposes all 16 modules across two 8-module pages.
+- Visible release branding is 5.0 Genesis; stale Q2/4.5 labels are removed.
+- Release metadata identifies the 8-pass development line.
+- CI packaging now publishes both the bootable NDS and the complete SD bundle.
 
-The stock DSi provides dual LCDs, a touch screen, microphone, cameras and SD storage.
-External RF analyzers, SDRs, QPU hardware, satellite/5G/Bluetooth devices and other
-specialized hardware are represented as gateway modules rather than falsely claimed
-to exist inside the DSi.
+## Hardware boundary
+The stock DSi provides dual displays, touch, microphone, cameras and SD storage. External RF
+analyzers, SDRs, QPU hardware, satellite/5G/Bluetooth devices and other specialized hardware
+remain gateway hardware; the DSi does not natively contain those capabilities.
 
-RF/Marauder mode is passive/receive/analyze-only in this build. It does not implement
-deauthentication, credential theft, unauthorized access, jamming or interference.
-Use external transmit/test hardware only where lawful and authorized.
+## RF safety
+Marauder/RF functionality is limited to receive/analyze/telemetry concepts and external
+authorized gateways. No jamming, deauthentication, credential theft, or unauthorized-access
+tooling is included.
 
-Nintendo documents DSi SD/SDHC compatibility up to 32 GB. Keep AetherMod data under
-data/AetherMod/ on the SD card.
-
-Copy AetherMod.nds to the SD card and launch it with a compatible DSi homebrew loader.
-The packaged bundle includes the AetherMod data directory.
+## Installation
+Copy the packaged `apps/AetherMod/AetherMod.nds` and `data/AetherMod/` directory to the
+DSi SD card and launch the NDS with a compatible homebrew loader.
