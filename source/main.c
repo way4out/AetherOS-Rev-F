@@ -195,7 +195,7 @@ static void input(void) {
 }
 
 int main(void) {
-    powerON(POWER_ALL_2D);
+    powerOn(POWER_ALL_2D);
     videoSetMode(MODE_0_2D);
     vramSetBankA(VRAM_A_MAIN_BG);
     consoleDemoInit();
