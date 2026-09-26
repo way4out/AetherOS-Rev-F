@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 5
-#define AETHERMOD_PASS 5
+#define AETHERMOD_PASS 6
 #define AETHERMOD_TOTAL_PASSES 8
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
@@ -53,12 +53,14 @@ static u32 lastSaveFrame=0, sessionErrors=0, inputEvents=0;
 static int diagnosticsPass=0, recoveryNotice=0, lastDiagnosticFrame=0;
 static int dirtyState=0, bootCount=0, lastMode=0;
 static int gatewayState=0, capabilityScore=0, resourceFaults=0;
+static int keyRepeatFrames=0, lastKeys=0, eventBurst=0, frameBudgetFaults=0;
 static int soundId=-1;
 
 static void saveState(void);
 static void markDirty(void);
 static void returnHome(void);
 static void updateCapabilityHealth(void);
+static void serviceInput(u32 keys);
 static int normalizeSelection(int value);
 static void setSelection(int value);
 static u32 hash32(const void *ptr,size_t n);
@@ -150,7 +152,16 @@ static void ensureDirs(void){
     mkdir(a,0777); mkdir(b,0777);
 }
 
-static void markDirty(void){ dirtyState=1; }\n\nstatic void updateCapabilityHealth(void){
+static void markDirty(void){ dirtyState=1; }\n\nstatic void serviceInput(u32 keys){
+    int changedKeys=(int)keys ^ lastKeys;
+    if(changedKeys) inputEvents++;
+    if(keys) keyRepeatFrames++; else keyRepeatFrames=0;
+    if(keys && keyRepeatFrames>180) frameBudgetFaults++;
+    if(changedKeys && eventBurst<255) eventBurst++;
+    else if(!keys && eventBurst>0) eventBurst--;
+    lastKeys=(int)keys;
+}
+\n\nstatic void updateCapabilityHealth(void){
     capabilityScore=100;
     if(!isDSiMode()) capabilityScore-=5;
     if(save.wireless) capabilityScore-=0;
@@ -402,6 +413,7 @@ static void telemetry(void){
     iprintf("EXTERNAL    GATEWAY ONLY\n");
     iprintf("DIAGNOSTICS  %s  ERR:%lu  LAST:%d\n",diagnosticsPass?"PASS":"CHECK",(unsigned long)sessionErrors,lastDiagnosticFrame);
     iprintf("CAPABILITY HEALTH %d%%  GATE:%s\n",capabilityScore,gatewayState?"ARMED":"GUARDED");
+    iprintf("INPUT EVENTS %lu  REPEAT:%d\n",(unsigned long)inputEvents,keyRepeatFrames);
     iprintf("RESOURCE FAULTS %d\n",resourceFaults);
     footer("B HOME");
 }
@@ -471,7 +483,7 @@ static void systemPage(void){
 
 static void about(void){
     page("ABOUT AETHERMOD");
-    iprintf("AETHERMOD 5.0 GENESIS / PASS 4\n");
+    iprintf("AETHERMOD 5.0 GENESIS / PASS 6\n");
     iprintf("ALL-ENCOMPASSING COCKPIT\n\n");
     iprintf("Local-first. Modular. Gateway-ready.\n");
     iprintf("Quantum-inspired computation.\n");
@@ -600,6 +612,7 @@ int main(void){
     while(1){
         swiWaitForVBlank();
         frameCounter++;
+    serviceInput(keysDown());
         input();
         if((frameCounter&31)==0 && dirtyState && !safeMode) saveState();
         if((frameCounter&3)==0){ if(mode==0) homePulse=0; draw(); }
