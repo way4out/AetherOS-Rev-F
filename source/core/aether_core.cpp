@@ -30,6 +30,7 @@
 #include "../codex/aether_yhwh_codex.h"
 #include "../harmonic/aether_prime_harmonic.h"
 #include "../heritage/aether_heritage.h"
+#include "../os/aether_os_fabric.h"
 
 namespace { aether::quantum::Simulator q; bool servicesStarted=false; }
 
@@ -40,7 +41,7 @@ void init(SystemState&s){
     vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
     consoleDemoInit(); consoleClear(); s.touchReady=true;
     quantum::init(q); engine::init(); graph::init(); recovery::init(); governor::init(); diag::init(); hil::init(); mission::init(); capacity::init();
-    studio::init(); gate::init(); compute::init(); settings::init(); i18n::init(); codex::init(); harmonic::init(); i18n::adjust((int)settings::current().language-1); theme::init(); securitylab::init(); animal::init(); heritage::init(); ui::init();
+    studio::init(); gate::init(); compute::init(); settings::init(); i18n::init(); codex::init(); harmonic::init(); osfabric::init(); i18n::adjust((int)settings::current().language-1); theme::init(); securitylab::init(); animal::init(); heritage::init(); ui::init();
 }
 static void startDeferredServices(SystemState&s){
     if(servicesStarted) return;
@@ -119,6 +120,7 @@ void update(SystemState&s){
             if(d&KEY_X&&s.selectedModule==MOD_STUDIO){audio::tone(660,180);++s.studioTicks;}
             if(d&KEY_Y&&s.selectedModule==MOD_SOUND) audio::stop();
             if(d&KEY_Y&&s.selectedModule==MOD_SYSTEM) recovery::heartbeat();
+            if(d&KEY_X&&s.selectedModule==MOD_SYSTEM) osfabric::cycle();
             if(d&KEY_Y&&s.selectedModule==MOD_CORE) recovery::heartbeat();
             if(d&KEY_Y&&s.selectedModule==MOD_AI) ai::generate();
             if(d&KEY_Y&&s.selectedModule==MOD_LAB) lab::tick();
@@ -154,7 +156,7 @@ void update(SystemState&s){
         if((s.frame&63)==0){(void)dsp::metrics();ai::generate();}
         if(s.selectedModule==MOD_NETWORK&&(s.frame&127)==0)network::tick();
         gate::tick(); session::tick(); graph::tick(); governor::tick(); recovery::heartbeat(); diag::tick(s.frame); securitylab::tick(); mission::tick(); capacity::tick(); ++s.securityTicks; ++s.missionTicks;
-        settings::tick(); i18n::tick(); animal::tick(); codex::tick(); harmonic::tick(); heritage::tick();
+        settings::tick(); i18n::tick(); animal::tick(); codex::tick(); harmonic::tick(); heritage::tick(); osfabric::tick();
     }
     ui::update(s);
 }
