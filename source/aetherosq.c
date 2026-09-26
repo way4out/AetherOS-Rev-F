@@ -54,6 +54,8 @@ static int diagnosticsPass=0, recoveryNotice=0;
 static int soundId=-1;
 
 static void saveState(void);
+static int normalizeSelection(int value);
+static void setSelection(int value);
 
 static int storageReady(void){
     FILE *f=fopen("fat:/data/AetherMod/.aether_test","wb");
