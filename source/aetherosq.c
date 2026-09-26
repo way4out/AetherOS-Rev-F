@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 5
-#define AETHERMOD_PASS 6
+#define AETHERMOD_PASS 7
 #define AETHERMOD_TOTAL_PASSES 8
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
@@ -54,6 +54,7 @@ static int diagnosticsPass=0, recoveryNotice=0, lastDiagnosticFrame=0;
 static int dirtyState=0, bootCount=0, lastMode=0;
 static int gatewayState=0, capabilityScore=0, resourceFaults=0;
 static int keyRepeatFrames=0, lastKeys=0, eventBurst=0, frameBudgetFaults=0;
+static int recoveryCount=0, validationFaults=0, moduleGuardFaults=0;
 static int soundId=-1;
 
 static void saveState(void);
@@ -88,6 +89,26 @@ static void runDiagnostics(void){
     if(save.selectionPin!=selectionPin) sessionErrors++;
     diagnosticsPass=(sessionErrors==0);
     lastDiagnosticFrame=(int)frameCounter;
+}
+
+static void validateRuntimeState(void){
+    int faults=0;
+    if(selectionPin<0 || selectionPin>=APP_COUNT) faults++;
+    if(cursor<0 || cursor>=APP_COUNT) faults++;
+    if(save.selectionPin>=APP_COUNT) faults++;
+    if(mode<0 || mode>APP_COUNT) faults++;
+    if(faults){
+        validationFaults+=faults;
+        canonicalizeSelection();
+        if(mode<0 || mode>APP_COUNT){ mode=0; recoveryCount++; }
+    }
+}
+static void guardModuleState(void){
+    if(mode<0 || mode>APP_COUNT){
+        moduleGuardFaults++;
+        mode=0;
+        returnHome();
+    }
 }
 
 static void canonicalizeSelection(void){
@@ -522,7 +543,7 @@ static void tone(void){
 }
 
 static void input(void){
-    scanKeys(); u32 d=keysDown(); serviceInput(d); int changed=0;
+    scanKeys(); u32 d=keysDown(); serviceInput(d); validateRuntimeState(); int changed=0;
     if(d&KEY_SELECT){safeMode=!safeMode;if(safeMode){save.onlineAI=0;save.wireless=0;save.downloads=0;gatewayState=0;mode=0;}saveState();changed=1;}
     if(d&KEY_TOUCH){
         touchPosition t; touchRead(&t);
@@ -613,6 +634,7 @@ int main(void){
         swiWaitForVBlank();
         frameCounter++;
         input();
+        guardModuleState();
         if((frameCounter&31)==0 && dirtyState && !safeMode) saveState();
         if((frameCounter&3)==0){ if(mode==0) homePulse=0; draw(); }
     }
