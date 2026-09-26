@@ -4,9 +4,9 @@ ifeq ($(strip $(DEVKITARM)),)
 $(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
 endif
 
-GAME_TITLE := AetherOS O2S2HaHa FunCore
-GAME_SUBTITLE1 := DSi Interactive Next Gen
-GAME_SUBTITLE2 := Safe Fun Engine
+GAME_TITLE := Quantum AetherOSQ
+GAME_SUBTITLE1 := DSi Quantum Cockpit
+GAME_SUBTITLE2 := Interactive Edition
 include $(DEVKITARM)/ds_rules
 
 TARGET := O2S2HaHa
