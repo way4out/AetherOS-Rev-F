@@ -56,6 +56,7 @@ static int soundId=-1;
 static void saveState(void);
 static int normalizeSelection(int value);
 static void setSelection(int value);
+static u32 hash32(const void *ptr,size_t n);
 
 static int storageReady(void){
     FILE *f=fopen("fat:/data/AetherMod/.aether_test","wb");
