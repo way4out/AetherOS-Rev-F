@@ -14,6 +14,8 @@
  */
 
 #define APP_COUNT 16
+#define AETHERMOD_MAJOR 4
+#define AETHERMOD_PASS 1
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
 #define ANIMAL_PATH "data/AetherMod/animals.txt"
@@ -38,6 +40,7 @@ static PrintConsole topConsole, bottomConsole;
 static const char *root = "fat:/";
 static int mode=0, cursor=0, codexPage=0, animalPage=0;
 static int safeMode=0, spectrumCursor=0, calculatorCursor=0;
+static int selectionPin=0, homeScroll=0, homePulse=0;
 static int codexSearch=0, animalAnalyzing=0, fftWindow=0, fftPeakHold=0;
 static int networkSelfTest=0, quantumState=0, dawPlaying=0, dawTrack=0;
 static int rfMode=0, rfBand=0, rfChannel=1, rfPeakHold=0, rfPacketView=0;
@@ -131,6 +134,8 @@ static void page(const char *title){
 static void footer(const char *s){iprintf("\n%s\n",s);}
 
 static void home(void){
+    /* One authoritative selectionPin drives the visible designation pin and launch target. */
+    cursor=selectionPin;
     topBg("DUAL-OS COCKPIT");
     consoleSelect(&bottomConsole); consoleClear();
     iprintf("AETHERMOD REVOLUTION IS HERE\n");
@@ -415,7 +420,7 @@ static void input(void){
         touchPosition t; touchRead(&t);
         if(mode==0){
             int r=((int)t.py-48)/12;
-            if(r>=0&&r<APP_COUNT){cursor=r;mode=cursor+1;save.launches++;saveState();changed=1;}
+            if(r>=0&&r<APP_COUNT){selectionPin=r;cursor=selectionPin;mode=selectionPin+1;save.launches++;saveState();changed=1;}
             else if(t.py<48){mode=0;changed=1;}
         } else {
             if(t.py<48||t.py>=192){mode=0;changed=1;}
@@ -425,9 +430,9 @@ static void input(void){
         }
     }
     if(mode==0){
-        if(d&KEY_UP){cursor=(cursor+APP_COUNT-1)%APP_COUNT;changed=1;} if(d&KEY_DOWN){cursor=(cursor+1)%APP_COUNT;changed=1;}
-        if(d&KEY_LEFT){cursor=(cursor+APP_COUNT-1)%APP_COUNT;changed=1;} if(d&KEY_RIGHT){cursor=(cursor+1)%APP_COUNT;changed=1;}
-        if(d&KEY_A){mode=cursor+1;save.launches++;saveState();changed=1;} if(d&KEY_X){cursor=1;mode=2;save.launches++;saveState();changed=1;} if(d&KEY_Y){cursor=8;mode=9;save.launches++;saveState();changed=1;}
+        if(d&KEY_UP){selectionPin=(selectionPin+APP_COUNT-1)%APP_COUNT;cursor=selectionPin;homePulse=1;changed=1;} if(d&KEY_DOWN){selectionPin=(selectionPin+1)%APP_COUNT;cursor=selectionPin;homePulse=1;changed=1;}
+        if(d&KEY_LEFT){selectionPin=(selectionPin+APP_COUNT-1)%APP_COUNT;cursor=selectionPin;homePulse=1;changed=1;} if(d&KEY_RIGHT){selectionPin=(selectionPin+1)%APP_COUNT;cursor=selectionPin;homePulse=1;changed=1;}
+        if(d&KEY_A){cursor=selectionPin;mode=selectionPin+1;save.launches++;saveState();changed=1;} if(d&KEY_X){selectionPin=1;cursor=selectionPin;mode=2;save.launches++;saveState();changed=1;} if(d&KEY_Y){selectionPin=8;cursor=selectionPin;mode=9;save.launches++;saveState();changed=1;}
     } else if(mode==1){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){quantumState=(quantumState+1)%4;frameCounter+=97;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;frameCounter+=1009;changed=1;} if(d&KEY_Y){quantumState=0;changed=1;}
     } else if(mode==2){
@@ -488,7 +493,7 @@ int main(void){
         swiWaitForVBlank();
         frameCounter++;
         input();
-        if((frameCounter&3)==0) draw();
+        if((frameCounter&3)==0){ if(mode==0) homePulse=0; draw(); }
     }
     return 0;
 }
