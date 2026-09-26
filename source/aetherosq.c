@@ -14,9 +14,9 @@
  */
 
 #define APP_COUNT 16
-#define AETHERMOD_MAJOR 6
-#define AETHERMOD_PASS 2
-#define AETHERMOD_TOTAL_PASSES 3
+#define AETHERMOD_MAJOR 7
+#define AETHERMOD_PASS 1
+#define AETHERMOD_TOTAL_PASSES 5
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
 #define ANIMAL_PATH "data/AetherMod/animals.txt"
@@ -55,6 +55,7 @@ static int dirtyState=0, bootCount=0, lastMode=0;
 static int gatewayState=0, capabilityScore=0, resourceFaults=0;
 static int keyRepeatFrames=0, lastKeys=0, eventBurst=0, frameBudgetFaults=0;
 static int recoveryCount=0, validationFaults=0, moduleGuardFaults=0;
+static int resetHoldFrames=0, resetConfirm=0, resetCursor=0, resetNotice=0;
 static int soundId=-1;
 static int aiCursor=0, aiQuery=0, browserCursor=0, graphMode=0, dawView=0, settingsCursor=0, codexLine=0, animalFeature=0, telemetryPage=0;
 
@@ -63,6 +64,7 @@ static void markDirty(void);
 static void returnHome(void);
 static void updateCapabilityHealth(void);
 static void serviceInput(u32 keys);
+static void resetToBase(void);
 static int normalizeSelection(int value);
 static void canonicalizeSelection(void);
 static void setSelection(int value);
@@ -98,15 +100,15 @@ static void validateRuntimeState(void){
     if(selectionPin<0 || selectionPin>=APP_COUNT) faults++;
     if(cursor<0 || cursor>=APP_COUNT) faults++;
     if(save.selectionPin>=APP_COUNT) faults++;
-    if(mode<0 || mode>APP_COUNT) faults++;
+    if(mode!=99 && (mode<0 || mode>APP_COUNT)) faults++;
     if(faults){
         validationFaults+=faults;
         canonicalizeSelection();
-        if(mode<0 || mode>APP_COUNT){ mode=0; recoveryCount++; }
+        if(mode!=99 && (mode<0 || mode>APP_COUNT)){ mode=0; recoveryCount++; }
     }
 }
 static void guardModuleState(void){
-    if(mode<0 || mode>APP_COUNT){
+    if(mode!=99 && (mode<0 || mode>APP_COUNT)){
         moduleGuardFaults++;
         mode=0;
         returnHome();
@@ -200,6 +202,35 @@ static void updateCapabilityHealth(void){
 
 static void returnHome(void){ lastMode=mode; mode=0; homeScroll=(selectionPin>=8); setSelection(selectionPin); saveState(); }
 
+
+static void resetToBase(void){
+    defaults();
+    selectionPin=0; cursor=0; homeScroll=0; homePulse=0;
+    mode=0; safeMode=0; gatewayState=0; dirtyState=0;
+    codexPage=0; codexSearch=0; codexLine=0; animalPage=0; animalFeature=0; animalAnalyzing=0;
+    calculatorCursor=0; calcA=17; calcB=9; dawTrack=0; dawTrackMute=0; dawPlaying=0;
+    dspScale=1; fftWindow=0; fftPeakHold=0; telemetryPage=0; aiCursor=0; aiQuery=0; browserCursor=0;
+    networkSelfTest=0; quantumState=0; rfMode=0; rfBand=0; rfChannel=1; rfPeakHold=0; rfPacketView=0;
+    saSpan=20; saStart=0; saRBW=10; saAtten=0; saMarker=0; saRunning=0; saGenArmed=0;
+    recoveryNotice=0; resetHoldFrames=0; resetConfirm=0; resetCursor=0; resetNotice=1;
+    if(fatInitDefault()){
+        ensureDirs();
+        char p[120]; snprintf(p,sizeof(p),"%sdata/AetherMod/save.dat",root); remove(p);
+        saveState();
+    }
+}
+
+static void resetPage(void){
+    page("AETHERMOD BASE RESET");
+    iprintf("RESTORE FACTORY / BASE SETTINGS\\n\\n");
+    iprintf("This clears AetherMod settings and runtime state.\\n");
+    iprintf("Installed SD corpus/data files are preserved.\\n\\n");
+    iprintf("%s  YES\\n",resetCursor==0?">":" ");
+    iprintf("%s  NO\\n\\n",resetCursor==1?">":" ");
+    iprintf("SELECT = CONFIRM YES    B = CANCEL\\n");
+    iprintf("START hold detected: 3-second recovery path.\\n");
+}
+
 static void saveState(void){
     if(safeMode) return;
     ensureDirs();
@@ -270,7 +301,7 @@ static void home(void){
     iprintf("\nPIN: %02d  TARGET: %s\n",selectionPin+1,apps[selectionPin]);
     iprintf("DIAG:%s ERR:%lu HEALTH:%d%%\n",diagnosticsPass?"PASS":"CHECK",(unsigned long)sessionErrors,capabilityScore);
     iprintf("\nA OPEN  X QUANTUM  Y TELEMETRY\n");
-    iprintf("Touch: rows=modules, bottom=page\n");
+    iprintf("Touch: rows=modules, bottom=page | START hold 3s = BASE RESET\n");
 }
 
 static void quantum(void){
@@ -284,7 +315,7 @@ static void quantum(void){
     iprintf("ALGO superposition / phase / measure\n");
     iprintf("FFT BRIDGE READY  QPU %s\n",save.wireless?"GATEWAY":"LOCAL");
     iprintf("Software quantum simulator; no physical QPU claimed.\n");
-    footer("A RUN  X PHASE  Y MEASURE  B HOME");
+    footer("A RUN  X PHASE  Y MEASURE  B HOME  START HOLD 3s = RESET");
 }
 
 static void codex(void){
@@ -518,6 +549,7 @@ static void about(void){
 }
 
 static void draw(void){
+    if(mode==99){resetPage();return;}
     switch(mode){
       case 0: home(); break;
       case 1: quantum(); break;
@@ -546,6 +578,17 @@ static void tone(void){
 
 static void input(void){
     scanKeys(); u32 d=keysDown(); serviceInput(d); validateRuntimeState(); int changed=0;
+    if(d&KEY_START){ resetHoldFrames++; } else { resetHoldFrames=0; }
+    if(mode!=99 && resetHoldFrames>=180){ resetHoldFrames=0; resetCursor=0; mode=99; changed=1; }
+    if(mode==99){
+        if(d&KEY_UP){resetCursor=0;changed=1;}
+        if(d&KEY_DOWN){resetCursor=1;changed=1;}
+        if(d&KEY_A){if(resetCursor==0){resetToBase();changed=1;}else{mode=0;resetConfirm=0;changed=1;}}
+        if(d&KEY_B){mode=0;resetConfirm=0;changed=1;}
+        if(d&KEY_TOUCH){touchPosition t;touchRead(&t);if(t.py<80||t.py>=168){mode=0;changed=1;}else if(t.py<130){resetCursor=0;changed=1;}else{resetCursor=1;changed=1;}}
+        if(changed)draw();
+        return;
+    }
     if(d&KEY_SELECT){safeMode=!safeMode;if(safeMode){save.onlineAI=0;save.wireless=0;save.downloads=0;gatewayState=0;mode=0;}saveState();changed=1;}
     if(d&KEY_TOUCH){
         touchPosition t; touchRead(&t);
