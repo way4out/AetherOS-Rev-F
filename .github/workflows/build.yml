@@ -30,7 +30,7 @@ jobs:
           zip -r ../AetherMod-6.0-Expansion-Pass3-DSi-Full-Rollout.zip .
       - uses: actions/upload-artifact@v4
         with:
-          name: AetherMod-6.0-Expansion-Pass2-DSi-Full-Rollout
+          name: AetherMod-6.0-Expansion-Pass3-DSi-Full-Rollout
           path: |
             AetherMod.nds
-            AetherMod-6.0-Expansion-Pass1-DSi-Full-Rollout.zip
+            AetherMod-6.0-Expansion-Pass3-DSi-Full-Rollout.zip
