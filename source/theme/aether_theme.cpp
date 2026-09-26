@@ -31,7 +31,7 @@ const char* ground(){
     case settings::THEME_OCEAN:return "  ~~~~~~~~  ~~~~~~~~  TIDELINE  ~~~~~";
     case settings::THEME_QUANTUM:return "  .-o-.  .-o-.  .-o-.  ENTANGLEMENT";
     case settings::THEME_NIGHT:return "  --------  horizon / deep space  -----";
-    default:return "  ___/\_____/\_____/\___  WILDLANDS";
+    default:return "  ___/\\_____/\\_____/\\___  WILDLANDS";
     }
 }
 const char* accent(){

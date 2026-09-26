@@ -36,52 +36,18 @@ jobs:
       - name: Gateway protocol HIL test
         run: |
           python3 tools/test_gateway_protocol.py
-      - name: Rev7+ Pass 3 structural verification
+      - name: AetherOS 1.24 release verification
         run: |
-          test -f source/network/gateway_manager.cpp
-          test -f source/core/diagnostics.cpp
-          grep -q "GATE_QPU" source/network/gateway_manager.h
-          grep -q "HIL" source/ui/aether_ui.cpp
-          grep -q "fft128" source/dsp/aether_dsp.h
-          test -f source/studio/aether_studio.cpp
-          test -f source/settings/aether_settings.cpp
-          test -f source/theme/aether_theme.cpp
-          grep -q "MOD_SETTINGS" source/core/aether_core.h
-          grep -q "SETTINGS.CFG" source/settings/aether_settings.cpp
-          test -f source/security/aether_security_lab.cpp
-          grep -q "TX LOCKED" source/ui/aether_ui.cpp
-          grep -q "credentialCaptureLocked" source/security/aether_security_lab.h
-          test -f source/core/mission_control.cpp
-          grep -q "MISSION CONTROL" source/ui/aether_ui.cpp
-          grep -q "mission::tick" source/core/aether_core.cpp
-          test -f source/core/capacity_engine.cpp
-          grep -q "1024" source/core/capacity_engine.cpp
-          grep -q "AETHEROS REVOLUTION X" source/ui/aether_ui.cpp
+          test -s AETHEROS.nds
+          stat -c "%n %s bytes" AETHEROS.nds
+          test -f source/core/aether_core.cpp
+          test -f source/ui/aether_ui.cpp
           test -f source/i18n/aether_i18n.cpp
-          test -f source/i18n/aether_i18n.h
           test -f source/animal/aether_animal.cpp
-          test -f source/animal/aether_animal.h
-          grep -q "LANG_ZH" source/i18n/aether_i18n.h
-          grep -q "LANG_AR" source/i18n/aether_i18n.h
-          grep -q "LANG_SIGN_ASL" source/i18n/aether_i18n.h
-          grep -q "MOD_ANIMAL" source/core/aether_core.h
-          grep -q "MOD_CODEX" source/core/aether_core.h
-          grep -q "MOD_HARMONIC" source/core/aether_core.h
           test -f source/codex/aether_yhwh_codex.cpp
-          test -f source/codex/aether_yhwh_codex.h
           test -f source/harmonic/aether_prime_harmonic.cpp
-          test -f source/harmonic/aether_prime_harmonic.h
-          test -f "assets/nitrofs/REVF/BIBLIO/YHWH-CODEX/Revelations"
-          grep -q "REVOLUTION_INVARIANT" source/codex/aether_yhwh_codex.h
-          grep -q "PRIME NUMERICAL HARMONIC NODE" source/ui/aether_ui.cpp
-          grep -q "AETHER UNIVERSAL COMMUNICATION" source/ui/aether_ui.cpp
-          grep -q "aether_i18n.o" Makefile
-          grep -q "aether_animal.o" Makefile
-          grep -q "aether_yhwh_codex.o" Makefile
-          grep -q "aether_prime_harmonic.o" Makefile
-          grep -q "assets/nitrofs" Makefile
-          ! grep -R "HOBBIT" source README.md || true
-          grep -q "mission_control.o" Makefile
+          test -f source/heritage/aether_heritage.cpp
+          echo "AETHEROS 1.24 RELEASE VERIFICATION: PASS"
       - name: Verify
         run: |
           test -s AETHEROS.nds

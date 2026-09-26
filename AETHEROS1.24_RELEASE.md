@@ -1,0 +1,1 @@
+# AetherOS 1.24\n\nRelease build validation marker.\n
