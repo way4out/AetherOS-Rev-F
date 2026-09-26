@@ -70,6 +70,7 @@ static void canonicalizeSelection(void);
 static void setSelection(int value);
 static u32 hash32(const void *ptr,size_t n);
 static void defaults(void);
+static void page(const char *title);
 static void ensureDirs(void);
 
 static int storageReady(void){
@@ -353,7 +354,7 @@ static void animal(void){
     int a=animalPage%15,m=(int)((frameCounter/8+a)%8),feature=animalFeature%5;
     iprintf("SPECIES %s  STATE %s\n",animalNames[a],animalAnalyzing?"LIVE":"READY");
     iprintf("MIC -> FEATURES -> STATE -> RESPONSE\n");
-    iprintf("PITCH %02d ENERGY %02d RHYTHM %02d\n",(a*7+frameCounter)%100,(a*11+frameCounter/2)%100,(a*5+frameCounter)%100);
+    iprintf("PITCH %02d ENERGY %02d RHYTHM %02d\n",(int)((a*7+frameCounter)%100),(int)((a*11+frameCounter/2)%100),(int)((a*5+frameCounter)%100));
     iprintf("FEATURE %s  WINDOW %dms  EVENTS %02d\n",feature==0?"PITCH":feature==1?"ENERGY":feature==2?"RHYTHM":feature==3?"SPECTRUM":"ONSETS",64+(feature*32),(a*13+(int)frameCounter)%100);
     iprintf("STATE %s  CONF %02d%%\n",m<3?"CALM":m<6?"ALERT":"SOCIAL",animalAnalyzing?68+(a%25):0);
     iprintf("PLAY |");for(int i=0;i<16;i++)iprintf("%c",((i+m)%5==0)?'O':'.');iprintf("|\n");
