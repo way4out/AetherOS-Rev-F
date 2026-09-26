@@ -56,6 +56,7 @@ static int gatewayState=0, capabilityScore=0, resourceFaults=0;
 static int keyRepeatFrames=0, lastKeys=0, eventBurst=0, frameBudgetFaults=0;
 static int recoveryCount=0, validationFaults=0, moduleGuardFaults=0;
 static int soundId=-1;
+static int aiCursor=0, aiQuery=0, browserCursor=0, graphMode=0, dawView=0, settingsCursor=0;
 
 static void saveState(void);
 static void markDirty(void);
@@ -136,9 +137,9 @@ static void launchSelection(void){
 }
 
 static const char *apps[APP_COUNT]={
-    "AETHER HOME","QUANTUM CORE","CODEX","ANIMAL AI",
+    "AETHER HOME","QUANTUM CORE","YHWH CODEX","ANIMAL AI",
     "MARAUDER/RF","TINySA LAB","CALCULATOR","DAW STUDIO",
-    "DSP/FFT","TELEMETRY","PROJECTS","NETWORK GATEWAY",
+    "DSP/FFT","TELEMETRY","AI HOME","NETWORK GATEWAY",
     "AI SAFETY","FAMILY SAFETY","SYSTEM","ABOUT"
 };
 
@@ -444,16 +445,18 @@ static void telemetry(void){
     footer("B HOME");
 }
 
-static void projects(void){
-    page("PROJECTS");
-    iprintf("AETHER FAMILY\n\n");
-    iprintf("AQ.1 QUANTUM PHONE       LINK\n");
-    iprintf("OEQL/OEQC                 LINK\n");
-    iprintf("AETHEROS REV E/F         CORE\n");
-    iprintf("HORSE RESCUE PLATFORM    DATA\n");
-    iprintf("ANIMAL INTERPRETER       DATA\n");
-    iprintf("BISON / EXOTICS          DATA\n");
-    footer("A OPEN  B HOME");
+static void aiHome(void){
+    page("AI HOME / AETHER BOT");
+    const char *modes[]={"CHAT","CODE","SCIENCE","ANIMAL","SYSTEM","WEB GATE"};
+    iprintf("MODE %s  LOCAL-FIRST\n",modes[aiCursor%6]);
+    iprintf("AETHER BOT / DSi AI WORKBENCH\n");
+    iprintf("KNOWLEDGE: device + Codex + local data\n");
+    iprintf("QUERY SLOT %d  STATUS:%s\n",aiQuery,save.ai?"READY":"OFF");
+    iprintf("ONLINE AI %s  PRIVACY %s\n",save.onlineAI?"GATE":"OFF",save.privacy?"LOCK":"OPEN");
+    iprintf("BROWSER GATE %s\n",save.browser?"READY":"OFF");
+    iprintf("TOOLS: calculator / graph / animal / RF / web\n");
+    iprintf("Local responses are deterministic; cloud AI requires gateway.\n");
+    footer("UP/DOWN MODE  A RUN  X ONLINE  Y PRIVACY  B HOME");
 }
 
 static void network(void){
@@ -507,6 +510,17 @@ static void systemPage(void){
     footer("UP/DOWN BRIGHT  A THEME  X SOUND  B HOME");
 }
 
+static void generalSettings(void){
+    page("GENERAL SETTINGS");
+    iprintf("DSi CONTROL CENTER\n");
+    iprintf("BRIGHT %u/4  SOUND %s  THEME %s\n",save.brightness,save.sound?"ON":"OFF",save.theme?"AETHER":"CLASSIC");
+    iprintf("AI %s  ONLINE %s  PRIVACY %s\n",save.ai?"ON":"OFF",save.onlineAI?"ON":"OFF",save.privacy?"LOCK":"OPEN");
+    iprintf("BROWSER %s  DOWNLOADS %s\n",save.browser?"ON":"OFF",save.downloads?"ON":"OFF");
+    iprintf("WIRELESS %s  SAFE %s\n",save.wireless?"ARMED":"GUARDED",safeMode?"ON":"OFF");
+    iprintf("All changes use the existing save system.\n");
+    footer("UP/DOWN SELECT  A TOGGLE  X SAFE  B HOME");
+}
+
 static void about(void){
     page("ABOUT AETHERMOD");
     iprintf("AETHERMOD 5.0 GENESIS / PASS 6\n");
@@ -532,12 +546,12 @@ static void draw(void){
       case 7: daw(); break;
       case 8: dsp(); break;
       case 9: telemetry(); break;
-      case 10: projects(); break;
+      case 10: aiHome(); break;
       case 11: network(); break;
       case 12: aiSafety(); break;
       case 13: family(); break;
       case 14: systemPage(); break;
-      default: about(); break;
+      default: generalSettings(); break;
     }
 }
 
@@ -603,7 +617,7 @@ static void input(void){
         if(d&KEY_B){dawPlaying=0;saveState();mode=0;changed=1;} if(d&KEY_UP){save.dawStep=(save.dawStep+15)%16;changed=1;} if(d&KEY_DOWN){save.dawStep=(save.dawStep+1)%16;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;} if(d&KEY_LEFT){dawTrack=(dawTrack+2)%3;changed=1;} if(d&KEY_RIGHT){dawTrack=(dawTrack+1)%3;changed=1;} if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;saveState();changed=1;} if(dawPlaying&&(frameCounter%15)==0){tone();save.dawStep=(save.dawStep+1)%16;changed=1;}
     } else if(mode==8){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){frameCounter+=31;changed=1;} if(d&KEY_X){fftWindow^=1;changed=1;} if(d&KEY_Y){fftPeakHold^=1;dspScale=(dspScale%3)+1;changed=1;}
-    } else if(mode==9||mode==10){if(d&KEY_B){mode=0;changed=1;}
+    } else if(mode==9||mode==10){if(d&KEY_B){mode=0;changed=1;} if(mode==10&&d&KEY_UP){aiCursor=(aiCursor+5)%6;changed=1;} if(mode==10&&d&KEY_DOWN){aiCursor=(aiCursor+1)%6;changed=1;} if(mode==10&&d&KEY_A){aiQuery++;tone();changed=1;} if(mode==10&&d&KEY_X){save.onlineAI^=1;changed=1;} if(mode==10&&d&KEY_Y){save.privacy^=1;changed=1;}
     } else if(mode==11){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.wireless^=1;gatewayState=save.wireless;markDirty();changed=1;} if(d&KEY_X){networkSelfTest=1;changed=1;} if(d&KEY_Y){networkSelfTest=0;changed=1;}
     } else if(mode==12){
@@ -612,6 +626,8 @@ static void input(void){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.parental^=1;save.nsfw=save.unsafe=save.unregulated=save.parental;save.downloads=!save.parental;save.browser=!save.parental;saveState();changed=1;} if(d&KEY_X){save.userContent^=1;save.nsfw^=1;saveState();changed=1;} if(d&KEY_Y){save.wireless^=1;save.downloads^=1;saveState();changed=1;}
     } else if(mode==14){
         if(d&KEY_B){save.selectionPin=selectionPin;saveState();mode=0;changed=1;} if(d&KEY_UP&&save.brightness<4){save.brightness++;changed=1;} if(d&KEY_DOWN&&save.brightness>0){save.brightness--;changed=1;} if(d&KEY_A){save.theme^=1;saveState();changed=1;} if(d&KEY_X){save.sound^=1;saveState();changed=1;}
+    } else if(mode==15){
+        if(d&KEY_B){save.selectionPin=selectionPin;saveState();mode=0;changed=1;} if(d&KEY_UP){settingsCursor=(settingsCursor+6)%7;changed=1;} if(d&KEY_DOWN){settingsCursor=(settingsCursor+1)%7;changed=1;} if(d&KEY_A){switch(settingsCursor){case 0:save.ai^=1;break;case 1:save.onlineAI^=1;break;case 2:save.privacy^=1;break;case 3:save.browser^=1;break;case 4:save.downloads^=1;break;case 5:save.wireless^=1;break;default:save.sound^=1;break;} saveState();changed=1;} if(d&KEY_X){safeMode=!safeMode;if(safeMode){save.onlineAI=0;save.wireless=0;save.downloads=0;gatewayState=0;}saveState();changed=1;}
     } else {if(d&KEY_B){mode=0;changed=1;}}
     if(changed)draw();
 }
