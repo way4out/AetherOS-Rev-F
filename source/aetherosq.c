@@ -18,7 +18,7 @@ typedef struct {
 
 static SaveData save;
 static int mode = 0, cursor = 0, safeMode = 0;
-static int parental=1, nsfw=1, unsafe=1, unregulated=1, ai=1, onlineAI=0, privacy=1, language=0;
+static int parental=1, nsfw=1, unsafe=1, unregulated=1, ai=1, onlineAI=0, privacy=1, language=0, wireless=0, downloads=0, userContent=1, browser=1, brightness=3, theme=0;
 static u32 frameCounter = 0;
 static PrintConsole topConsole;
 static PrintConsole bottomConsole;
@@ -98,20 +98,25 @@ static void header(const char *t) {
 static void hub(void) {
     header("QUANTUM COCKPIT");
     const char *items[] = {
-        "QUANTUM FUNCORE","AETHER TELEMETRY","SETTINGS","SAFE TEST","ABOUT",
-        "FAMILY & SAFETY","AI SAFETY","LANGUAGE"
+        "QUANTUM LAB","TELEMETRY","SETTINGS","SAFE TEST","ABOUT",
+        "FAMILY & SAFETY","AI SAFETY","LANGUAGE","SYSTEM TOOLS",
+        "APP LIBRARY","PRIVACY VAULT","FUNCORE"
     };
-    for (int x = 0; x < 8; x++)
-        iprintf("%s %s\n", x == cursor ? ">" : " ", items[x]);
-
-    iprintf("\nA SELECT  UP/DOWN NAV\nX FUN  Y TELEMETRY\n");
-    iprintf("Launches: %lu\n", (unsigned long)save.launches);
+    for (int x=0; x<12; x++)
+        iprintf("%s %02d  %s\n", x==cursor?">":" ", x+1, items[x]);
+    iprintf("\nA=OPEN  UP/DOWN=NAV  X=LAB  Y=TELEMETRY\n");
+    iprintf("Touch top=Safety  middle=AI  lower=Language\n");
+    iprintf("Launches: %lu\n",(unsigned long)save.launches);
     consoleSelect(&topConsole);
     consoleClear();
-    iprintf("QUANTUM\nAETHEROSQ\n\nFUNCORE ONLINE\n\n");
-    iprintf("FRAME %lu\n", (unsigned long)frameCounter);
-    iprintf("MODE %s\n", safeMode ? "SAFE" : "LIVE");
-    iprintf("DSi %s\n", isDSiMode() ? "MODE" : "DS/COMPAT");
+    iprintf("      A E T H E R O S Q\n\n");
+    iprintf("   QUANTUM COCKPIT ONLINE\n\n");
+    iprintf("  ENERGY   %3d%%\n",(int)((frameCounter/3)%101));
+    iprintf("  PHASE    %02lu\n",(unsigned long)((frameCounter/7)%12));
+    iprintf("  STABLE   %s\n",safeMode?"SAFE":"NOMINAL");
+    iprintf("  AI       %s\n",ai?"LOCAL":"OFF");
+    iprintf("  FILTER   %s\n",nsfw&&unsafe&&unregulated?"STRICT":"CUSTOM");
+    iprintf("\n  [%s] %s\n",isDSiMode()?"DSi":"DS",languageName());
     consoleSelect(&bottomConsole);
 }
 
@@ -158,6 +163,43 @@ static void languageCenter(void) {
     iprintf("5 Portugues  6 Nihongo  7 Hangul  8 Chinese  9 Russian\n");
 }
 
+
+static void statusBar(void) {
+    iprintf("Q-AOSQ | %s | %s\n", safeMode?"SAFE":"LIVE", isDSiMode()?"DSi":"DS");
+    iprintf("--------------------------------\n");
+}
+static void systemTools(void) {
+    header("SYSTEM TOOLS");
+    iprintf("DISPLAY     %u/4\n", brightness);
+    iprintf("THEME       %s\n", theme?"AETHER":"CLASSIC");
+    iprintf("WIRELESS    %s\n", wireless?"ENABLED":"GUARDED");
+    iprintf("DOWNLOADS   %s\n", downloads?"ALLOWED":"GUARDED");
+    iprintf("BROWSER     %s\n", browser?"ALLOWED":"BLOCKED");
+    iprintf("USER DATA   %s\n\n", userContent?"FILTERED":"BLOCKED");
+    iprintf("UP/DOWN DISPLAY  A THEME\nX WIRELESS  Y DOWNLOADS\nB=BACK\n");
+}
+static void appLibrary(void) {
+    header("AETHER APP LIBRARY");
+    iprintf("[01] Quantum Lab       READY\n");
+    iprintf("[02] FunCore            READY\n");
+    iprintf("[03] Telemetry          READY\n");
+    iprintf("[04] Family Safety      READY\n");
+    iprintf("[05] AI Safety          READY\n");
+    iprintf("[06] Language Hub       READY\n");
+    iprintf("[07] System Tools       READY\n");
+    iprintf("[08] Privacy Vault       READY\n\n");
+    iprintf("All modules are local-first.\nB=BACK\n");
+}
+static void privacyVault(void) {
+    header("PRIVACY VAULT");
+    iprintf("PRIVACY LOCK      %s\n", privacy?"ARMED":"DISARMED");
+    iprintf("ONLINE AI         %s\n", onlineAI?"ENABLED":"DISABLED");
+    iprintf("WIRELESS          %s\n", wireless?"ENABLED":"GUARDED");
+    iprintf("USER CONTENT      %s\n", userContent?"FILTERED":"BLOCKED");
+    iprintf("DOWNLOADS         %s\n\n", downloads?"ALLOWED":"GUARDED");
+    iprintf("A=PRIVACY  X=WIRELESS  Y=ONLINE AI\nB=BACK\n");
+}
+
 static void telemetry(void) {
     header("AETHER TELEMETRY");
     iprintf("Frame: %lu\nIntensity: %u\nSound: %s\n",
@@ -192,73 +234,83 @@ static void about(void) {
 }
 
 static void draw(void) {
-    if (mode == 1) quantumLab();
-    else if (mode == 6) safetyCenter();
-    else if (mode == 7) aiCenter();
-    else if (mode == 8) languageCenter();
-    else if (mode == 2) telemetry();
-    else if (mode == 3) settings();
-    else if (mode == 4) safe_test();
-    else if (mode == 5) about();
-    else hub();
+    if (mode==0) hub();
+    else if (mode==1) quantumLab();
+    else if (mode==2) telemetry();
+    else if (mode==3) settings();
+    else if (mode==4) safe_test();
+    else if (mode==5) about();
+    else if (mode==6) safetyCenter();
+    else if (mode==7) aiCenter();
+    else if (mode==8) languageCenter();
+    else if (mode==9) systemTools();
+    else if (mode==10) appLibrary();
+    else if (mode==11) privacyVault();
+    else if (mode==12) quantumLab();
 }
 
 static void input(void) {
     scanKeys();
-    u32 d = keysDown();
-    u32 h = keysHeld();
+    u32 d=keysDown();
+    u32 h=keysHeld();
 
-    if (d & KEY_TOUCH) { touchPosition t; touchRead(&t); if (t.py < 70) mode = 6; else if (t.py < 140) mode = 7; else if (t.py < 200) mode = 8; else mode = 0; }
-
+    if (d & KEY_TOUCH) {
+        touchPosition t; touchRead(&t);
+        if (t.py < 70) mode=6;
+        else if (t.py < 140) mode=7;
+        else if (t.py < 200) mode=8;
+        else mode=0;
+    }
     if (d & KEY_SELECT) {
-        safeMode = !safeMode;
-        if (safeMode) {
-            save.sound = 0;
-            save.intensity = 1;
-            mode = 0;
-        }
+        safeMode=!safeMode;
+        if (safeMode) { save.sound=0; save.intensity=1; mode=0; }
     }
 
-    if (mode == 0) {
-        if (d & KEY_UP) cursor = (cursor + 7) % 8;
-        if (d & KEY_DOWN) cursor = (cursor + 1) % 8;
-        if (d & KEY_X) mode = 1;
-        if (d & KEY_Y) mode = 2;
-        if (d & KEY_A) {
-            mode = cursor + 1;
-            save.launches++;
-            save_state();
-        }
-    } else if (mode == 1) {
-        if (d & KEY_B) mode = 0;
-        if (d & KEY_X) frameCounter += 97;
-        if (d & KEY_Y) frameCounter /= 2;
-        if (h & KEY_A) frameCounter += 2;
-    } else if (mode == 6) {
-        if (d & KEY_B) mode = 0;
-        if (d & KEY_X) { parental ^= 1; nsfw = unsafe = unregulated = parental; }
-        if (d & KEY_Y) { nsfw ^= 1; unsafe ^= 1; unregulated ^= 1; }
-        if (d & KEY_A) { nsfw ^= 1; }
-    } else if (mode == 7) {
-        if (d & KEY_B) mode = 0;
-        if (d & KEY_A) ai ^= 1;
-        if (d & KEY_X) onlineAI ^= 1;
-        if (d & KEY_Y) privacy ^= 1;
-    } else if (mode == 8) {
-        if (d & KEY_B) mode = 0;
-        if (d & KEY_UP) language = (language + 9) % 10;
-        if (d & KEY_DOWN) language = (language + 1) % 10;
-        if (d & KEY_A) save_state();
-    } else if (mode == 2 || mode == 4 || mode == 5) {
-        if (d & KEY_B) mode = 0;
-    } else if (mode == 3) {
-        if (d & KEY_UP && save.intensity < 4) save.intensity++;
-        if (d & KEY_DOWN && save.intensity > 0) save.intensity--;
-        if (d & KEY_A) save.sound ^= 1;
-        if (d & KEY_B) {
-            save_state();
-            mode = 0;
-        }
+    if (mode==0) {
+        if (d&KEY_UP) cursor=(cursor+11)%12;
+        if (d&KEY_DOWN) cursor=(cursor+1)%12;
+        if (d&KEY_X) mode=1;
+        if (d&KEY_Y) mode=2;
+        if (d&KEY_A) { mode=cursor+1; save.launches++; save_state(); }
+    } else if (mode==1 || mode==12) {
+        if (d&KEY_B) mode=0;
+        if (d&KEY_X) frameCounter+=97;
+        if (d&KEY_Y) frameCounter/=2;
+        if (h&KEY_A) frameCounter+=2;
+    } else if (mode==2 || mode==4 || mode==5 || mode==10) {
+        if (d&KEY_B) mode=0;
+    } else if (mode==3) {
+        if (d&KEY_UP && save.intensity<4) save.intensity++;
+        if (d&KEY_DOWN && save.intensity>0) save.intensity--;
+        if (d&KEY_A) save.sound^=1;
+        if (d&KEY_B) { save_state(); mode=0; }
+    } else if (mode==6) {
+        if (d&KEY_B) mode=0;
+        if (d&KEY_X) { parental^=1; nsfw=unsafe=unregulated=parental; userContent=parental; browser=!parental; }
+        if (d&KEY_Y) { unsafe^=1; unregulated^=1; }
+        if (d&KEY_A) nsfw^=1;
+    } else if (mode==7) {
+        if (d&KEY_B) mode=0;
+        if (d&KEY_A) ai^=1;
+        if (d&KEY_X) onlineAI^=1;
+        if (d&KEY_Y) privacy^=1;
+    } else if (mode==8) {
+        if (d&KEY_B) mode=0;
+        if (d&KEY_UP) language=(language+9)%10;
+        if (d&KEY_DOWN) language=(language+1)%10;
+        if (d&KEY_A) save_state();
+    } else if (mode==9) {
+        if (d&KEY_B) mode=0;
+        if (d&KEY_UP && brightness<4) brightness++;
+        if (d&KEY_DOWN && brightness>0) brightness--;
+        if (d&KEY_A) theme^=1;
+        if (d&KEY_X) wireless^=1;
+        if (d&KEY_Y) downloads^=1;
+    } else if (mode==11) {
+        if (d&KEY_B) mode=0;
+        if (d&KEY_A) privacy^=1;
+        if (d&KEY_X) wireless^=1;
+        if (d&KEY_Y) onlineAI^=1;
     }
 }
 
