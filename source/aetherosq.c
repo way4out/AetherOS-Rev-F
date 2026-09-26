@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 5
-#define AETHERMOD_PASS 4
+#define AETHERMOD_PASS 5
 #define AETHERMOD_TOTAL_PASSES 8
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
@@ -52,11 +52,13 @@ static u32 frameCounter=0;
 static u32 lastSaveFrame=0, sessionErrors=0, inputEvents=0;
 static int diagnosticsPass=0, recoveryNotice=0, lastDiagnosticFrame=0;
 static int dirtyState=0, bootCount=0, lastMode=0;
+static int gatewayState=0, capabilityScore=0, resourceFaults=0;
 static int soundId=-1;
 
 static void saveState(void);
 static void markDirty(void);
 static void returnHome(void);
+static void updateCapabilityHealth(void);
 static int normalizeSelection(int value);
 static void setSelection(int value);
 static u32 hash32(const void *ptr,size_t n);
@@ -148,7 +150,16 @@ static void ensureDirs(void){
     mkdir(a,0777); mkdir(b,0777);
 }
 
-static void markDirty(void){ dirtyState=1; }
+static void markDirty(void){ dirtyState=1; }\n\nstatic void updateCapabilityHealth(void){
+    capabilityScore=100;
+    if(!fatInitDefault()) capabilityScore-=25;
+    if(!isDSiMode()) capabilityScore-=5;
+    if(save.wireless) capabilityScore-=0;
+    if(save.onlineAI && save.privacy) capabilityScore-=10;
+    if(safeMode) capabilityScore-=5;
+    if(capabilityScore<0) capabilityScore=0;
+}
+
 
 static void returnHome(void){ lastMode=mode; mode=0; homeScroll=(selectionPin>=8); setSelection(selectionPin); saveState(); }
 
@@ -208,6 +219,7 @@ static void home(void){
     /* One authoritative selectionPin drives marker, number, label and launch target. */
     canonicalizeSelection();
     runDiagnostics();
+    updateCapabilityHealth();
     topBg("DUAL-OS COCKPIT");
     consoleSelect(&bottomConsole); consoleClear();
     iprintf("AETHERMOD REVOLUTION IS HERE\n");
@@ -219,7 +231,7 @@ static void home(void){
         iprintf("%s%02d %-18s\n",n==cursor?"> ":"  ",n+1,apps[n]);
     }
     iprintf("\nPIN: %02d  TARGET: %s\n",selectionPin+1,apps[selectionPin]);
-    iprintf("DIAG:%s ERR:%lu\n",diagnosticsPass?"PASS":"CHECK",(unsigned long)sessionErrors);
+    iprintf("DIAG:%s ERR:%lu HEALTH:%d%%\n",diagnosticsPass?"PASS":"CHECK",(unsigned long)sessionErrors,capabilityScore);
     iprintf("\nA OPEN  X QUANTUM  Y TELEMETRY\n");
     iprintf("Touch: rows=modules, bottom=page\n");
 }
@@ -390,6 +402,8 @@ static void telemetry(void){
     iprintf("CAMERA      SYSTEM GATEWAY\n");
     iprintf("EXTERNAL    GATEWAY ONLY\n");
     iprintf("DIAGNOSTICS  %s  ERR:%lu  LAST:%d\n",diagnosticsPass?"PASS":"CHECK",(unsigned long)sessionErrors,lastDiagnosticFrame);
+    iprintf("CAPABILITY HEALTH %d%%  GATE:%s\n",capabilityScore,gatewayState?"ARMED":"GUARDED");
+    iprintf("RESOURCE FAULTS %d\n",resourceFaults);
     footer("B HOME");
 }
 
@@ -415,6 +429,7 @@ static void network(void){
     iprintf("QPU             EXTERNAL\n");
     iprintf("SDR             EXTERNAL\n");
     iprintf("FRAMED CRC32 GATE READY\nRX/TX QUEUES    BOUNDED\n");
+    iprintf("GATE STATE      %s\n",gatewayState?"ARMED":"GUARDED");
     iprintf("SELFTEST        %s\n",networkSelfTest?"PASS":"READY");
     footer("A ARM GATE  X SELFTEST  Y RESET  B HOME");
 }
@@ -497,7 +512,7 @@ static void tone(void){
 
 static void input(void){
     scanKeys(); u32 d=keysDown(); int changed=0;
-    if(d&KEY_SELECT){safeMode=!safeMode;if(safeMode){save.onlineAI=0;save.wireless=0;save.downloads=0;mode=0;}saveState();changed=1;}
+    if(d&KEY_SELECT){safeMode=!safeMode;if(safeMode){save.onlineAI=0;save.wireless=0;save.downloads=0;gatewayState=0;mode=0;}saveState();changed=1;}
     if(d&KEY_TOUCH){
         touchPosition t; touchRead(&t);
         if(mode==0){
@@ -536,13 +551,13 @@ static void input(void){
         if(d&KEY_B){mode=0;changed=1;}
         if(d&KEY_UP){rfMode=(rfMode+3)%4;changed=1;} if(d&KEY_DOWN){rfMode=(rfMode+1)%4;changed=1;}
         if(d&KEY_LEFT){rfBand=(rfBand+2)%3;changed=1;} if(d&KEY_RIGHT){rfBand=(rfBand+1)%3;changed=1;}
-        if(d&KEY_A){save.wireless=1;rfPacketView=0;frameCounter+=11;changed=1;}
+        if(d&KEY_A){save.wireless=1;gatewayState=1;rfPacketView=0;frameCounter+=11;markDirty();changed=1;}
         if(d&KEY_X){rfPacketView^=1;changed=1;} if(d&KEY_Y){rfPeakHold^=1;changed=1;}
     } else if(mode==5){
         if(d&KEY_B){mode=0;changed=1;}
         if(d&KEY_UP){saSpan+=5;if(saSpan>200)saSpan=5;changed=1;} if(d&KEY_DOWN){saSpan-=5;if(saSpan<5)saSpan=200;changed=1;}
         if(d&KEY_LEFT){saStart-=5;if(saStart<0)saStart=0;changed=1;} if(d&KEY_RIGHT){saStart+=5;if(saStart>800)saStart=800;changed=1;}
-        if(d&KEY_A){saRunning=!saRunning;save.wireless=1;changed=1;}
+        if(d&KEY_A){saRunning=!saRunning;save.wireless=1;gatewayState=saRunning;markDirty();changed=1;}
         if(d&KEY_X){saMarker+=5;if(saMarker>saSpan)saMarker=0;changed=1;}
         if(d&KEY_Y){if(saRBW==10){saRBW=30;saAtten=10;}else if(saRBW==30){saRBW=100;saAtten=20;}else{saRBW=10;saAtten=0;}changed=1;}
     } else if(mode==6){
@@ -553,7 +568,7 @@ static void input(void){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){frameCounter+=31;changed=1;} if(d&KEY_X){fftWindow^=1;changed=1;} if(d&KEY_Y){fftPeakHold^=1;dspScale=(dspScale%3)+1;changed=1;}
     } else if(mode==9||mode==10){if(d&KEY_B){mode=0;changed=1;}
     } else if(mode==11){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.wireless^=1;changed=1;} if(d&KEY_X){networkSelfTest=1;changed=1;} if(d&KEY_Y){networkSelfTest=0;changed=1;}
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.wireless^=1;gatewayState=save.wireless;markDirty();changed=1;} if(d&KEY_X){networkSelfTest=1;changed=1;} if(d&KEY_Y){networkSelfTest=0;changed=1;}
     } else if(mode==12){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.ai^=1;changed=1;} if(d&KEY_X){save.onlineAI^=1;changed=1;} if(d&KEY_Y){save.privacy^=1;changed=1;}
     } else if(mode==13){
@@ -574,7 +589,8 @@ int main(void){
     swiWaitForVBlank();
 
     if(!fatInitDefault()){
-        safeMode=1; defaults();
+        resourceFaults++;
+        safeMode=1; gatewayState=0; defaults();
         consoleSelect(&bottomConsole); consoleClear();
         iprintf("AETHERMOD SAFE BOOT\nSD/FAT unavailable.\nRunning RAM-only.\n");
     } else {
