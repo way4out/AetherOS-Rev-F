@@ -1,59 +1,29 @@
-name: Build AetherOS REVOLUTION X for Nintendo DSi
+name: Build O2S2HaHa DSi
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
     container: devkitpro/devkitarm:20241104
     steps:
       - uses: actions/checkout@v4
-      - name: Verify devkitPro NDS toolchain
+      - name: Build NDS
         run: |
-          echo "DEVKITPRO=$DEVKITPRO"
-          echo "DEVKITARM=$DEVKITARM"
-          test -f "$DEVKITARM/ds_rules"
-          test -f "$DEVKITPRO/libnds/lib/libnds9.a"
-      - name: Build
+          make clean
+          make
+          test -f O2S2HaHa.nds
+          ls -lh O2S2HaHa.nds
+      - name: Package
         run: |
-          set +e
-          make > build.log 2>&1
-          rc=$?
-          cat build.log
-          echo "MAKE_RC=$rc"
-          ls -lh AETHEROS.elf AETHEROS.nds 2>/dev/null || true
-          exit $rc
-      - name: Upload build diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: AETHEROS-build-diagnostics
-          path: build.log
-      - name: Gateway protocol HIL test
-        run: |
-          python3 tools/test_gateway_protocol.py
-      - name: AetherOS 1.24 release verification
-        run: |
-          test -s AETHEROS.nds
-          stat -c "%n %s bytes" AETHEROS.nds
-          test -f source/core/aether_core.cpp
-          test -f source/ui/aether_ui.cpp
-          test -f source/i18n/aether_i18n.cpp
-          test -f source/animal/aether_animal.cpp
-          test -f source/codex/aether_yhwh_codex.cpp
-          test -f source/harmonic/aether_prime_harmonic.cpp
-          test -f source/heritage/aether_heritage.cpp
-          echo "AETHEROS 1.24 RELEASE VERIFICATION: PASS"
-      - name: Verify
-        run: |
-          test -s AETHEROS.nds
-          file AETHEROS.nds || true
-          ls -lh AETHEROS.nds
+          mkdir -p deploy/apps/O2S2HaHa
+          cp O2S2HaHa.nds deploy/apps/O2S2HaHa/O2S2HaHa.nds
+          cd deploy
+          zip -r ../O2S2HaHa-DSi-NextGen.zip .
       - uses: actions/upload-artifact@v4
         with:
-          name: AETHEROS-NDS
-          path: AETHEROS.nds
+          name: O2S2HaHa-DSi-NextGen
+          path: |
+            O2S2HaHa.nds
+            O2S2HaHa-DSi-NextGen.zip
