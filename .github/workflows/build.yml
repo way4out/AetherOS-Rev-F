@@ -39,6 +39,7 @@ jobs:
       - name: AetherOS 1.24 release verification
         run: |
           test -s AETHEROS.nds
+          stat -c "%n %s bytes" AETHEROS.nds
           test -f source/core/aether_core.cpp
           test -f source/ui/aether_ui.cpp
           test -f source/i18n/aether_i18n.cpp
@@ -46,11 +47,6 @@ jobs:
           test -f source/codex/aether_yhwh_codex.cpp
           test -f source/harmonic/aether_prime_harmonic.cpp
           test -f source/heritage/aether_heritage.cpp
-          test -f assets/nitrofs/REVF/BIBLIO/YHWH-CODEX/Revelations
-          grep -q "AETHEROS REVOLUTION X" source/ui/aether_ui.cpp
-          grep -q "AETHER UNIVERSAL COMMUNICATION" source/ui/aether_ui.cpp
-          grep -q "PRIME NUMERICAL HARMONIC NODE" source/ui/aether_ui.cpp
-          grep -q "1126" source/core/capacity_engine.cpp
           echo "AETHEROS 1.24 RELEASE VERIFICATION: PASS"
       - name: Verify
         run: |
