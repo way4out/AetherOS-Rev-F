@@ -33,8 +33,8 @@ static void scenery(u16* p, settings::Theme t, u32 frame){
     // Keep the scenic pixels intact; the console layer provides the interactive chrome.
     for(int x=8;x<248;x++){p[8*256+x]=hi;p[184*256+x]=dark;} for(int y=8;y<185;y++){p[y*256+8]=hi;p[y*256+247]=dark;}
 }
-static const char* names[MOD_COUNT]={"CORE","QUANTUM","SOUND","DSP","LAB","AI","NETWORK","PROJECTS","RF LAB","MARAUDER","STUDIO","SYSTEM","ANIMAL","SETTINGS"};
-static const char* glyphs[MOD_COUNT]={"[CORE]","[QBIT]","[SND ]","[DSP ]","[LAB ]","[AI  ]","[NET ]","[FILE]","[RF  ]","[RFX ]","[DAW ]","[SYS ]","[BIO ]","[SET ]"};
+static const char* names[MOD_COUNT]={"CORE","QUANTUM","SOUND","DSP","LAB","AI","NETWORK","PROJECTS","RF LAB","MARAUDER","STUDIO","SYSTEM","ANIMAL","YHWH CODEX","HARMONIC","SETTINGS"};
+static const char* glyphs[MOD_COUNT]={"[CORE]","[QBIT]","[SND ]","[DSP ]","[LAB ]","[AI  ]","[NET ]","[FILE]","[RF  ]","[RFX ]","[DAW ]","[SYS ]","[BIO ]","[CODEX]","[HARM]","[SET ]"};
 
 static void selectTop(){consoleSelect(&topConsole);}
 static void selectBottom(){consoleSelect(&bottomConsole);}
@@ -67,8 +67,11 @@ void init(){
 void update(const SystemState&){}
 
 static void card(int n,const SystemState&s){
-    bool active=(n==s.selectedModule); const int col=n&1,row=n>>1;
-    iprintf("\x1b[%d;%dH%s[%s] %-9s%s",2+row*2,1+col*16,active?"\x1b[33m>\x1b[47m":"\x1b[37m",active?"*":" ",names[n],active?"\x1b[0m":"\x1b[37m");
+    bool active=(n==s.selectedModule); const int col=n&3,row=n>>2;
+    const int x=10+col*61,y=58+row*30;
+    u16 fill=active?ARGB16(1,0,18,30):ARGB16(1,2,8,16);
+    rect(topPixels,x,y,x+55,y+24,fill);
+    iprintf("\x1b[%d;%dH%s%s %s%s",1+y/8,1+x/8,active?"\x1b[33m>":"\x1b[36m",glyphs[n],names[n],active?" *":"\x1b[37m");
 }
 static void statusRibbon(const SystemState&s){
     auto hr=hil::report(); auto st=studio::state(); auto dg=diag::report();
@@ -84,7 +87,7 @@ static void topDesktop(const SystemState&s){
         iprintf("\x1b[33m AETHER SPACE  \x1b[37m%s\n",p.locationValid?"LOCATION READY":"AETHER DEFAULT");
         iprintf(" %s\n",theme::sky());
         statusRibbon(s);
-        iprintf("\n\x1b[36mYOUR MODULES\n");
+        iprintf("\n\x1b[36mMODULE INTERFACE  // TOUCH A PANEL\n");
         for(int i=0;i<MOD_COUNT;i++)card(i,s);
     } else if(p.layout==settings::LAYOUT_FOCUS){
         iprintf("\x1b[33m FOCUS DESK\n\x1b[37m");
@@ -96,15 +99,16 @@ static void topDesktop(const SystemState&s){
         iprintf("\x1b[32m AETHER VALLEY DESKTOP\n\x1b[37m");
         iprintf(" %s\n",theme::ground());
         statusRibbon(s);
-        iprintf("\n\x1b[36mMODULE DECK\x1b[37m\n");
+        iprintf("\n\x1b[36mMODULE INTERFACE  // TOUCH A PANEL\x1b[37m\n");
         for(int i=0;i<MOD_COUNT;i++)card(i,s);
     }
 }
 static void bottomDesktop(const SystemState&s){
     clearBottom(); selectBottom(); auto p=settings::current();
     iprintf("\x1b[36mAETHEROS1.1+ CONTROL DECK\x1b[37m\n");
-    iprintf("TOUCH A MODULE  •  A OPEN  •  B HOME\n");
-    iprintf("PROFILE: YOU\nTHEME: %s\nLAYOUT: %s\n",settings::themeName(theme::active()),settings::layoutName(p.layout));
+    iprintf("TOUCH MODULE  •  A OPEN  •  B HOME\n");
+    iprintf("PROFILE  YOU     THEME  %s\n",settings::themeName(theme::active()));
+    iprintf("LAYOUT  %s     DENSITY  %s\n",settings::layoutName(p.layout),p.density==0?"LOW":p.density==1?"MED":p.density==2?"HIGH":"MAX");
     iprintf("%s\n",settings::locationLabel());
     iprintf("\n\x1b[36mQUICK CONTROL\n");
     iprintf("A  Open / Enter\nD  Navigate\nTOUCH  Direct\nB  Back\nSTART Safe Mode\n");
