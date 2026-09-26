@@ -369,7 +369,7 @@ static void calculator(void){
       case 9:result=a<b?a:b;fn="MIN";break;case 10:result=a^b;fn="BIT-XOR";break;default:result=(a*a+b*b)%1000003;fn="Q-NORM";break;
     }
     iprintf("A=%lld B=%lld  FN %s\nRESULT %lld\n",a,b,fn,result);
-    iprintf("SCIENTIFIC: MOD / % / SQUARE / CUBE / BITWISE\n");
+    iprintf("SCIENTIFIC: MOD / %% / SQUARE / CUBE / BITWISE\n");
     iprintf("Q: phase=%d parity=%d mod256=%lld\n",(int)((a*7+b*3)%360),(int)((a^b)&1),(a*b)%256);
     footer("UP/DOWN FUNCTION  A EDIT A  X EDIT B  B HOME");
 }
@@ -426,7 +426,7 @@ static void telemetry(void){
     iprintf("PAGE %d/2  PRESS A TO CYCLE\n",telemetryPage+1);
     if(telemetryPage){
         iprintf("GATEWAYS: RF=%s TINYSA=%s NET=%s AI=%s\n",gatewayState?"ARM":"SAFE",saRunning?"SWEEP":"IDLE",save.browser?"READY":"OFF",save.ai?"READY":"OFF");
-        iprintf("FRAME BUDGET %d  INPUT BURSTS %d\n",frameBudgetFaults,eventBursts);
+        iprintf("FRAME BUDGET %d  INPUT BURSTS %d\n",frameBudgetFaults,eventBurst);
         iprintf("SAVE CHECKSUM %s  LAST SAVE %lu\n",saveIntegrity()?"OK":"BAD",(unsigned long)lastSaveFrame);
     }
     footer("A PAGE  B HOME");
