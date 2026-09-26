@@ -1,32 +1,38 @@
-# AetherMod 7.0 Apex — Nintendo DSi / DS Release
+# AetherMod 7.0 Apex - Nintendo DSi / DS Release
 
-## Pass 3 / 5 — RF + TinySA Operator Layer
+## Pass 4 / 5 - Calculator + DAW + DSP/FFT Workstation
 
-Pass 3 expands the Marauder/RF and TinySA interfaces while preserving the local-first, bounded-storage design.
+### Calculator
+- Touchscreen 4x4 keypad.
+- A/B operand entry.
+- 12 calculation modes: add, subtract, multiply, divide, modulo, percent, square, cube, max, min, XOR, Q-norm.
+- Answer chaining, operand swap, sign control, memory result.
+- Derived phase/parity/modulo readouts.
 
-### Marauder / RF
-- Four operator modes: Survey, Channel View, Packet Metadata, RSSI History.
-- Band/channel navigation and signal telemetry display.
-- Warning index for signal/noise/authorization conditions.
-- Authorized push-test queue with an 8-item runtime cap.
-- Bounded session event log with a 32-event runtime counter.
-- Explicit safety gate: no jamming, deauthentication, credential capture, or unauthorized access.
-- Stock DSi RF limitations remain explicit; physical RF requires compatible external hardware.
+### DAW
+- Four independent 16-step tracks.
+- 64 programmable cells.
+- Touch step editing.
+- Live play/stop transport.
+- BPM control from 60-240.
+- Track selection, octave, swing/FX state and mixer/sequence views.
+- Local PSG/PCM-oriented sound engine.
 
-### TinySA
-- Hybrid visual + text interface.
-- Spectrum, Waterfall, Text Stats, and Marker views.
-- Span, RBW, attenuation, marker, sweep, trace-hold and input-source controls.
-- SIM mode works without hardware; EXTERNAL mode is a gateway state, not a claim of native DSi USB/serial TinySA support.
+### DSP / FFT
+- Deterministic 32-sample analysis pipeline.
+- Window selection and peak hold.
+- Input source selection and gain control.
+- 16-bin magnitude display and peak-bin tracking.
+- Touch frequency-bin selection.
+- Purpose: waveform/signal inspection, resonance analysis, peak finding and audio experimentation.
 
-### 4 GB SD strategy
-- The 4 GB card is treated as the available storage budget.
-- The NDS application remains compact.
-- Runtime logs are bounded rather than allowed to grow indefinitely.
-- Large Codex/AI corpora should remain optional SD data and must fit within the user's remaining card space.
-- No module is designed to reserve the entire card or silently consume it.
+### Universal interaction
+- Touch interactions were extended to Calculator, DAW and DSP.
+- D-pad remains the keyboard navigation path.
+- Home selection remains centralized through selectionPin.
 
-### Remaining passes
-1. Deeper Calculator/DAW/DSP interaction.
-2. Telemetry + AI Home + Network Gateway expansion.
-3. AI Safety + Family Safety + System/Service + General Settings + Quantum Core + final touch/navigation hardening.
+### 4 GB SD architecture
+The 4 GB card is the expansion/data layer, not a target for executable bloat. Core modules remain compact while large optional datasets can live under data/AetherMod/.
+
+### Remaining
+Pass 5 is reserved for Telemetry, AI Home, Network Gateway, AI Safety, Family Safety, System/Service, General Settings, Quantum Core and final cross-module touch/navigation hardening.
