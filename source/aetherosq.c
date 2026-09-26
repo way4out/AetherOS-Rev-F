@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 5
-#define AETHERMOD_PASS 2
+#define AETHERMOD_PASS 3
 #define AETHERMOD_TOTAL_PASSES 8
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
@@ -50,7 +50,7 @@ static int rfMode=0, rfBand=0, rfChannel=1, rfPeakHold=0, rfPacketView=0;
 static int saSpan=20, saStart=0, saRBW=10, saAtten=0, saMarker=0, saRunning=0, saGenArmed=0;
 static u32 frameCounter=0;
 static u32 lastSaveFrame=0, sessionErrors=0, inputEvents=0;
-static int diagnosticsPass=0, recoveryNotice=0;
+static int diagnosticsPass=0, recoveryNotice=0, lastDiagnosticFrame=0;
 static int soundId=-1;
 
 static void saveState(void);
@@ -73,12 +73,14 @@ static int saveIntegrity(void){
 
 static void runDiagnostics(void){
     diagnosticsPass=0;
+    sessionErrors=0;
     if(!saveIntegrity()) sessionErrors++;
     if(!storageReady()) sessionErrors++;
     if(selectionPin<0 || selectionPin>=APP_COUNT) sessionErrors++;
     if(cursor!=selectionPin) sessionErrors++;
     if(save.selectionPin!=selectionPin) sessionErrors++;
     diagnosticsPass=(sessionErrors==0);
+    lastDiagnosticFrame=(int)frameCounter;
 }
 
 static void canonicalizeSelection(void){
@@ -201,12 +203,16 @@ static void home(void){
     consoleSelect(&bottomConsole); consoleClear();
     iprintf("AETHERMOD REVOLUTION IS HERE\n");
     iprintf("------------------------------\n");
-    iprintf("Tap a module or use UP/DOWN.\n\n");
-    for(int i=0;i<APP_COUNT;i++)
-        iprintf("%s%02d %-18s\n",i==cursor?"> ":"  ",i+1,apps[i]);
-    iprintf("\nSELECTED: [%02d] %s\n",cursor+1,apps[cursor]);
+    iprintf("PAGE %d/2  Tap a module or use D-PAD.\n\n",homeScroll+1);
+    int first=homeScroll*8;
+    for(int i=0;i<8;i++){
+        int n=first+i;
+        iprintf("%s%02d %-18s\n",n==cursor?"> ":"  ",n+1,apps[n]);
+    }
+    iprintf("\nPIN: %02d  TARGET: %s\n",selectionPin+1,apps[selectionPin]);
+    iprintf("DIAG:%s ERR:%lu\n",diagnosticsPass?"PASS":"CHECK",(unsigned long)sessionErrors);
     iprintf("\nA OPEN  X QUANTUM  Y TELEMETRY\n");
-    iprintf("Touch rows: top=modules / bottom=pages\n");
+    iprintf("Touch: rows=modules, bottom=page\n");
 }
 
 static void quantum(void){
@@ -355,7 +361,7 @@ static void dsp(void){
     }
     iprintf("32-SAMPLE SPECTRUM / 16 BINS\n");
     for(int i=0;i<16;i++){int v=mag[i]/4; iprintf("%02d ",i); for(int j=0;j<v;j++)iprintf("#"); iprintf("\n");}
-    iprintf("WINDOW:%s  PEAK-HOLD:%s\n",fftWindow?"HAMMING":"RECT",fftPeakHold?"ON":"OFF");
+    iprintf("WINDOW:%s  PEAK-HOLD:%s  SCALE:%d\n",fftWindow?"HAMMING":"RECT",fftPeakHold?"ON":"OFF",dspScale);
     footer("A REFRAME  X WINDOW  Y PEAK-HOLD  B HOME");
 }
 
@@ -372,6 +378,7 @@ static void telemetry(void){
     iprintf("MIC         AVAILABLE\n");
     iprintf("CAMERA      SYSTEM GATEWAY\n");
     iprintf("EXTERNAL    GATEWAY ONLY\n");
+    iprintf("DIAGNOSTICS  %s  ERR:%lu  LAST:%d\n",diagnosticsPass?"PASS":"CHECK",(unsigned long)sessionErrors,lastDiagnosticFrame);
     footer("B HOME");
 }
 
@@ -427,7 +434,7 @@ static void family(void){
 static void systemPage(void){
     selfTestRun = (frameCounter & 15) == 0;
     page("SYSTEM");
-    iprintf("AETHERMOD OS    Q2\n");
+    iprintf("AETHERMOD OS    5.0 GENESIS\n");
     iprintf("DUAL OS          %s\n",mode?"APP":"HOME");
     iprintf("BRIGHTNESS       %u/4\n",save.brightness);
     iprintf("THEME            %s\n",save.theme?"AETHER":"CLASSIC");
@@ -489,6 +496,7 @@ static void input(void){
                 int r=homeScroll*8+row;
                 if(r<APP_COUNT){setSelection(r);launchSelection();changed=1;}
             }
+            else if(t.py>=150){homeScroll^=1;setSelection(homeScroll*8);saveState();changed=1;}
             else if(t.py<48){mode=0;changed=1;}
         } else {
             if(t.py<48||t.py>=192){mode=0;changed=1;}
@@ -505,8 +513,8 @@ static void input(void){
         if(d&KEY_LEFT){inputEvents++;setSelection(selectionPin-1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
         if(d&KEY_RIGHT){inputEvents++;setSelection(selectionPin+1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
         if(d&KEY_A){inputEvents++;launchSelection();changed=1;}
-        if(d&KEY_X){setSelection(1);homeScroll=0;mode=2;save.launches++;saveState();changed=1;}
-        if(d&KEY_Y){setSelection(8);homeScroll=1;mode=9;save.launches++;saveState();changed=1;}
+        if(d&KEY_X){setSelection(1);homeScroll=0;mode=1;save.launches++;saveState();changed=1;}
+        if(d&KEY_Y){setSelection(9);homeScroll=1;mode=10;save.launches++;saveState();changed=1;}
     } else if(mode==1){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){quantumState=(quantumState+1)%4;frameCounter+=97;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;frameCounter+=1009;changed=1;} if(d&KEY_Y){quantumState=0;changed=1;}
     } else if(mode==2){
