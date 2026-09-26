@@ -2,6 +2,11 @@
 
 Nintendo DSi-native local-first cockpit and homebrew platform.
 
+## Pass 2 / 8
+- Runtime save-integrity, SD-write, selection-sync and recovery diagnostics.
+- Telemetry exposes runtime health, last-save frame and error counters.
+- V4 save compatibility is preserved.
+
 ## Pass 1 / 8
 - Canonical home selection/PIN state for marker, number, label and launch target.
 - Full 16-module touchscreen access through two 8-module home pages.
