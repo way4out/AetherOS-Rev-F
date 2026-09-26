@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 5
-#define AETHERMOD_PASS 1
+#define AETHERMOD_PASS 2
 #define AETHERMOD_TOTAL_PASSES 8
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
@@ -49,9 +49,39 @@ static int networkSelfTest=0, quantumState=0, dawPlaying=0, dawTrack=0;
 static int rfMode=0, rfBand=0, rfChannel=1, rfPeakHold=0, rfPacketView=0;
 static int saSpan=20, saStart=0, saRBW=10, saAtten=0, saMarker=0, saRunning=0, saGenArmed=0;
 static u32 frameCounter=0;
+static u32 lastSaveFrame=0, sessionErrors=0, inputEvents=0;
+static int diagnosticsPass=0, recoveryNotice=0;
 static int soundId=-1;
 
 static void saveState(void);
+
+static int storageReady(void){
+    FILE *f=fopen("fat:/data/AetherMod/.aether_test","wb");
+    if(!f) return 0;
+    fputs("OK",f); fclose(f);
+    remove("fat:/data/AetherMod/.aether_test");
+    return 1;
+}
+
+static int saveIntegrity(void){
+    SaveData t=save; u32 c=t.checksum; t.checksum=0;
+    return c==hash32(&t,sizeof(t)) && save.magic==SAVE_MAGIC && save.version==4;
+}
+
+static void runDiagnostics(void){
+    diagnosticsPass=0;
+    if(!saveIntegrity()) sessionErrors++;
+    if(!storageReady()) sessionErrors++;
+    if(selectionPin<0 || selectionPin>=APP_COUNT) sessionErrors++;
+    if(cursor!=selectionPin) sessionErrors++;
+    if(save.selectionPin!=selectionPin) sessionErrors++;
+    diagnosticsPass=(sessionErrors==0);
+}
+
+static void canonicalizeSelection(void){
+    int p=normalizeSelection(save.selectionPin);
+    setSelection(p);
+}
 
 static int normalizeSelection(int value){
     if(value<0) return APP_COUNT-1;
@@ -116,7 +146,7 @@ static void saveState(void){
     save.checksum=0; save.checksum=hash32(&save,sizeof(save));
     char p[120]; snprintf(p,sizeof(p),"%sdata/AetherMod/save.dat",root);
     FILE *f=fopen(p,"wb"); if(!f) return;
-    fwrite(&save,1,sizeof(save),f); fclose(f);
+    fwrite(&save,1,sizeof(save),f); fclose(f); lastSaveFrame=frameCounter;
 }
 
 static void loadState(void){
@@ -130,7 +160,8 @@ static void loadState(void){
         }
     }
     fclose(f);
-    if(save.version!=4) setSelection(0);
+    canonicalizeSelection();
+    if(!saveIntegrity()) recoveryNotice=1;
 }
 
 static const char *langName(void){return langs[save.language%10];}
@@ -161,7 +192,8 @@ static void footer(const char *s){iprintf("\n%s\n",s);}
 
 static void home(void){
     /* One authoritative selectionPin drives marker, number, label and launch target. */
-    setSelection(save.selectionPin);
+    canonicalizeSelection();
+    runDiagnostics();
     topBg("DUAL-OS COCKPIT");
     consoleSelect(&bottomConsole); consoleClear();
     iprintf("AETHERMOD REVOLUTION IS HERE\n");
@@ -326,6 +358,7 @@ static void dsp(void){
 
 static void telemetry(void){
     coreTick++;
+    runDiagnostics();
     page("TELEMETRY");
     iprintf("FRAME       %lu\n",(unsigned long)frameCounter);
     iprintf("LAUNCHES    %lu\n",(unsigned long)save.launches);
@@ -464,11 +497,11 @@ static void input(void){
         }
     }
     if(mode==0){
-        if(d&KEY_UP){setSelection(selectionPin-1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
-        if(d&KEY_DOWN){setSelection(selectionPin+1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
-        if(d&KEY_LEFT){setSelection(selectionPin-1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
-        if(d&KEY_RIGHT){setSelection(selectionPin+1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
-        if(d&KEY_A){launchSelection();changed=1;}
+        if(d&KEY_UP){inputEvents++;setSelection(selectionPin-1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
+        if(d&KEY_DOWN){inputEvents++;setSelection(selectionPin+1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
+        if(d&KEY_LEFT){inputEvents++;setSelection(selectionPin-1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
+        if(d&KEY_RIGHT){inputEvents++;setSelection(selectionPin+1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
+        if(d&KEY_A){inputEvents++;launchSelection();changed=1;}
         if(d&KEY_X){setSelection(1);homeScroll=0;mode=2;save.launches++;saveState();changed=1;}
         if(d&KEY_Y){setSelection(8);homeScroll=1;mode=9;save.launches++;saveState();changed=1;}
     } else if(mode==1){
