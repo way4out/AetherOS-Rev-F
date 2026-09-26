@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 4
-#define AETHERMOD_PASS 4
+#define AETHERMOD_PASS 5
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
 #define ANIMAL_PATH "data/AetherMod/animals.txt"
@@ -116,7 +116,7 @@ static const char *langName(void){return langs[save.language%10];}
 
 static void topBg(const char *title){
     consoleSelect(&topConsole); consoleClear();
-    iprintf("      A E T H E R M O D  Q2\n");
+    iprintf("      A E T H E R M O D  4.5\n");
     iprintf("  ========================\n");
     iprintf("  %s\n\n",title);
     iprintf("  [%s]  QCORE:%s  AI:%s\n",
