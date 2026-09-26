@@ -15,7 +15,7 @@
 
 #define APP_COUNT 16
 #define AETHERMOD_MAJOR 4
-#define AETHERMOD_PASS 1
+#define AETHERMOD_PASS 2
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
 #define ANIMAL_PATH "data/AetherMod/animals.txt"
@@ -40,7 +40,7 @@ static PrintConsole topConsole, bottomConsole;
 static const char *root = "fat:/";
 static int mode=0, cursor=0, codexPage=0, animalPage=0;
 static int safeMode=0, spectrumCursor=0, calculatorCursor=0;
-static int selectionPin=0, homeScroll=0, homePulse=0;
+static int selectionPin=0, homeScroll=0, homePulse=0, selfTestRun=0, coreTick=0;
 static int codexSearch=0, animalAnalyzing=0, fftWindow=0, fftPeakHold=0;
 static int networkSelfTest=0, quantumState=0, dawPlaying=0, dawTrack=0;
 static int rfMode=0, rfBand=0, rfChannel=1, rfPeakHold=0, rfPacketView=0;
@@ -72,7 +72,7 @@ static u32 hash32(const void *ptr,size_t n){
 
 static void defaults(void){
     memset(&save,0,sizeof(save));
-    save.magic=SAVE_MAGIC; save.version=2;
+    save.magic=SAVE_MAGIC; save.version=3;
     save.sound=1; save.intensity=2; save.language=0;
     save.parental=1; save.nsfw=1; save.unsafe=1; save.unregulated=1;
     save.ai=1; save.privacy=1; save.wireless=0; save.downloads=0;
@@ -102,7 +102,7 @@ static void loadState(void){
     FILE *f=fopen(p,"rb"); if(!f) return;
     SaveData t; if(fread(&t,1,sizeof(t),f)==sizeof(t)){
         u32 old=t.checksum; t.checksum=0;
-        if(old==hash32(&t,sizeof(t)) && t.magic==SAVE_MAGIC && t.version==2) save=t;
+        if(old==hash32(&t,sizeof(t)) && t.magic==SAVE_MAGIC && (t.version==2 || t.version==3)) save=t;
     }
     fclose(f);
 }
@@ -299,6 +299,7 @@ static void dsp(void){
 }
 
 static void telemetry(void){
+    coreTick++;
     page("TELEMETRY");
     iprintf("FRAME       %lu\n",(unsigned long)frameCounter);
     iprintf("LAUNCHES    %lu\n",(unsigned long)save.launches);
@@ -362,6 +363,7 @@ static void family(void){
 }
 
 static void systemPage(void){
+    selfTestRun = (frameCounter & 15) == 0;
     page("SYSTEM");
     iprintf("AETHERMOD OS    Q2\n");
     iprintf("DUAL OS          %s\n",mode?"APP":"HOME");
