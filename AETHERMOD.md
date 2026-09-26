@@ -48,9 +48,17 @@ DSi SD card and launch the NDS with a compatible homebrew loader.
 - Telemetry exposes boot count and persistence state.
 
 
-## Pass 5 / 8
+## Pass 6 / 8
+
 - Added a capability-health layer for runtime status reporting.
 - Added explicit guarded/armed gateway state for external hardware paths.
 - Safe Mode now clears gateway state alongside wireless/external controls.
 - RF and TinySA actions explicitly transition the gateway state when armed.
 - Health polling avoids repeated FAT initialization.
+
+
+## Pass 6 / 8
+- Added centralized DSi input-event servicing after key scanning.
+- Added input-event, key-repeat, burst, and frame-budget diagnostics.
+- Updated About and release identity to Pass 6.
+- Preserved existing V4 save compatibility and guarded gateway behavior.
