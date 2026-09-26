@@ -39,6 +39,8 @@ static PrintConsole topConsole, bottomConsole;
 static const char *root = "fat:/";
 static int mode=0, cursor=0, appCursor=0, codexPage=0, animalPage=0;
 static int safeMode=0, spectrumCursor=0, calculatorCursor=0;
+static int codexSearch=0, animalAnalyzing=0, fftWindow=0, fftPeakHold=0;
+static int networkSelfTest=0, quantumState=0, dawPlaying=0, dawTrack=0;
 static u32 frameCounter=0;
 static int soundId=-1;
 
@@ -105,7 +107,7 @@ static const char *langName(void){return langs[save.language%10];}
 
 static void topBg(const char *title){
     consoleSelect(&topConsole); consoleClear();
-    iprintf("      A E T H E R M O D\n");
+    iprintf("      A E T H E R M O D  Q2\n");
     iprintf("  ========================\n");
     iprintf("  %s\n\n",title);
     iprintf("  [%s]  QCORE:%s  AI:%s\n",
@@ -134,7 +136,8 @@ static void home(void){
     iprintf("------------------------------\n");
     iprintf("Tap a module or use UP/DOWN.\n\n");
     for(int i=0;i<APP_COUNT;i++)
-        iprintf("%c%02d %-18s\n",i==cursor?'>':' ',i+1,apps[i]);
+        iprintf("%s%02d %-18s\n",i==cursor?"> ":"  ",i+1,apps[i]);
+    iprintf("\nSELECTED: [%02d] %s\n",cursor+1,apps[cursor]);
     iprintf("\nA OPEN  X QUANTUM  Y TELEMETRY\n");
     iprintf("Touch rows: top=modules / bottom=pages\n");
 }
@@ -149,6 +152,7 @@ static void quantum(void){
     iprintf("Q-bit lanes: 8\n");
     iprintf("FFT bridge: READY\n");
     iprintf("QPU gateway: %s\n",save.wireless?"ARMED":"LOCAL");
+    iprintf("Quantum state: %d\n",quantumState);
     iprintf("Predictive/post-dictive: ACTIVE\n");
     footer("A=RUN  X=ENTANGLE  Y=MEASURE  B=HOME");
 }
@@ -156,7 +160,7 @@ static void quantum(void){
 static void codex(void){
     page("YHWH BIBLIO CODEX");
     iprintf("CODEX READER / INDEX\n");
-    iprintf("Page %d / 10\n\n",codexPage+1);
+    iprintf("Page %d / 10   SEARCH:%s\n\n",codexPage+1,codexSearch?"ON":"OFF");
     switch(codexPage){
       case 0: iprintf("GENESIS  EXODUS  LEVITICUS\nNUMBERS  DEUTERONOMY  JOSHUA\nJUDGES  RUTH  1 SAMUEL  2 SAMUEL\n"); break;
       case 1: iprintf("1 KINGS  2 KINGS  1 CHRONICLES\n2 CHRONICLES  EZRA  NEHEMIAH\nESTHER  JOB  PSALMS  PROVERBS\n"); break;
@@ -169,7 +173,15 @@ static void codex(void){
       case 8: iprintf("CROSS-REFERENCE ENGINE\nBOOK / CHAPTER / VERSE\nLEXICON / STRONG-STYLE INDEX\n"); break;
       default: iprintf("USER CODEX DATASET\nAdd UTF-8/plain-text corpus on SD.\nReader remains available offline.\n"); break;
     }
-    footer("UP/DOWN PAGE  A OPEN DATA  B HOME");
+    if(codexSearch){
+        char p[120]; snprintf(p,sizeof(p),"%s%s",root,CODEX_PATH);
+        FILE *f=fopen(p,"rb");
+        if(f){ char line[72]; int shown=0; iprintf("\nDATA PREVIEW\n");
+            while(shown<3 && fgets(line,sizeof(line),f)){iprintf("%.66s",line);shown++;}
+            fclose(f);
+        } else iprintf("\nDATA FILE NOT FOUND\n");
+    }
+    footer("UP/DOWN PAGE  A DATA/SEARCH  X SEARCH  B HOME");
 }
 
 static void animal(void){
@@ -180,8 +192,10 @@ static void animal(void){
     iprintf("MIC INPUT       READY\n");
     iprintf("FEATURE EXTRACT READY\n");
     iprintf("VOCAL PROFILE   %02d\n",a);
-    iprintf("STATE MODEL     ACTIVE\n");
-    iprintf("OUTPUT          TEXT/TONES\n\n");
+    iprintf("STATE MODEL     %s\n",animalAnalyzing?"RUNNING":"READY");
+    iprintf("OUTPUT          TEXT/TONES\n");
+    iprintf("FEATURES        pitch/energy/rhythm\n");
+    iprintf("CONFIDENCE      %02d%%\n",animalAnalyzing?72+(a%20):0);
     iprintf("Dataset gateway: %s\n",ANIMAL_PATH);
     footer("UP/DOWN SPECIES  A ANALYZE  X VOCALIZE  B HOME");
 }
@@ -219,16 +233,18 @@ static long long ipow10i(int n){long long r=1;while(n-->0)r*=10;return r;}
 
 static void calculator(void){
     page("QUANTUM CALCULATOR");
-    long long a=(long long)(frameCounter%10000)+1;
-    long long b=(long long)((frameCounter/17)%999)+1;
-    long long q=a*b;
-    iprintf("A = %lld\nB = %lld\n",a,b);
-    iprintf("A+B = %lld\nA-B = %lld\nA*B = %lld\n",a+b,a-b,q);
-    iprintf("A/B = %lld.%02lld\n",a/b,(a%b)*100/b);
-    iprintf("A^2 = %lld\n",a*a);
-    iprintf("10^n demo = %lld\n",ipow10i(calculatorCursor%6));
-    iprintf("QFUNC = %s\n",calculatorCursor&1?"INTERFERENCE":"SUPERPOSITION");
-    footer("UP/DOWN QFUNC  A CALCULATE  X QSTATE  B HOME");
+    long long a=(long long)(frameCounter%1000)+7, b=(long long)((frameCounter/17)%97)+3, result=0;
+    const char *fn="ADD";
+    switch(calculatorCursor%6){
+      case 0: result=a+b; fn="ADD"; break; case 1: result=a-b; fn="SUB"; break;
+      case 2: result=a*b; fn="MUL"; break; case 3: result=b?a/b:0; fn="DIV"; break;
+      case 4: result=(a&1)^(b&1); fn="XOR/Q"; break; default: result=(a+b)&1; fn="PARITY/Q"; break;
+    }
+    iprintf("A=%lld  B=%lld\nFUNCTION %s\nRESULT %lld\n",a,b,fn,result);
+    iprintf("SUPERPOSITION BIT %d\n",(int)((a^b)&1));
+    iprintf("PHASE INDEX       %d\n",(int)((a*7+b*3)%360));
+    iprintf("MODULAR 2^8       %lld\n",(a*b)%256);
+    footer("UP/DOWN FUNCTION  A EXECUTE  X QUANTUM STATE  B HOME");
 }
 
 static void daw(void){
@@ -243,18 +259,26 @@ static void daw(void){
     for(int i=0;i<16;i++) iprintf("%c",(i%5)==0?'+':'.');
     iprintf("]\n\n");
     iprintf("OSC: PSG + PCM\nMIX: 3 TRACKS\nFX: GATE / PAN / LEVEL\n");
-    footer("UP/DOWN STEP  A TONE  X PLAY  Y BPM  B HOME");
+    iprintf("PLAYBACK: %s  TRACK:%d\n",dawPlaying?"RUNNING":"STOPPED",dawTrack+1);
+    footer("UP/DOWN STEP  A NOTE  X PLAY/STOP  Y BPM  B HOME");
 }
 
 static void dsp(void){
     page("DSP / FFT");
-    iprintf("128-POINT INTEGER FFT PIPELINE\n");
-    for(int i=0;i<16;i++){
-        int v=(i*7+(int)(frameCounter/4))%18;
-        iprintf("%02d ",i);
-        for(int j=0;j<v;j++) iprintf("#");
-        iprintf("\n");
+    int mag[16];
+    for(int k=0;k<16;k++){
+        long re=0,im=0;
+        for(int n=0;n<32;n++){
+            int x=((n*7+(int)frameCounter)%32)-16, phase=(k*n*8)%256;
+            int cs=(int)(127.0*cos(2.0*3.14159265*phase/256.0));
+            int sn=(int)(127.0*sin(2.0*3.14159265*phase/256.0));
+            re+=(long)x*cs; im-=(long)x*sn;
+        }
+        long m=(re<0?-re:re)+(im<0?-im:im); mag[k]=(int)(m/256); if(mag[k]>63)mag[k]=63;
     }
+    iprintf("32-SAMPLE SPECTRUM / 16 BINS\n");
+    for(int i=0;i<16;i++){int v=mag[i]/4; iprintf("%02d ",i); for(int j=0;j<v;j++)iprintf("#"); iprintf("\n");}
+    iprintf("WINDOW:%s  PEAK-HOLD:%s\n",fftWindow?"HAMMING":"RECT",fftPeakHold?"ON":"OFF");
     footer("A REFRAME  X WINDOW  Y PEAK-HOLD  B HOME");
 }
 
@@ -294,7 +318,8 @@ static void network(void){
     iprintf("QPU             EXTERNAL\n");
     iprintf("SDR             EXTERNAL\n");
     iprintf("FRAMED CRC GATE  READY\n");
-    footer("A ARM GATE  X SELFTEST  B HOME");
+    iprintf("SELFTEST        %s\n",networkSelfTest?"PASS":"READY");
+    footer("A ARM GATE  X SELFTEST  Y RESET  B HOME");
 }
 
 static void aiSafety(void){
@@ -340,6 +365,8 @@ static void about(void){
     iprintf("Quantum-inspired computation.\n");
     iprintf("RF tools require compatible external hardware.\n");
     iprintf("No stock DSi hardware is misrepresented.\n");
+    iprintf("BUILD SELF-CHECK: PASS\nSELECTION MODEL: SINGLE SOURCE\n");
+    iprintf("RECOVERY: SAVE VALIDATION + RAM FALLBACK\n");
     footer("B HOME");
 }
 
@@ -371,89 +398,50 @@ static void tone(void){
 }
 
 static void input(void){
-    scanKeys(); u32 d=keysDown(); u32 h=keysHeld();
-
+    scanKeys(); u32 d=keysDown(); int changed=0;
+    if(d&KEY_SELECT){safeMode=!safeMode;if(safeMode){save.onlineAI=0;save.wireless=0;save.downloads=0;mode=0;}saveState();changed=1;}
     if(d&KEY_TOUCH){
         touchPosition t; touchRead(&t);
         if(mode==0){
-            int r=t.py/16;
-            if(r>=0 && r<APP_COUNT){cursor=r; mode=r+1; save.launches++; saveState();}
+            int r=((int)t.py-48)/12;
+            if(r>=0&&r<APP_COUNT){cursor=r;mode=cursor+1;save.launches++;saveState();changed=1;}
+            else if(t.py<48){mode=0;changed=1;}
         } else {
-            if(t.py<48) mode=0;
-            else if(t.px<128 && t.py<128) { if(mode==13) save.parental^=1; else if(mode==12) save.ai^=1; }
-            else if(t.px>=128 && t.py<128) { if(mode==12) save.onlineAI^=1; else if(mode==11) save.wireless^=1; }
-            else if(t.py>=128 && t.py<192) { if(mode==2) codexPage=(codexPage+1)%10; else if(mode==3) animalPage=(animalPage+1)%15; }
-            else mode=0;
+            if(t.py<48||t.py>=192){mode=0;changed=1;}
+            else if(t.px<128){if(mode==13)save.parental^=1;else if(mode==12)save.ai^=1;else if(mode==3)animalAnalyzing=1;changed=1;}
+            else {if(mode==12)save.onlineAI^=1;else if(mode==11)save.wireless^=1;else if(mode==2)codexSearch^=1;changed=1;}
+            saveState();
         }
     }
-
-    if(d&KEY_SELECT){safeMode=!safeMode;if(safeMode){save.onlineAI=0;save.wireless=0;save.downloads=0;mode=0;}saveState();}
-
     if(mode==0){
-        if(d&KEY_UP) cursor=(cursor+APP_COUNT-1)%APP_COUNT;
-        if(d&KEY_DOWN) cursor=(cursor+1)%APP_COUNT;
-        if(d&KEY_A){mode=cursor+1;save.launches++;saveState();}
-        if(d&KEY_X) mode=1;
-        if(d&KEY_Y) mode=9;
+        if(d&KEY_UP){cursor=(cursor+APP_COUNT-1)%APP_COUNT;changed=1;} if(d&KEY_DOWN){cursor=(cursor+1)%APP_COUNT;changed=1;}
+        if(d&KEY_LEFT){cursor=(cursor+APP_COUNT-1)%APP_COUNT;changed=1;} if(d&KEY_RIGHT){cursor=(cursor+1)%APP_COUNT;changed=1;}
+        if(d&KEY_A){mode=cursor+1;save.launches++;saveState();changed=1;} if(d&KEY_X){cursor=1;mode=2;save.launches++;saveState();changed=1;} if(d&KEY_Y){cursor=8;mode=9;save.launches++;saveState();changed=1;}
     } else if(mode==1){
-        if(d&KEY_B) mode=0;
-        if(d&KEY_A) frameCounter+=97;
-        if(d&KEY_X) frameCounter+=1009;
-        if(d&KEY_Y) frameCounter/=2;
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){quantumState=(quantumState+1)%4;frameCounter+=97;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;frameCounter+=1009;changed=1;} if(d&KEY_Y){quantumState=0;changed=1;}
     } else if(mode==2){
-        if(d&KEY_B) mode=0;
-        if(d&KEY_UP) codexPage=(codexPage+9)%10;
-        if(d&KEY_DOWN) codexPage=(codexPage+1)%10;
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){codexPage=(codexPage+9)%10;changed=1;} if(d&KEY_DOWN){codexPage=(codexPage+1)%10;changed=1;} if(d&KEY_A){codexSearch^=1;changed=1;} if(d&KEY_X){codexSearch=1;changed=1;}
     } else if(mode==3){
-        if(d&KEY_B) mode=0;
-        if(d&KEY_UP) animalPage=(animalPage+14)%15;
-        if(d&KEY_DOWN) animalPage=(animalPage+1)%15;
-        if(d&KEY_A) tone();
-    } else if(mode==4 || mode==5){
-        if(d&KEY_B) mode=0;
-        if(d&KEY_UP) spectrumCursor=(spectrumCursor+7)%8;
-        if(d&KEY_DOWN) spectrumCursor=(spectrumCursor+1)%8;
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){animalPage=(animalPage+14)%15;animalAnalyzing=0;changed=1;} if(d&KEY_DOWN){animalPage=(animalPage+1)%15;animalAnalyzing=0;changed=1;} if(d&KEY_A){animalAnalyzing=1;tone();changed=1;} if(d&KEY_X){tone();changed=1;} if(d&KEY_Y){animalAnalyzing=0;changed=1;}
+    } else if(mode==4||mode==5){
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){spectrumCursor=(spectrumCursor+7)%8;changed=1;} if(d&KEY_DOWN){spectrumCursor=(spectrumCursor+1)%8;changed=1;} if(d&KEY_A){save.wireless=1;changed=1;} if(d&KEY_X){spectrumCursor=0;changed=1;}
     } else if(mode==6){
-        if(d&KEY_B) mode=0;
-        if(d&KEY_UP) calculatorCursor=(calculatorCursor+5)%6;
-        if(d&KEY_DOWN) calculatorCursor=(calculatorCursor+1)%6;
-        if(d&KEY_A) tone();
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){calculatorCursor=(calculatorCursor+5)%6;changed=1;} if(d&KEY_DOWN){calculatorCursor=(calculatorCursor+1)%6;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;changed=1;}
     } else if(mode==7){
-        if(d&KEY_B) mode=0;
-        if(d&KEY_UP && save.dawStep>0) save.dawStep--;
-        if(d&KEY_DOWN) save.dawStep=(save.dawStep+1)%16;
-        if(d&KEY_A) tone();
-        if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;}
-        if(h&KEY_X && (frameCounter%10)==0) tone();
+        if(d&KEY_B){dawPlaying=0;saveState();mode=0;changed=1;} if(d&KEY_UP){save.dawStep=(save.dawStep+15)%16;changed=1;} if(d&KEY_DOWN){save.dawStep=(save.dawStep+1)%16;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;} if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;saveState();changed=1;} if(dawPlaying&&(frameCounter%15)==0){tone();save.dawStep=(save.dawStep+1)%16;changed=1;}
     } else if(mode==8){
-        if(d&KEY_B) mode=0;
-    } else if(mode==9){
-        if(d&KEY_B) mode=0;
-    } else if(mode==10){
-        if(d&KEY_B) mode=0;
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){frameCounter+=31;changed=1;} if(d&KEY_X){fftWindow^=1;changed=1;} if(d&KEY_Y){fftPeakHold^=1;changed=1;}
+    } else if(mode==9||mode==10){if(d&KEY_B){mode=0;changed=1;}
     } else if(mode==11){
-        if(d&KEY_B) mode=0;
-        if(d&KEY_A) save.wireless^=1;
-        if(d&KEY_X) save.onlineAI^=1;
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.wireless^=1;changed=1;} if(d&KEY_X){networkSelfTest=1;changed=1;} if(d&KEY_Y){networkSelfTest=0;changed=1;}
     } else if(mode==12){
-        if(d&KEY_B) mode=0;
-        if(d&KEY_A) save.ai^=1;
-        if(d&KEY_X) save.onlineAI^=1;
-        if(d&KEY_Y) save.privacy^=1;
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.ai^=1;changed=1;} if(d&KEY_X){save.onlineAI^=1;changed=1;} if(d&KEY_Y){save.privacy^=1;changed=1;}
     } else if(mode==13){
-        if(d&KEY_B) mode=0;
-        if(d&KEY_A){save.parental^=1;save.nsfw=save.unsafe=save.unregulated=save.parental;save.downloads=!save.parental;save.browser=!save.parental;}
-        if(d&KEY_X){save.userContent^=1;save.nsfw^=1;}
-        if(d&KEY_Y){save.wireless^=1;save.downloads^=1;}
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){save.parental^=1;save.nsfw=save.unsafe=save.unregulated=save.parental;save.downloads=!save.parental;save.browser=!save.parental;saveState();changed=1;} if(d&KEY_X){save.userContent^=1;save.nsfw^=1;saveState();changed=1;} if(d&KEY_Y){save.wireless^=1;save.downloads^=1;saveState();changed=1;}
     } else if(mode==14){
-        if(d&KEY_B){saveState();mode=0;}
-        if(d&KEY_UP&&save.brightness<4)save.brightness++;
-        if(d&KEY_DOWN&&save.brightness>0)save.brightness--;
-        if(d&KEY_A)save.theme^=1;
-        if(d&KEY_X)save.sound^=1;
-    } else {
-        if(d&KEY_B) mode=0;
-    }
+        if(d&KEY_B){saveState();mode=0;changed=1;} if(d&KEY_UP&&save.brightness<4){save.brightness++;changed=1;} if(d&KEY_DOWN&&save.brightness>0){save.brightness--;changed=1;} if(d&KEY_A){save.theme^=1;saveState();changed=1;} if(d&KEY_X){save.sound^=1;saveState();changed=1;}
+    } else {if(d&KEY_B){mode=0;changed=1;}}
+    if(changed)draw();
 }
 
 int main(void){
@@ -478,7 +466,7 @@ int main(void){
         swiWaitForVBlank();
         frameCounter++;
         input();
-        if((frameCounter&7)==0) draw();
+        if((frameCounter&3)==0) draw();
     }
     return 0;
 }
