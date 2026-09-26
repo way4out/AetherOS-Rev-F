@@ -174,7 +174,9 @@ static void ensureDirs(void){
     mkdir(a,0777); mkdir(b,0777);
 }
 
-static void markDirty(void){ dirtyState=1; }\n\nstatic void serviceInput(u32 keys){
+static void markDirty(void){ dirtyState=1; }
+
+static void serviceInput(u32 keys){
     int changedKeys=(int)keys ^ lastKeys;
     if(changedKeys) inputEvents++;
     if(keys) keyRepeatFrames++; else keyRepeatFrames=0;
