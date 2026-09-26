@@ -1,0 +1,20 @@
+AETHERMOD TINySA PROFILE PACK / PASS 3
+======================================
+Hybrid UI profile for compatible external TinySA-class analyzer gateways.
+
+VIEWS
+SPECTRUM | live-style trace
+WATERFALL | temporal trace view
+TEXT STATS | numeric sweep summary
+MARKER | frequency marker view
+
+CONTROLS
+SPAN: 5..200 MHz
+RBW: 10 / 30 / 100 kHz
+ATTENUATION: 0 / 10 / 20 dB
+MARKER: touch or X
+INPUT: SIM / EXTERNAL gateway
+
+The DSi UI can visualize and manage gateway state without claiming native
+USB/serial/TinySA hardware support. Physical integration requires a compatible
+adapter and documented protocol.
