@@ -4,3 +4,10 @@ Species profiles: horse,dog,cat,cow,bison,camel,zebra,ostrich,bird,wolf,fox,deer
 Pipeline: microphone -> feature extraction -> species profile -> state classification -> text/tones.
 This is a local data gateway. Model inference beyond the DSi's local compute can be supplied by
 an external AI gateway; the DSi never pretends that a stock microphone is a semantic animal translator.
+
+
+ANALYSIS MODES
+--------------
+CALM / ALERT / SOCIAL state cues are feature classifications for educational and interactive use.
+Recommended local features: pitch, energy, rhythm, duration, repetition, spectral centroid, onset density.
+Gateway AI may enrich classification when explicitly enabled; it must not be presented as literal animal-language translation.
