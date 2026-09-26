@@ -98,8 +98,8 @@ static void header(const char *t) {
 static void hub(void) {
     header("QUANTUM COCKPIT");
     const char *items[] = {
-        "QUANTUM FUNCORE", "AETHER TELEMETRY", "SETTINGS",
-        "SAFE TEST", "ABOUT"
+        "QUANTUM FUNCORE","AETHER TELEMETRY","SETTINGS","SAFE TEST","ABOUT",
+        "FAMILY & SAFETY","AI SAFETY","LANGUAGE"
     };
     for (int x = 0; x < 8; x++)
         iprintf("%s %s\n", x == cursor ? ">" : " ", items[x]);
@@ -208,7 +208,7 @@ static void input(void) {
     u32 d = keysDown();
     u32 h = keysHeld();
 
-    if (d & KEY_TOUCH) { touchPosition t; touchRead(&t); if (t.py < 80) mode = 1; else if (t.py < 160) mode = 2; else mode = 0; }
+    if (d & KEY_TOUCH) { touchPosition t; touchRead(&t); if (t.py < 70) mode = 6; else if (t.py < 140) mode = 7; else if (t.py < 200) mode = 8; else mode = 0; }
 
     if (d & KEY_SELECT) {
         safeMode = !safeMode;
@@ -234,6 +234,21 @@ static void input(void) {
         if (d & KEY_X) frameCounter += 97;
         if (d & KEY_Y) frameCounter /= 2;
         if (h & KEY_A) frameCounter += 2;
+    } else if (mode == 6) {
+        if (d & KEY_B) mode = 0;
+        if (d & KEY_X) { parental ^= 1; nsfw = unsafe = unregulated = parental; }
+        if (d & KEY_Y) { nsfw ^= 1; unsafe ^= 1; unregulated ^= 1; }
+        if (d & KEY_A) { nsfw ^= 1; }
+    } else if (mode == 7) {
+        if (d & KEY_B) mode = 0;
+        if (d & KEY_A) ai ^= 1;
+        if (d & KEY_X) onlineAI ^= 1;
+        if (d & KEY_Y) privacy ^= 1;
+    } else if (mode == 8) {
+        if (d & KEY_B) mode = 0;
+        if (d & KEY_UP) language = (language + 9) % 10;
+        if (d & KEY_DOWN) language = (language + 1) % 10;
+        if (d & KEY_A) save_state();
     } else if (mode == 2 || mode == 4 || mode == 5) {
         if (d & KEY_B) mode = 0;
     } else if (mode == 3) {
