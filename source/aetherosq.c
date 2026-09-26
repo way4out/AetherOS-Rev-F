@@ -4,7 +4,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <stdbool.h>
-#include <math.h>
 #include "config.h"
 
 /*
@@ -269,9 +268,10 @@ static void dsp(void){
     for(int k=0;k<16;k++){
         long re=0,im=0;
         for(int n=0;n<32;n++){
-            int x=((n*7+(int)frameCounter)%32)-16, phase=(k*n*8)%256;
-            int cs=(int)(127.0*cos(2.0*3.14159265*phase/256.0));
-            int sn=(int)(127.0*sin(2.0*3.14159265*phase/256.0));
+            static const int ctab[16]={127,118,90,49,0,-49,-90,-118,-127,-118,-90,-49,0,49,90,118};
+            static const int stab[16]={0,49,90,118,127,118,90,49,0,-49,-90,-118,-127,-118,-90,-49};
+            int x=((n*7+(int)frameCounter)%32)-16, phase=((k*n*8)%256)>>4;
+            int cs=ctab[phase&15], sn=stab[phase&15];
             re+=(long)x*cs; im-=(long)x*sn;
         }
         long m=(re<0?-re:re)+(im<0?-im:im); mag[k]=(int)(m/256); if(mag[k]>63)mag[k]=63;
