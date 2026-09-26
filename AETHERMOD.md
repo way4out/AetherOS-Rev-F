@@ -1,31 +1,32 @@
 # AetherMod 7.0 Apex — Nintendo DSi / DS Release
 
-## Pass 2 / 5 — Corpus + Interactive Data Foundation
+## Pass 3 / 5 — RF + TinySA Operator Layer
 
-Pass 1 established the recovery foundation and three-second START-button BASE RESET. Pass 2 expands the offline data layer used by the Codex and Animal AI systems while preserving DSi-safe, local-first behavior.
+Pass 3 expands the Marauder/RF and TinySA interfaces while preserving the local-first, bounded-storage design.
 
-### YHWH Biblio Codex
-- Added `data/AetherMod/codex_manifest.txt` with the complete indexed book list, YHWH/יהוה/LORD/ADONAI name-layer metadata, and a structured-corpus contract.
-- Offline corpus remains SD-first.
-- Recommended structured format: `BOOK|CHAPTER|VERSE|TEXT`.
-- Full text can be supplied through public-domain or properly licensed UTF-8 corpus files.
-- The application does not represent a particular translation as divinely authored.
+### Marauder / RF
+- Four operator modes: Survey, Channel View, Packet Metadata, RSSI History.
+- Band/channel navigation and signal telemetry display.
+- Warning index for signal/noise/authorization conditions.
+- Authorized push-test queue with an 8-item runtime cap.
+- Bounded session event log with a 32-event runtime counter.
+- Explicit safety gate: no jamming, deauthentication, credential capture, or unauthorized access.
+- Stock DSi RF limitations remain explicit; physical RF requires compatible external hardware.
 
-### Animal AI
-- Added `data/AetherMod/animal_profiles.txt`.
-- Expanded the profile vocabulary to pitch, energy, rhythm, spectrum, onsets, duration and spectral centroid.
-- Added per-species feature emphasis for the onboard 15-profile set.
-- Classification remains probabilistic/educational rather than literal animal-language translation.
-- Optional external AI remains explicitly labeled as an external gateway.
+### TinySA
+- Hybrid visual + text interface.
+- Spectrum, Waterfall, Text Stats, and Marker views.
+- Span, RBW, attenuation, marker, sweep, trace-hold and input-source controls.
+- SIM mode works without hardware; EXTERNAL mode is a gateway state, not a claim of native DSi USB/serial TinySA support.
 
-### Release architecture
-- DSi/DS local-first operation remains the baseline.
-- External RF, TinySA, 5G, satellite and QPU capabilities require compatible external hardware/gateways; the software does not fabricate stock hardware capabilities.
-- Existing three-second START recovery path remains the system recovery mechanism.
+### 4 GB SD strategy
+- The 4 GB card is treated as the available storage budget.
+- The NDS application remains compact.
+- Runtime logs are bounded rather than allowed to grow indefinitely.
+- Large Codex/AI corpora should remain optional SD data and must fit within the user's remaining card space.
+- No module is designed to reserve the entire card or silently consume it.
 
 ### Remaining passes
-1. Codex + Animal deeper runtime integration.
-2. Marauder/RF + TinySA expansion.
-3. Calculator + DAW + DSP/FFT expansion.
-4. Telemetry + AI Home + Network Gateway expansion.
-5. AI Safety + Family Safety + System/Service + General Settings + Quantum Core + final UI hardening.
+1. Deeper Calculator/DAW/DSP interaction.
+2. Telemetry + AI Home + Network Gateway expansion.
+3. AI Safety + Family Safety + System/Service + General Settings + Quantum Core + final touch/navigation hardening.
