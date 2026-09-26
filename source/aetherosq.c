@@ -276,16 +276,15 @@ static void home(void){
 static void quantum(void){
     page("QUANTUM CORE");
     int e=(frameCounter/3)%101;
-    iprintf("LOCAL QUANTUM SIMULATOR\n");
-    iprintf("State vector: bounded\n");
-    iprintf("Coherence proxy: %d%%\n",e);
-    iprintf("Phase: %lu\n",(unsigned long)((frameCounter/7)%360));
-    iprintf("Q-bit lanes: 8\n");
-    iprintf("FFT bridge: READY\n");
-    iprintf("QPU gateway: %s\n",save.wireless?"ARMED":"LOCAL");
-    iprintf("Quantum state: %d\n",quantumState);
-    iprintf("Predictive/post-dictive: ACTIVE\n");
-    footer("A=RUN  X=ENTANGLE  Y=MEASURE  B=HOME");
+    iprintf("QUANTUM WORKBENCH / LOCAL SIM\n");
+    iprintf("COHERENCE %3d%%  PHASE %3lu deg\n",e,(unsigned long)((frameCounter/7)%360));
+    iprintf("Q-LANES 8  STATE %d  MEASURE:%s\n",quantumState,(quantumState&1)?"YES":"NO");
+    iprintf("VECTOR |"); for(int i=0;i<16;i++) iprintf("%c",((i+e/7)%5==0)?'#':'.'); iprintf("|\n");
+    iprintf("GRAPH  |"); for(int i=0;i<16;i++){int v=(i*7+e)%16;iprintf("%c",v>10?'*':v>5?'+':'.');} iprintf("|\n");
+    iprintf("ALGO superposition / phase / measure\n");
+    iprintf("FFT BRIDGE READY  QPU %s\n",save.wireless?"GATEWAY":"LOCAL");
+    iprintf("Software quantum simulator; no physical QPU claimed.\n");
+    footer("A RUN  X PHASE  Y MEASURE  B HOME");
 }
 
 static void codex(void){
@@ -316,75 +315,61 @@ static void codex(void){
 }
 
 static void animal(void){
-    page("ANIMAL TRANSLATOR");
-    int a=animalPage%15;
-    iprintf("SPECIES: %s\n",animalNames[a]);
-    iprintf("REAL-TIME PIPELINE\n");
-    iprintf("MIC INPUT       READY\n");
-    iprintf("FEATURE EXTRACT READY\n");
-    iprintf("VOCAL PROFILE   %02d\n",a);
-    iprintf("STATE MODEL     %s\n",animalAnalyzing?"RUNNING":"READY");
-    iprintf("OUTPUT          TEXT/TONES\n");
-    iprintf("FEATURES        pitch/energy/rhythm\n");
-    iprintf("CONFIDENCE      %02d%%\n",animalAnalyzing?72+(a%20):0);
-    iprintf("Dataset gateway: %s\n",ANIMAL_PATH);
-    footer("UP/DOWN SPECIES  A ANALYZE  X VOCALIZE  B HOME");
+    page("ANIMAL AI / GAME");
+    int a=animalPage%15,m=(int)((frameCounter/8+a)%8);
+    iprintf("SPECIES %s  STATE %s\n",animalNames[a],animalAnalyzing?"LIVE":"READY");
+    iprintf("MIC -> FEATURES -> STATE -> RESPONSE\n");
+    iprintf("PITCH %02d ENERGY %02d RHYTHM %02d\n",(a*7+frameCounter)%100,(a*11+frameCounter/2)%100,(a*5+frameCounter)%100);
+    iprintf("STATE %s  CONF %02d%%\n",m<3?"CALM":m<6?"ALERT":"SOCIAL",animalAnalyzing?68+(a%25):0);
+    iprintf("PLAY |");for(int i=0;i<16;i++)iprintf("%c",((i+m)%5==0)?'O':'.');iprintf("|\n");
+    iprintf("TEXT CUE + TONE + VISUAL STATE\n");
+    iprintf("AI GATE %s\n",save.onlineAI?"ONLINE":"LOCAL PROFILE");
+    iprintf("Signal classification; not literal animal speech.\n");
+    footer("UP/DOWN SPECIES  A ANALYZE  X VOCALIZE  Y RESET  B HOME");
 }
 
 static void rfLab(const char *title){
     page(title);
     const char *modes[]={"SURVEY","CHANNEL VIEW","PACKET META","RSSI HISTORY"};
     const char *bands[]={"2.4GHz ISM","5GHz ISM","CUSTOM GATE"};
-    iprintf("MARAUDER RECEIVE/ANALYZE CONSOLE\n");
-    iprintf("MODE       %s\n",modes[rfMode&3]);
-    iprintf("BAND       %s\n",bands[rfBand%3]);
-    iprintf("CHANNEL    %d\n",rfChannel);
-    iprintf("RSSI       %d dBm\n",-32-(int)(frameCounter%48));
-    iprintf("NOISE      -%d dBm\n",78+(int)(frameCounter%17));
-    iprintf("SNR        %d dB\n",18-(int)(frameCounter%8));
-    iprintf("BEACON/META %lu\n",(unsigned long)((frameCounter*3)%997));
-    iprintf("PACKET VIEW %s\n",rfPacketView?"ON":"OFF");
-    iprintf("PEAK HOLD   %s\n",rfPeakHold?"ON":"OFF");
-    iprintf("CAPTURE     %s\n",save.wireless?"EXTERNAL GATE":"LOCAL SIM");
-    iprintf("TX/DEAUTH/JAM/CRED-CAPTURE: DISABLED\n");
-    footer("UP/DOWN MODE  A SCAN  X META  Y PEAK  LEFT/RIGHT BAND  B HOME");
+    int rssi=-32-(int)(frameCounter%48),noise=-78-(int)(frameCounter%17);
+    iprintf("AUTHORIZED RF RECEIVE / ANALYZE\n");
+    iprintf("%s  %s  CH %d\n",modes[rfMode&3],bands[rfBand%3],rfChannel);
+    iprintf("RSSI %d dBm  NOISE %d dBm  SNR %d dB\n",rssi,noise,rssi-noise);
+    iprintf("SPECTRUM |");for(int i=0;i<24;i++)iprintf("%c",((i+(frameCounter/3))%7==0)?'^':'.');iprintf("|\n");
+    iprintf("META %lu  PACKET %s  PEAK %s\n",(unsigned long)((frameCounter*3)%997),rfPacketView?"ON":"OFF",rfPeakHold?"ON":"OFF");
+    iprintf("PUSH QUEUE %s  GATE %s\n",gatewayState?"READY":"EMPTY",save.wireless?"ARMED":"GUARDED");
+    iprintf("External push is limited to authorized test hardware.\n");
+    iprintf("JAM/DEAUTH/CREDENTIAL CAPTURE DISABLED\n");
+    footer("UP/DOWN MODE  A SURVEY  X META  Y PEAK  L/R BAND  B HOME");
 }
 
 static void tinysa(void){
     page("TINySA LAB");
-    int stop=saStart+saSpan;
-    iprintf("EXTERNAL TINySA CONTROL / TELEMETRY\n");
-    iprintf("INPUT       %s\n",save.wireless?"EXTERNAL":"SIMULATED");
-    iprintf("START       %d MHz\n",saStart);
-    iprintf("STOP        %d MHz\n",stop);
-    iprintf("SPAN        %d MHz\n",saSpan);
-    iprintf("RBW         %d kHz\n",saRBW);
-    iprintf("ATTENUATION  %d dB\n",saAtten);
-    iprintf("POINTS      450\n");
-    iprintf("MARKER      %d MHz  %s\n",saMarker,saRunning?"TRACKING":"READY");
-    iprintf("SWEEP       %s\n",saRunning?"RUNNING":"STOPPED");
-    iprintf("GENERATOR   %s\n",saGenArmed?"CONFIGURED":"SAFE/OFF");
-    iprintf("AM/FM       CONFIG PAGE\n");
-    iprintf("SAFE GATE   external TX only\n");
-    iprintf("\nSCPI-LIKE QUEUE:\n");
-    iprintf("scan %d %d %d %d\n",saStart,stop,saRBW,saAtten);
-    footer("UP/DOWN SPAN  A SWEEP  X MARKER  Y RBW/ATTEN  L/R START  B HOME");
+    int stop=saStart+saSpan,markerHz=saStart+saMarker,level=18+(int)((frameCounter/4)%40);
+    iprintf("LIVE SPECTRUM GATEWAY\n");
+    iprintf("%4d MHz ",saStart);for(int i=0;i<24;i++)iprintf("%c",i==((saMarker*24)/(saSpan?saSpan:1))?'M':(i%5==0?'|':'.'));iprintf(" %4d\n",stop);
+    iprintf("LEVEL %02d dB  PEAK %02d dB  MARK %d MHz\n",level,level+7,markerHz);
+    iprintf("SPAN %d MHz RBW %d kHz ATT %d dB\n",saSpan,saRBW,saAtten);
+    iprintf("SWEEP %s INPUT %s POINTS 450\n",saRunning?"RUN":"STOP",save.wireless?"EXTERNAL":"SIM");
+    iprintf("GENERATOR %s QUEUE %s\n",saGenArmed?"READY":"SAFE/OFF",gatewayState?"ARMED":"GUARDED");
+    iprintf("CURRENT STATS sweep=%lu marker=%d peak=%s\n",(unsigned long)(frameCounter%10000),markerHz,rfPeakHold?"ON":"OFF");
+    footer("UP/DOWN SPAN  A SWEEP  X MARKER  Y RBW/ATT  L/R START  B HOME");
 }
 
 static void calculator(void){
-    page("QUANTUM CALCULATOR");
-    long long a=calcA, b=calcB, result=0;
-    const char *fn="ADD";
-    switch(calculatorCursor%8){
-      case 0: result=a+b; fn="ADD"; break; case 1: result=a-b; fn="SUB"; break;
-      case 2: result=a*b; fn="MUL"; break; case 3: result=b?a/b:0; fn="DIV"; break;
-      case 4: result=(a&1)^(b&1); fn="XOR/Q"; break; case 5: result=(a*b)%257; fn="MOD-257"; break; case 6: result=(a*a+b*b)%1009; fn="Q-NORM"; break; default: result=(a+b)&1; fn="PARITY/Q"; break;
+    page("AETHER CALCULATOR");
+    long long a=calcA,b=calcB,result=0;const char *fn="ADD";
+    switch(calculatorCursor%12){
+      case 0:result=a+b;fn="ADD";break;case 1:result=a-b;fn="SUB";break;case 2:result=a*b;fn="MUL";break;
+      case 3:result=b?a/b:0;fn="DIV";break;case 4:result=b?a%b:0;fn="MOD";break;case 5:result=(a*100)/((b==0)?1:b);fn="PERCENT";break;
+      case 6:result=a*a;fn="SQUARE";break;case 7:result=a*a*a;fn="CUBE";break;case 8:result=a>b?a:b;fn="MAX";break;
+      case 9:result=a<b?a:b;fn="MIN";break;case 10:result=a^b;fn="BIT-XOR";break;default:result=(a*a+b*b)%1000003;fn="Q-NORM";break;
     }
-    iprintf("A=%lld  B=%lld\nFUNCTION %s\nRESULT %lld\n",a,b,fn,result);
-    iprintf("SUPERPOSITION BIT %d\n",(int)((a^b)&1));
-    iprintf("PHASE INDEX       %d\n",(int)((a*7+b*3)%360));
-    iprintf("MODULAR 2^8       %lld\n",(a*b)%256);
-    footer("UP/DOWN FUNCTION  A EXECUTE  X QUANTUM STATE  B HOME");
+    iprintf("A=%lld B=%lld  FN %s\nRESULT %lld\n",a,b,fn,result);
+    iprintf("SCIENTIFIC: MOD / % / SQUARE / CUBE / BITWISE\n");
+    iprintf("Q: phase=%d parity=%d mod256=%lld\n",(int)((a*7+b*3)%360),(int)((a^b)&1),(a*b)%256);
+    footer("UP/DOWN FUNCTION  A EDIT A  X EDIT B  B HOME");
 }
 
 static void daw(void){
