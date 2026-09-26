@@ -4,7 +4,7 @@ AetherMod is a local-first dual-screen DSi homebrew cockpit with modular quantum
 codex/data, animal-analysis, RF telemetry, TinySA gateway, calculator, DAW, DSP, telemetry,
 projects, network gateway, AI safety, family safety, system and release diagnostics.
 
-## Pass 2 / 8
+## Pass 3 / 8
 - Runtime diagnostics now validate save integrity, SD write access, selection synchronization and recovery state.
 - Telemetry exposes save/storage/selection diagnostics and last-save frame.
 - Home diagnostics surface recovery state without changing the V4 save format.
@@ -31,3 +31,11 @@ tooling is included.
 ## Installation
 Copy the packaged `apps/AetherMod/AetherMod.nds` and `data/AetherMod/` directory to the
 DSi SD card and launch the NDS with a compatible homebrew loader.
+
+
+### Pass 3 hardening
+- Canonical home PIN remains the single source of selection truth.
+- Home touch navigation now exposes both eight-module pages.
+- Quantum and Telemetry hardware-key shortcuts target their correct modules.
+- Runtime diagnostics reset per diagnostic run and expose the latest diagnostic frame.
+- DSP telemetry exposes the active scale; System branding is 5.0 Genesis.
