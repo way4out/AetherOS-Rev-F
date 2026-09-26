@@ -1,6 +1,7 @@
 #pragma once
 #include <nds.h>
 #include "../quantum/quantum_core.h"
+#include "../os/aether_os_fabric.h"
 
 namespace aether {
 enum Module {
