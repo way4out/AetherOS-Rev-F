@@ -1,0 +1,52 @@
+AETHERMOD 7.0 APEX — ANIMAL AI PROFILE PACK / PASS 2
+=====================================================
+
+MODEL CONTRACT
+--------------
+The DSi module performs feature-oriented classification and interactive visualization.
+It does not claim literal translation of animal language.
+
+FEATURES
+--------
+PITCH       fundamental-frequency estimate / pitch contour
+ENERGY      relative amplitude / loudness envelope
+RHYTHM      inter-event timing / repetition
+SPECTRUM    coarse spectral-energy distribution
+ONSETS      sound-event density
+DURATION    event length
+CENTROID    coarse spectral centroid
+
+SPECIES PROFILES
+----------------
+HORSE    : whinny, nicker, snort, neigh | high-priority pitch/rhythm view
+DOG      : bark, whine, growl, howl       | onset/energy view
+CAT      : meow, purr, hiss               | pitch/energy view
+COW      : moo, low-frequency call        | pitch/duration view
+BISON    : low call, snort                | energy/duration view
+CAMEL    : grunt, groan                   | duration/rhythm view
+ZEBRA    : bark-like call, bray           | pitch/onset view
+OSTRICH  : boom, hiss, body-sound cues    | low-frequency/energy view
+BIRD     : chirp, song, call               | pitch/spectrum view
+WOLF     : howl, whine, bark               | pitch/duration view
+FOX      : bark, scream-like call         | onset/pitch view
+DEER     : grunt, bleat, bark              | rhythm/energy view
+BEAR     : huff, growl, vocalization      | energy/duration view
+BIG CAT  : growl, roar, chirp              | spectrum/energy view
+OTHER    : generic adaptive profile        | all features
+
+INTERACTION LOOP
+-----------------
+MIC INPUT -> FRAME -> FEATURES -> PROFILE -> STATE CUE -> VISUAL GRAPH -> OPTIONAL TONE
+
+STATE CUES
+----------
+CALM / ALERT / SOCIAL are interaction labels derived from configured features and should be
+presented as probabilistic/educational cues rather than certainty about animal intent.
+
+PASS 2 EXPANSION
+-----------------
+- Eight-feature profile vocabulary
+- Per-species recommended feature emphasis
+- Explicit classification limits
+- Offline profile pack for SD deployment
+- External AI gateway remains optional and clearly labeled
