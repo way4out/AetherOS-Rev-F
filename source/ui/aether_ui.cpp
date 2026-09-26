@@ -16,6 +16,7 @@
 #include "../core/capacity_engine.h"
 #include "../i18n/aether_i18n.h"
 #include "../animal/aether_animal.h"
+#include "../os/aether_os_fabric.h"
 #include <nds.h>
 
 namespace aether::ui {
@@ -44,7 +45,7 @@ static void clearBottom(){selectBottom();consoleClear();}
 static void title(const char* t,const SystemState&s){
     clearTop(); selectTop();
     char stamp[40]; settings::timestamp(stamp,sizeof(stamp));
-    iprintf("%sAETHEROS REVOLUTION X%s // %s\n","\x1b[36m","\x1b[37m",t);
+    iprintf("%sAETHEROS O2S%s // %s\n","\x1b[36m","\x1b[37m",t);
     iprintf("%s%s%s\n",theme::accent(),theme::sky(),"\x1b[37m");
     iprintf("%s%s%s\n",theme::accent(),theme::ground(),"\x1b[37m");
     iprintf("%s%s  %s%s\n",theme::accent(),theme::icon(),stamp,"\x1b[37m");
@@ -81,7 +82,8 @@ static void statusRibbon(const SystemState&s){
 static void topDesktop(const SystemState&s){
     auto p=settings::current(); scenery(topPixels,theme::active(),s.frame); scenery(bottomPixels,theme::active(),s.frame);
     title("AETHER HOME",s); selectTop();
-    iprintf("\x1b[1;1H\x1b[36mAETHEROS1.1+\x1b[37m   UNIVERSAL DSi WORKSTATION\n");
+    iprintf("\x1b[1;1H\x1b[36mAETHEROS O2S\x1b[37m   UNIVERSAL DSi WORKSTATION\n");
+    iprintf("\x1b[2;1H\x1b[33mOS FABRIC: %s\x1b[37m  %s\n",osfabric::name(),osfabric::mode());
     iprintf("\x1b[4;1H");
     if(p.layout==settings::LAYOUT_MYSPACE){
         iprintf("\x1b[33m AETHER SPACE  \x1b[37m%s\n",p.locationValid?"LOCATION READY":"AETHER DEFAULT");
@@ -178,7 +180,7 @@ static void actionPanel(int m){
     case MOD_RF: iprintf("A Capture sample\nX Analyze band\nY Refresh telemetry\nSELECT Reset"); break;
     case MOD_MARAUDER: iprintf("A Sample + analyze\nX Analyze\nY Consent/acknowledge\nL Passive RF\nR Lab Simulation\nSELECT Reset"); break;
     case MOD_STUDIO: iprintf("A Play/trigger\nX Performance hit\nY Stop\nL/R View/step\nSELECT Reset"); break;
-    case MOD_SYSTEM: iprintf("A Mission refresh\nX Diagnostics snapshot\nY Recovery heartbeat\nSELECT Safe mode"); break;
+    case MOD_SYSTEM: iprintf("A Mission refresh\nX Cycle OS profile\nY Recovery heartbeat\nSELECT Safe mode"); break;
     case MOD_ANIMAL: iprintf("A Analyze animal signal\nX Animal > Human\nY Human > Animal\nL/R Species\nSELECT Reset"); break;
     case MOD_SETTINGS: iprintf("A Apply\nX Save config\nY Reset layout\nL/R Choose\nSELECT Save\nLANG %s",i18n::languageName()); break;
     }
