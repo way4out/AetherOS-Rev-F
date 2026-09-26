@@ -373,39 +373,33 @@ static void calculator(void){
 }
 
 static void daw(void){
-    page("AETHER DAW / STUDIO");
-    iprintf("16-STEP SEQUENCER\n");
-    iprintf("BPM %u   STEP %02u\n",save.dawBpm,save.dawStep);
-    iprintf("TRACK1 [");
-    for(int i=0;i<16;i++) iprintf("%c",(i==save.dawStep)?'>':((i%3)==0?'X':'.'));
-    iprintf("]\nTRACK2 [");
-    for(int i=0;i<16;i++) iprintf("%c",(i%4)==0?'O':'.');
-    iprintf("]\nTRACK3 [");
-    for(int i=0;i<16;i++) iprintf("%c",(i%5)==0?'+':'.');
-    iprintf("]\n\n");
-    iprintf("OSC: PSG + PCM\nMIX: 3 TRACKS\nFX: GATE / PAN / LEVEL\n");
-    iprintf("PLAYBACK: %s  TRACK:%d\n",dawPlaying?"RUNNING":"STOPPED",dawTrack+1);
-    footer("UP/DOWN STEP  A NOTE  X PLAY/STOP  Y BPM  B HOME");
+    page("AETHER DAW / GAME STUDIO");
+    iprintf("STEP SEQUENCER BPM %u STEP %02u\n",save.dawBpm,save.dawStep);
+    iprintf("PIANO |");for(int i=0;i<16;i++)iprintf("%c",i==save.dawStep?'^':(i%2?'|':'.'));iprintf("|\n");
+    iprintf("T1 [");for(int i=0;i<16;i++)iprintf("%c",i==save.dawStep?'>':((i%3)==0?'X':'.'));iprintf("]\n");
+    iprintf("T2 [");for(int i=0;i<16;i++)iprintf("%c",(i%4)==0?'O':'.');iprintf("]\n");
+    iprintf("T3 [");for(int i=0;i<16;i++)iprintf("%c",(i%5)==0?'+':'.');iprintf("]\n");
+    iprintf("VIEW %s  TRACK %d  MUTE:%d\n",dawView?"MIXER":"PIANO",dawTrack+1,dawTrackMute);
+    iprintf("OSC PSG+PCM  FX GATE/PAN/LEVEL  AUDIO LOCAL\n");
+    iprintf("PLAY %s  game-loop timing %s\n",dawPlaying?"RUN":"STOP",dawPlaying?"LIVE":"READY");
+    footer("UP/DOWN STEP  A NOTE  X PLAY  Y BPM  L/R TRACK  SELECT VIEW  B HOME");
 }
 
 static void dsp(void){
-    page("DSP / FFT");
-    int mag[16];
-    for(int k=0;k<16;k++){
-        long re=0,im=0;
-        for(int n=0;n<32;n++){
-            static const int ctab[16]={127,118,90,49,0,-49,-90,-118,-127,-118,-90,-49,0,49,90,118};
-            static const int stab[16]={0,49,90,118,127,118,90,49,0,-49,-90,-118,-127,-118,-90,-49};
-            int x=((n*7+(int)frameCounter)%32)-16, phase=((k*n*8)%256)>>4;
-            int cs=ctab[phase&15], sn=stab[phase&15];
-            re+=(long)x*cs; im-=(long)x*sn;
-        }
-        long m=(re<0?-re:re)+(im<0?-im:im); mag[k]=(int)(m/256); if(mag[k]>63)mag[k]=63;
+    page("DSP / FFT LAB");
+    int mag[16],peak=0,peakv=0;
+    for(int k=0;k<16;k++){long re=0,im=0;for(int n=0;n<32;n++){
+        static const int ctab[16]={127,118,90,49,0,-49,-90,-118,-127,-118,-90,-49,0,49,90,118};
+        static const int stab[16]={0,49,90,118,127,118,90,49,0,-49,-90,-118,-127,-118,-90,-49};
+        int x=((n*7+(int)frameCounter)%32)-16,phase=((k*n*8)%256)>>4;re+=(long)x*ctab[phase&15];im-=(long)x*stab[phase&15];}
+        long m=(re<0?-re:re)+(im<0?-im:im);mag[k]=(int)(m/256);if(mag[k]>63)mag[k]=63;if(mag[k]>peakv){peakv=mag[k];peak=k;}
     }
-    iprintf("32-SAMPLE SPECTRUM / 16 BINS\n");
-    for(int i=0;i<16;i++){int v=mag[i]/4; iprintf("%02d ",i); for(int j=0;j<v;j++)iprintf("#"); iprintf("\n");}
-    iprintf("WINDOW:%s  PEAK-HOLD:%s  SCALE:%d\n",fftWindow?"HAMMING":"RECT",fftPeakHold?"ON":"OFF",dspScale);
-    footer("A REFRAME  X WINDOW  Y PEAK-HOLD  B HOME");
+    iprintf("TIME |");for(int i=0;i<32;i++)iprintf("%c",((i+(frameCounter/2))%8<4)?'~':'_');iprintf("|\n");
+    iprintf("FREQ |");for(int i=0;i<16;i++)iprintf("%c",i==peak?'^':(mag[i]>8?'#':'.'));iprintf("| PEAK BIN %d\n",peak);
+    for(int i=0;i<16;i++){int v=mag[i]/4;iprintf("%02d ",i);for(int j=0;j<v;j++)iprintf("#");iprintf("\n");}
+    iprintf("WINDOW %s PEAK-HOLD %s SCALE %d\n",fftWindow?"HAMMING":"RECT",fftPeakHold?"ON":"OFF",dspScale);
+    iprintf("INPUT -> WINDOW -> FFT -> MAGNITUDE -> GRAPH\n");
+    footer("A REFRESH  X WINDOW  Y PEAK/SCALE  B HOME");
 }
 
 static void telemetry(void){
@@ -445,18 +439,16 @@ static void aiHome(void){
 }
 
 static void network(void){
-    page("NETWORK GATEWAY");
-    iprintf("LOCAL LINK       READY\n");
-    iprintf("WIFI             %s\n",save.wireless?"ARMED":"GUARDED");
-    iprintf("5G               EXTERNAL\n");
-    iprintf("SATELLITE        EXTERNAL\n");
-    iprintf("BLUETOOTH        EXTERNAL\n");
-    iprintf("QPU             EXTERNAL\n");
-    iprintf("SDR             EXTERNAL\n");
-    iprintf("FRAMED CRC32 GATE READY\nRX/TX QUEUES    BOUNDED\n");
-    iprintf("GATE STATE      %s\n",gatewayState?"ARMED":"GUARDED");
-    iprintf("SELFTEST        %s\n",networkSelfTest?"PASS":"READY");
-    footer("A ARM GATE  X SELFTEST  Y RESET  B HOME");
+    page("NETWORK GATEWAY / BROWSER");
+    iprintf("WIFI %s  GATE %s  SELFTEST %s\n",save.wireless?"ARMED":"GUARDED",gatewayState?"ARMED":"SAFE",networkSelfTest?"PASS":"READY");
+    iprintf("LOCAL LINK / HTTP CLIENT SHELL READY\n");
+    iprintf("BROWSER %s  DNS/HTTP EXTERNAL GATE\n",save.browser?"ENABLED":"DISABLED");
+    iprintf("5G SAT BT SDR QPU: EXTERNAL GATEWAYS\n");
+    iprintf("RX QUEUE 16  TX QUEUE 8  CRC32 FRAMING\n");
+    iprintf("URL SLOT %d  SAFE WEB MODE %s\n",browserCursor,save.browser?"ON":"OFF");
+    iprintf("HTTP GET / TEXT / METADATA / SAFE LINKS\n");
+    iprintf("No credential capture or radio disruption.\n");
+    footer("A ARM  X SELFTEST  Y BROWSER  L/R URL SLOT  B HOME");
 }
 
 static void aiSafety(void){
@@ -483,15 +475,13 @@ static void family(void){
 }
 
 static void systemPage(void){
-    selfTestRun = (frameCounter & 15) == 0;
-    page("SYSTEM");
-    iprintf("AETHERMOD OS    5.0 GENESIS\n");
-    iprintf("DUAL OS          %s\n",mode?"APP":"HOME");
-    iprintf("BRIGHTNESS       %u/4\n",save.brightness);
-    iprintf("THEME            %s\n",save.theme?"AETHER":"CLASSIC");
-    iprintf("LANGUAGE         %s\n",langName());
-    iprintf("SOUND            %s\n",save.sound?"ON":"OFF");
-    iprintf("SAFE MODE        %s\n",safeMode?"ON":"OFF");
+    selfTestRun=(frameCounter&15)==0;page("SYSTEM / SERVICE");
+    iprintf("AETHERMOD 5.0  DSi ARM9\n");
+    iprintf("SELFTEST %s SAFE %s DIRTY %s\n",selfTestRun?"RUN":"READY",safeMode?"ON":"OFF",dirtyState?"YES":"NO");
+    iprintf("BRIGHT %u/4 THEME %s LANG %s\n",save.brightness,save.theme?"AETHER":"CLASSIC",langName());
+    iprintf("SOUND %s AI %s WIFI %s BROWSER %s\n",save.sound?"ON":"OFF",save.ai?"ON":"OFF",save.wireless?"ON":"OFF",save.browser?"ON":"OFF");
+    iprintf("SAVE V4 STORAGE %s CAP %d%%\n",diagnosticsPass?"HEALTHY":"CHECK",capabilityScore);
+    iprintf("SELECT = safe-mode emergency control\n");
     footer("UP/DOWN BRIGHT  A THEME  X SOUND  B HOME");
 }
 
@@ -563,7 +553,7 @@ static void input(void){
         } else {
             if(t.py<48||t.py>=192){mode=0;changed=1;}
             else if(mode==7 && t.py>=96){dawTrack=(t.py-96)/32;if(dawTrack>2)dawTrack=2;dawTrackMute^=1;changed=1;}
-            else if(mode==6 && t.py>=72){calculatorCursor=((t.py-72)/14)%8;changed=1;}
+            else if(mode==6 && t.py>=72){calculatorCursor=((t.py-72)/14)%12;changed=1;}
             else if(t.px<128){if(mode==13)save.parental^=1;else if(mode==12)save.ai^=1;else if(mode==3)animalAnalyzing=1;changed=1;}
             else {if(mode==12)save.onlineAI^=1;else if(mode==11)save.wireless^=1;else if(mode==2)codexSearch^=1;changed=1;}
             saveState();
@@ -597,7 +587,7 @@ static void input(void){
         if(d&KEY_X){saMarker+=5;if(saMarker>saSpan)saMarker=0;changed=1;}
         if(d&KEY_Y){if(saRBW==10){saRBW=30;saAtten=10;}else if(saRBW==30){saRBW=100;saAtten=20;}else{saRBW=10;saAtten=0;}changed=1;}
     } else if(mode==6){
-        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){calculatorCursor=(calculatorCursor+7)%8;changed=1;} if(d&KEY_DOWN){calculatorCursor=(calculatorCursor+1)%8;changed=1;} if(d&KEY_A){tone();calcA+=1;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;calcB+=2;changed=1;}
+        if(d&KEY_B){mode=0;changed=1;} if(d&KEY_UP){calculatorCursor=(calculatorCursor+11)%12;changed=1;} if(d&KEY_DOWN){calculatorCursor=(calculatorCursor+1)%12;changed=1;} if(d&KEY_A){tone();calcA+=1;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;calcB+=2;changed=1;}
     } else if(mode==7){
         if(d&KEY_B){dawPlaying=0;saveState();mode=0;changed=1;} if(d&KEY_UP){save.dawStep=(save.dawStep+15)%16;changed=1;} if(d&KEY_DOWN){save.dawStep=(save.dawStep+1)%16;changed=1;} if(d&KEY_A){tone();changed=1;} if(d&KEY_X){dawPlaying=!dawPlaying;changed=1;} if(d&KEY_LEFT){dawTrack=(dawTrack+2)%3;changed=1;} if(d&KEY_RIGHT){dawTrack=(dawTrack+1)%3;changed=1;} if(d&KEY_Y){save.dawBpm+=5;if(save.dawBpm>240)save.dawBpm=60;saveState();changed=1;} if(dawPlaying&&(frameCounter%15)==0){tone();save.dawStep=(save.dawStep+1)%16;changed=1;}
     } else if(mode==8){
