@@ -14,8 +14,9 @@
  */
 
 #define APP_COUNT 16
-#define AETHERMOD_MAJOR 4
-#define AETHERMOD_PASS 5
+#define AETHERMOD_MAJOR 5
+#define AETHERMOD_PASS 1
+#define AETHERMOD_TOTAL_PASSES 8
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
 #define ANIMAL_PATH "data/AetherMod/animals.txt"
@@ -49,6 +50,24 @@ static int rfMode=0, rfBand=0, rfChannel=1, rfPeakHold=0, rfPacketView=0;
 static int saSpan=20, saStart=0, saRBW=10, saAtten=0, saMarker=0, saRunning=0, saGenArmed=0;
 static u32 frameCounter=0;
 static int soundId=-1;
+
+static int normalizeSelection(int value){
+    if(value<0) return APP_COUNT-1;
+    return value%APP_COUNT;
+}
+
+static void setSelection(int value){
+    selectionPin=normalizeSelection(value);
+    cursor=selectionPin;
+    save.selectionPin=(u16)selectionPin;
+}
+
+static void launchSelection(void){
+    setSelection(selectionPin);
+    mode=selectionPin+1;
+    save.launches++;
+    saveState();
+}
 
 static const char *apps[APP_COUNT]={
     "AETHER HOME","QUANTUM CORE","CODEX","ANIMAL AI",
@@ -109,7 +128,7 @@ static void loadState(void){
         }
     }
     fclose(f);
-    if(save.version!=4) save.selectionPin=0;
+    if(save.version!=4) setSelection(0);
 }
 
 static const char *langName(void){return langs[save.language%10];}
@@ -139,9 +158,8 @@ static void page(const char *title){
 static void footer(const char *s){iprintf("\n%s\n",s);}
 
 static void home(void){
-    /* One authoritative selectionPin drives the visible designation pin and launch target. */
-    selectionPin=save.selectionPin%APP_COUNT;
-    cursor=selectionPin;
+    /* One authoritative selectionPin drives marker, number, label and launch target. */
+    setSelection(save.selectionPin);
     topBg("DUAL-OS COCKPIT");
     consoleSelect(&bottomConsole); consoleClear();
     iprintf("AETHERMOD REVOLUTION IS HERE\n");
@@ -427,8 +445,13 @@ static void input(void){
     if(d&KEY_TOUCH){
         touchPosition t; touchRead(&t);
         if(mode==0){
-            int r=((int)t.py-48)/12;
-            if(r>=0&&r<APP_COUNT){selectionPin=r;save.selectionPin=selectionPin;cursor=selectionPin;mode=selectionPin+1;save.launches++;saveState();changed=1;}
+            /* Home touch uses two 8-item pages so all 16 modules are reachable. */
+            int pageIndex=(t.py>=108)?1:0;
+            int row=((int)t.py-48)/12;
+            if(row>=0&&row<8){
+                int r=homeScroll*8+row;
+                if(r<APP_COUNT){setSelection(r);launchSelection();changed=1;}
+            }
             else if(t.py<48){mode=0;changed=1;}
         } else {
             if(t.py<48||t.py>=192){mode=0;changed=1;}
@@ -440,9 +463,13 @@ static void input(void){
         }
     }
     if(mode==0){
-        if(d&KEY_UP){selectionPin=(selectionPin+APP_COUNT-1)%APP_COUNT;save.selectionPin=selectionPin;cursor=selectionPin;homePulse=1;changed=1;} if(d&KEY_DOWN){selectionPin=(selectionPin+1)%APP_COUNT;save.selectionPin=selectionPin;cursor=selectionPin;homePulse=1;changed=1;}
-        if(d&KEY_LEFT){selectionPin=(selectionPin+APP_COUNT-1)%APP_COUNT;cursor=selectionPin;homePulse=1;changed=1;} if(d&KEY_RIGHT){selectionPin=(selectionPin+1)%APP_COUNT;cursor=selectionPin;homePulse=1;changed=1;}
-        if(d&KEY_A){cursor=selectionPin;mode=selectionPin+1;save.launches++;saveState();changed=1;} if(d&KEY_X){selectionPin=1;save.selectionPin=selectionPin;cursor=selectionPin;mode=2;save.launches++;saveState();changed=1;} if(d&KEY_Y){selectionPin=8;save.selectionPin=selectionPin;cursor=selectionPin;mode=9;save.launches++;saveState();changed=1;}
+        if(d&KEY_UP){setSelection(selectionPin-1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
+        if(d&KEY_DOWN){setSelection(selectionPin+1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
+        if(d&KEY_LEFT){setSelection(selectionPin-1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
+        if(d&KEY_RIGHT){setSelection(selectionPin+1);homeScroll=(selectionPin>=8);homePulse=1;saveState();changed=1;}
+        if(d&KEY_A){launchSelection();changed=1;}
+        if(d&KEY_X){setSelection(1);homeScroll=0;mode=2;save.launches++;saveState();changed=1;}
+        if(d&KEY_Y){setSelection(8);homeScroll=1;mode=9;save.launches++;saveState();changed=1;}
     } else if(mode==1){
         if(d&KEY_B){mode=0;changed=1;} if(d&KEY_A){quantumState=(quantumState+1)%4;frameCounter+=97;changed=1;} if(d&KEY_X){quantumState=(quantumState+1)%4;frameCounter+=1009;changed=1;} if(d&KEY_Y){quantumState=0;changed=1;}
     } else if(mode==2){
