@@ -14,9 +14,9 @@
  */
 
 #define APP_COUNT 16
-#define AETHERMOD_MAJOR 5
-#define AETHERMOD_PASS 8
-#define AETHERMOD_TOTAL_PASSES 8
+#define AETHERMOD_MAJOR 6
+#define AETHERMOD_PASS 1
+#define AETHERMOD_TOTAL_PASSES 3
 #define NOTE_COUNT 8
 #define CODEX_PATH "data/AetherMod/codex.txt"
 #define ANIMAL_PATH "data/AetherMod/animals.txt"
@@ -498,7 +498,7 @@ static void generalSettings(void){
 
 static void about(void){
     page("ABOUT AETHERMOD");
-    iprintf("AETHERMOD 5.0 GENESIS / PASS 6\n");
+    iprintf("AETHERMOD 6.0 EXPANSION / PASS 1 / 3\n");
     iprintf("ALL-ENCOMPASSING COCKPIT\n\n");
     iprintf("Local-first. Modular. Gateway-ready.\n");
     iprintf("Quantum-inspired computation.\n");
