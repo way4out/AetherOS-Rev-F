@@ -1,4 +1,4 @@
-name: Build AetherMod for Nintendo DSi
+name: Build AetherMod Q2 for Nintendo DSi
 on:
   workflow_dispatch:
   push:
