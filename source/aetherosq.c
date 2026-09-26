@@ -18,6 +18,7 @@ typedef struct {
 
 static SaveData save;
 static int mode = 0, cursor = 0, safeMode = 0;
+static int parental=1, nsfw=1, unsafe=1, unregulated=1, ai=1, onlineAI=0, privacy=1, language=0;
 static u32 frameCounter = 0;
 static PrintConsole topConsole;
 static PrintConsole bottomConsole;
@@ -100,7 +101,7 @@ static void hub(void) {
         "QUANTUM FUNCORE", "AETHER TELEMETRY", "SETTINGS",
         "SAFE TEST", "ABOUT"
     };
-    for (int x = 0; x < 5; x++)
+    for (int x = 0; x < 8; x++)
         iprintf("%s %s\n", x == cursor ? ">" : " ", items[x]);
 
     iprintf("\nA SELECT  UP/DOWN NAV\nX FUN  Y TELEMETRY\n");
@@ -128,6 +129,33 @@ static void quantumLab(void) {
     if (frameCounter % 45 == 0)
         iprintf("\n>>> QUANTUM EVENT #%lu <<<\n",
             (unsigned long)(frameCounter / 45));
+}
+
+
+static const char *languageName(void) {
+    static const char *n[]={"English","Espanol","Francais","Deutsch","Italiano","Portugues","Nihongo","Hangul","Chinese","Russian"};
+    return n[language%10];
+}
+static void safetyCenter(void) {
+    header("FAMILY & SAFETY CENTER");
+    iprintf("Parental: %s\nNSFW: %s\nUnsafe: %s\nUnregulated: %s\n",
+      parental?"ON":"OFF",nsfw?"BLOCKED":"ALLOWED",unsafe?"BLOCKED":"ALLOWED",unregulated?"BLOCKED":"ALLOWED");
+    iprintf("AI: %s  ONLINE: %s\nPrivacy Lock: %s\nLanguage: %s\n\n",
+      ai?"ON":"OFF",onlineAI?"ON":"OFF",privacy?"ON":"OFF",languageName());
+    iprintf("X=STRICT  Y=AI  A=NSFW  B=BACK\n");
+}
+static void aiCenter(void) {
+    header("AI SAFETY CENTER");
+    iprintf("Local AI: %s\nOnline AI: %s\nNSFW filter: %s\n",
+      ai?"ON":"OFF",onlineAI?"ON":"OFF",nsfw?"ON":"OFF");
+    iprintf("Unsafe filter: %s\nPrivacy lock: %s\n\n",unsafe?"ON":"OFF",privacy?"ON":"OFF");
+    iprintf("A=AI  X=ONLINE  Y=PRIVACY  B=BACK\n");
+}
+static void languageCenter(void) {
+    header("LANGUAGE");
+    iprintf("Current: %s\n\nUP/DOWN select  A=apply  B=back\n",languageName());
+    iprintf("0 English  1 Espanol  2 Francais  3 Deutsch  4 Italiano\n");
+    iprintf("5 Portugues  6 Nihongo  7 Hangul  8 Chinese  9 Russian\n");
 }
 
 static void telemetry(void) {
@@ -165,6 +193,9 @@ static void about(void) {
 
 static void draw(void) {
     if (mode == 1) quantumLab();
+    else if (mode == 6) safetyCenter();
+    else if (mode == 7) aiCenter();
+    else if (mode == 8) languageCenter();
     else if (mode == 2) telemetry();
     else if (mode == 3) settings();
     else if (mode == 4) safe_test();
@@ -189,8 +220,8 @@ static void input(void) {
     }
 
     if (mode == 0) {
-        if (d & KEY_UP) cursor = (cursor + 4) % 5;
-        if (d & KEY_DOWN) cursor = (cursor + 1) % 5;
+        if (d & KEY_UP) cursor = (cursor + 7) % 8;
+        if (d & KEY_DOWN) cursor = (cursor + 1) % 8;
         if (d & KEY_X) mode = 1;
         if (d & KEY_Y) mode = 2;
         if (d & KEY_A) {
